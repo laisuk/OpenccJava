@@ -42,7 +42,7 @@ public class ConvertCommand implements Runnable {
     @Option(names = {"--auto-ext"}, description = "Auto-append extension to output file")
     private boolean autoExt;
 
-    @Option(names = {"--keep-font"}, defaultValue = "true", negatable = true, description = "Preserve font-family info (default: true)")
+    @Option(names = {"--keep-font"}, defaultValue = "false", negatable = true, description = "Preserve font-family info (default: false)")
     private boolean keepFont;
 
     private static final Logger LOGGER = Logger.getLogger(ConvertCommand.class.getName());
@@ -71,7 +71,7 @@ public class ConvertCommand implements Runnable {
             System.exit(1);
         }
 
-        String officeFormat = format;
+        String officeFormat = OfficeDocHelper.OFFICE_FORMATS.contains(format) ? format : null;
         String inputName = removeExtension(input.getName());
         String ext = getExtension(input.getName());
         // Derive output file if not provided
@@ -83,7 +83,7 @@ public class ConvertCommand implements Runnable {
         }
         // Infer format if not explicitly given
         if (officeFormat == null) {
-            if (ext.isEmpty()) {
+            if (ext.isEmpty() || !OfficeDocHelper.OFFICE_FORMATS.contains(ext.substring(1).toLowerCase())) {
                 System.err.println("❌ Cannot infer Office format from input file extension.");
                 System.exit(1);
             }

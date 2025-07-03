@@ -13,8 +13,8 @@ repositories {
 
 dependencies {
     // Core CLI parser
-    implementation("info.picocli:picocli:4.7.5")
-    annotationProcessor("info.picocli:picocli-codegen:4.7.5")
+    implementation("info.picocli:picocli:4.7.7")
+    annotationProcessor("info.picocli:picocli-codegen:4.7.7")
 
     // JSON serialization/deserialization
     implementation("com.fasterxml.jackson.core:jackson-databind:2.19.1")

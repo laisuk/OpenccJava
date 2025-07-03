@@ -10,7 +10,7 @@ import java.util.zip.*;
 
 public class OfficeDocHelper {
     private static final Logger LOGGER = Logger.getLogger(OfficeDocHelper.class.getName());
-    private static final List<String> OFFICE_FORMATS = Arrays.asList("docx", "xlsx", "pptx", "odt", "ods", "odp", "epub");
+    public static final List<String> OFFICE_FORMATS = Arrays.asList("docx", "xlsx", "pptx", "odt", "ods", "odp", "epub");
 
     public static class Result {
         public boolean success;
@@ -259,7 +259,7 @@ public class OfficeDocHelper {
         return switch (format) {
             case "docx" -> Pattern.compile("(w:(?:eastAsia|ascii|hAnsi|cs)=\")(.*?)(\")");
             case "xlsx" -> Pattern.compile("(val=\")(.*?)(\")");
-            case "pptx" -> Pattern.compile("(typeface=\"\")(.*?)(\")");
+            case "pptx" -> Pattern.compile("(typeface=\")(.*?)(\")");
             case "odt", "ods", "odp" ->
                     Pattern.compile("((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=[\"'])([^\"']+)([\"'])");
             case "epub" -> Pattern.compile("(font-family\\s*:\\s*)([^;\"']+)([;\"'])?");
