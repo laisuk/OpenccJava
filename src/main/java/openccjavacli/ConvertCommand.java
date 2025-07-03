@@ -74,7 +74,6 @@ public class ConvertCommand implements Runnable {
         String officeFormat = format;
         String inputName = removeExtension(input.getName());
         String ext = getExtension(input.getName());
-
         // Derive output file if not provided
         if (output == null) {
             String defaultExt = autoExt && format != null ? "." + format : ext;
@@ -82,7 +81,6 @@ public class ConvertCommand implements Runnable {
             output = new File(input.getParentFile(), defaultName);
             System.err.println("ℹ️ Output file not specified. Using: " + output);
         }
-
         // Infer format if not explicitly given
         if (officeFormat == null) {
             if (ext.isEmpty()) {
@@ -91,7 +89,6 @@ public class ConvertCommand implements Runnable {
             }
             officeFormat = ext.substring(1).toLowerCase();
         }
-
         // Ensure auto-ext is applied
         if (autoExt && getExtension(output.getName()).isEmpty()) {
             output = new File(output.getAbsolutePath() + "." + officeFormat);
@@ -108,7 +105,6 @@ public class ConvertCommand implements Runnable {
                 System.err.println("❌ Conversion failed: " + result.message);
                 System.exit(1);
             }
-
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Error during Office document conversion", ex);
             System.err.println("❌ Exception occurred: " + ex.getMessage());
@@ -120,7 +116,6 @@ public class ConvertCommand implements Runnable {
         try {
             OpenCC opencc = new OpenCC(config);
             String inputText;
-
             // Read from file or stdin
             if (input != null) {
                 inputText = Files.readString(input.toPath(), java.nio.charset.Charset.forName(inEncoding));
@@ -137,12 +132,10 @@ public class ConvertCommand implements Runnable {
                     }
 
                     System.err.println("Input Charset: " + inputCharset);
-                    System.err.println("Input text to convert, <Ctrl+D> to submit:");
+                    System.err.println("Input text to convert, <Ctrl+D> (Unix) <Ctrl-Z> (Windows) to submit:");
                 }
-
                 inputText = new String(System.in.readAllBytes(), inputCharset);
             }
-
             // Convert
             String outputText = opencc.convert(inputText, punct);
 

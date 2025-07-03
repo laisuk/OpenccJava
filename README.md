@@ -1,4 +1,4 @@
-# OpenCCJava
+# OpenccJava
 
 Java port of OpenCC with Office/EPUB document support and CLI tools.
 
