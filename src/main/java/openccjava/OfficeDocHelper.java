@@ -3,6 +3,7 @@ package openccjava;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.*;
 import java.util.stream.Stream;
@@ -61,8 +62,10 @@ public class OfficeDocHelper {
 
                 String converted = converter.convert(xml, punctuation);
 
-                for (Map.Entry<String, String> entry : fontMap.entrySet()) {
-                    converted = converted.replace(entry.getKey(), entry.getValue());
+                if (keepFont) {
+                    for (Map.Entry<String, String> entry : fontMap.entrySet()) {
+                        converted = converted.replace(entry.getKey(), entry.getValue());
+                    }
                 }
 
                 Files.writeString(fullPath, converted);
@@ -78,7 +81,7 @@ public class OfficeDocHelper {
             if ("epub".equals(format)) {
                 return createEpubZip(tempDir, outputFile.toPath());
             } else {
-                zip(tempDir.toFile(), outputFile);  // ✅ Both are File
+                zip(tempDir, outputFile.toPath());  // ✅ Both are File
 
             }
 
@@ -86,11 +89,14 @@ public class OfficeDocHelper {
         } catch (Exception ex) {
             return new Result(false, "❌ Conversion failed: " + ex.getMessage());
         } finally {
-            deleteRecursive(tempDir.toFile());
+            deleteRecursive(tempDir);
         }
     }
 
     private static void unzip(Path zipFile, Path targetDir) throws IOException {
+        // Ensure the destination directory exists
+        Files.createDirectories(targetDir);
+
         try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
@@ -106,32 +112,43 @@ public class OfficeDocHelper {
         }
     }
 
-    private static void zip(File sourceDir, File outputFile) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(outputFile);
-             ZipOutputStream zos = new ZipOutputStream(fos)) {
-            zipRecursive(sourceDir, sourceDir, zos);
+    public static void zip(Path sourcePath, Path zipFilePath) throws IOException {
+        // Ensure the parent directory for the zip file exists, if it has one
+        Path parentDir = zipFilePath.getParent();
+        if (parentDir != null) {
+            Files.createDirectories(parentDir);
         }
-    }
 
-    private static void zipRecursive(File rootDir, File current, ZipOutputStream zos) throws IOException {
-        File[] files = current.listFiles();
-        if (files == null) return;
+        try (OutputStream fos = Files.newOutputStream(zipFilePath);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
 
-        for (File file : files) {
-            String entryName = rootDir.toPath().relativize(file.toPath()).toString().replace("\\", "/");
-
-            if (file.isDirectory()) {
-                zipRecursive(rootDir, file, zos);
-            } else {
-                zos.putNextEntry(new ZipEntry(entryName));
-                try (FileInputStream fis = new FileInputStream(file)) {
-                    byte[] buffer = new byte[4096];
-                    int len;
-                    while ((len = fis.read(buffer)) != -1) {
-                        zos.write(buffer, 0, len);
-                    }
+            if (Files.isDirectory(sourcePath)) {
+                // Walk the file tree and add each file to the zip
+                // Using try-with-resources for the stream ensures it's closed
+                try (Stream<Path> paths = Files.walk(sourcePath)) {
+                    paths
+                            .filter(path -> !Files.isDirectory(path)) // Don't add directories as entries directly
+                            .forEach(path -> {
+                                // Get relative path for the zip entry
+                                Path relativePath = sourcePath.relativize(path);
+                                try {
+                                    ZipEntry zipEntry = new ZipEntry(relativePath.toString().replace('\\', '/')); // Use forward slashes for zip entries
+                                    zos.putNextEntry(zipEntry);
+                                    Files.copy(path, zos);
+                                    zos.closeEntry();
+                                } catch (IOException e) {
+                                    System.err.println("Error zipping file " + path + ": " + e.getMessage());
+                                }
+                            });
                 }
+            } else if (Files.isRegularFile(sourcePath)) {
+                // If it's a single file, just add it directly
+                ZipEntry zipEntry = new ZipEntry(sourcePath.getFileName().toString());
+                zos.putNextEntry(zipEntry);
+                Files.copy(sourcePath, zos);
                 zos.closeEntry();
+            } else {
+                throw new IllegalArgumentException("Source path must be a file or a directory: " + sourcePath);
             }
         }
     }
@@ -172,6 +189,7 @@ public class OfficeDocHelper {
                                 zos.closeEntry();
                             } catch (IOException e) {
                                 // Optional: Log individual file errors
+                                LOGGER.log(Level.WARNING, "Failed to add file to zip: " + p.getFileName(), e);
                             }
                         });
             }
@@ -267,20 +285,28 @@ public class OfficeDocHelper {
         };
     }
 
-    private static void deleteRecursive(File file) {
-        if (file == null || !file.exists()) return;
+    private static void deleteRecursive(Path dirPath) {
+        if (dirPath == null || !Files.exists(dirPath)) return;
 
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursive(child);
+        try {
+            if (Files.exists(dirPath)) { // Re-check after initial check, might be redundant but safe
+                try (Stream<Path> paths = Files.walk(dirPath)) {
+                    paths
+                            .sorted(Comparator.reverseOrder())
+                            .forEach(p -> {
+                                try {
+                                    Files.delete(p);
+                                } catch (IOException e) {
+                                    // More specific error output, perhaps log or re-throw if critical
+                                    System.err.println("⚠️ Failed to delete " + p + ": " + e.getMessage());
+                                }
+                            });
+
                 }
             }
-        }
-
-        if (!file.delete()) {
-            System.err.println("⚠️ Failed to delete: " + file.getAbsolutePath());
+        } catch (IOException e) {
+            // This catch block handles errors during Files.walk() itself
+            System.err.println("Error walking directory for cleanup at " + dirPath + ": " + e.getMessage());
         }
     }
 }
