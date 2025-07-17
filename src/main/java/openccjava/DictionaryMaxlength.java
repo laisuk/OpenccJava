@@ -91,11 +91,12 @@ public class DictionaryMaxlength {
                 Map.entry("jp_variants_rev", "JPVariantsRev.txt")
         );
 
-        Path base = Paths.get("dicts");
+        // Path base = Paths.get("dicts");
 
         for (Map.Entry<String, String> entry : paths.entrySet()) {
             try {
-                String content = Files.readString(base.resolve(entry.getValue()), StandardCharsets.UTF_8);
+                //String content = Files.readString(base.resolve(entry.getValue()), StandardCharsets.UTF_8);
+                String content = loadDictFile(entry.getValue());
                 DictEntry loaded = loadDictionaryMaxlength(content);
                 Field field = DictionaryMaxlength.class.getField(entry.getKey());
                 field.set(instance, loaded);
@@ -105,6 +106,22 @@ public class DictionaryMaxlength {
         }
 
         return instance;
+    }
+
+    private static String loadDictFile(String filename) throws IOException {
+        // Try filesystem first
+        Path filePath = Paths.get("dicts", filename);
+        if (Files.exists(filePath)) {
+            return Files.readString(filePath, StandardCharsets.UTF_8);
+        }
+        // Fallback to classpath resource
+        try (InputStream in = DictionaryMaxlength.class.getResourceAsStream("/dicts/" + filename)) {
+            if (in != null) {
+                return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        }
+
+        throw new FileNotFoundException("Dictionary not found: " + filename);
     }
 
     public static DictEntry loadDictionaryMaxlength(String content) {

@@ -56,6 +56,7 @@ public class OpenCC {
     public String convert(String input) {
         return convert(input, false); // default punctuation = true
     }
+
     public String convert(String input, boolean punctuation) {
         return switch (config) {
             case "s2t" -> s2t(input, punctuation);
