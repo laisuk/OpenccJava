@@ -1,7 +1,7 @@
 package openccjavacli;
 
 import openccjava.OpenCC;
-import openccjava.OfficeDocHelper;
+import openccjava.OfficeHelper;
 import picocli.CommandLine.*;
 
 import java.io.*;
@@ -71,7 +71,7 @@ public class ConvertCommand implements Runnable {
             System.exit(1);
         }
 
-        String officeFormat = OfficeDocHelper.OFFICE_FORMATS.contains(format) ? format : null;
+        String officeFormat = OfficeHelper.OFFICE_FORMATS.contains(format) ? format : null;
         String inputName = removeExtension(input.getName());
         String ext = getExtension(input.getName());
         // Derive output file if not provided
@@ -83,7 +83,7 @@ public class ConvertCommand implements Runnable {
         }
         // Infer format if not explicitly given
         if (officeFormat == null) {
-            if (ext.isEmpty() || !OfficeDocHelper.OFFICE_FORMATS.contains(ext.substring(1).toLowerCase())) {
+            if (ext.isEmpty() || !OfficeHelper.OFFICE_FORMATS.contains(ext.substring(1).toLowerCase())) {
                 System.err.println("❌ Cannot infer Office format from input file extension.");
                 System.exit(1);
             }
@@ -97,7 +97,7 @@ public class ConvertCommand implements Runnable {
 
         try {
             OpenCC opencc = new OpenCC(config);
-            var result = OfficeDocHelper.convert(input, output, officeFormat, opencc, punct, keepFont);
+            var result = OfficeHelper.convert(input, output, officeFormat, opencc, punct, keepFont);
 
             if (result.success) {
                 System.err.println(result.message + "\n📁 Output saved to: " + output.getAbsolutePath());

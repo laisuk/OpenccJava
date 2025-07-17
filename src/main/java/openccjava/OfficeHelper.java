@@ -9,8 +9,8 @@ import java.util.regex.*;
 import java.util.stream.Stream;
 import java.util.zip.*;
 
-public class OfficeDocHelper {
-    private static final Logger LOGGER = Logger.getLogger(OfficeDocHelper.class.getName());
+public class OfficeHelper {
+    private static final Logger LOGGER = Logger.getLogger(OfficeHelper.class.getName());
     public static final List<String> OFFICE_FORMATS = Arrays.asList("docx", "xlsx", "pptx", "odt", "ods", "odp", "epub");
 
     public static class Result {
