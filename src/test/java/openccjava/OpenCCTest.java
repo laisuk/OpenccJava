@@ -65,9 +65,7 @@ class OpenCCTest {
     public void testSegmentReplace_s2t_100kChars() {
         // Sample repeated simplified Chinese text (e.g., "汉字转换")
         String base = "汉字转换";
-        StringBuilder inputBuilder = new StringBuilder(1_000_000);
-        inputBuilder.append(base.repeat(100_000 / base.length()));
-        String input = inputBuilder.toString();
+        String input = base.repeat(100_000 / base.length());
 
         // Setup OpenCC
         DictionaryMaxlength d = DictionaryMaxlength.fromDicts(); // assume your preloaded dictionary method

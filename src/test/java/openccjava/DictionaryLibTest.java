@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DictionaryLibTest {
 
-    static final String TEST_JSON_OUTPUT = "dicts/test_dictionary_maxlength.json";
+    static final String TEST_JSON_OUTPUT = "test_dictionary_maxlength.json";
 
     static DictionaryMaxlength original;
 
@@ -28,6 +28,7 @@ class DictionaryLibTest {
         assertFalse(original.st_characters.dict.isEmpty(), "st_characters should be non-empty");
         assertFalse(original.ts_phrases.dict.isEmpty(), "ts_phrases should be non-empty");
         assertTrue(original.tw_variants_rev.maxLength > 0, "tw_variants_rev should have maxLength > 0");
+
     }
 
     @Test
@@ -50,6 +51,9 @@ class DictionaryLibTest {
                 loaded.st_characters.maxLength,
                 "Max length should be preserved"
         );
+
+        File file = new File(TEST_JSON_OUTPUT);
+        file.deleteOnExit();
     }
 
     @Test

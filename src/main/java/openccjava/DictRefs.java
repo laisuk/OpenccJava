@@ -65,17 +65,25 @@ public class DictRefs {
     }
 
     public static int findMaxUtf8Length(String input, int maxBytes) {
+        if (input == null || input.isEmpty() || maxBytes <= 0) {
+            return 0;
+        }
+
+        // Conservative estimation to reduce input length early
+        int estMaxChars = Math.min(input.length(), maxBytes / 2);  // Assume avg 2 bytes per char
+        input = input.substring(0, estMaxChars);
+
         int left = 0, right = input.length();
         while (left < right) {
             int mid = (left + right + 1) / 2;
-            String substr = input.substring(0, Math.min(mid, input.length()));
-            int utf8Length = substr.getBytes(StandardCharsets.UTF_8).length;
+            int utf8Length = input.substring(0, mid).getBytes(StandardCharsets.UTF_8).length;
             if (utf8Length <= maxBytes) {
                 left = mid;
             } else {
                 right = mid - 1;
             }
         }
+
         return left;
     }
 

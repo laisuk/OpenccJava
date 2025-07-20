@@ -13,6 +13,10 @@ public class OpenCC {
     private String config = "s2t";
     private String lastError;
 
+    private static final int MAX_SB_CAPACITY = 1024;
+    private static final ThreadLocal<StringBuilder> threadLocalSb =
+            ThreadLocal.withInitial(() -> new StringBuilder(MAX_SB_CAPACITY));
+
     public OpenCC() {
         this("s2t");
     }
@@ -107,7 +111,7 @@ public class OpenCC {
     public String segmentReplace(String text, List<DictEntry> dicts, int maxLength) {
         if (text == null || text.isEmpty()) return text;
 
-        List<int[]> ranges = getSplitRanges(text);
+        List<int[]> ranges = getSplitRanges(text, true);
         int numSegments = ranges.size();
 
         if (numSegments == 1 &&
@@ -146,10 +150,15 @@ public class OpenCC {
     }
 
     public String convertSegment(String segment, List<DictEntry> dicts, int maxLength) {
-        if (segment.length() == 1 && delimiters.contains(segment.charAt(0))) return segment;
-        int i = 0;
+        if (segment.length() == 1 && delimiters.contains(segment.charAt(0))) {
+            return segment;
+        }
+
         int segLen = segment.length();
-        StringBuilder sb = new StringBuilder(segLen);
+        StringBuilder sb = threadLocalSb.get();
+        sb.setLength(0); // reset for reuse
+
+        int i = 0;
         while (i < segLen) {
             int bestLen = 0;
             String bestMatch = null;
@@ -165,10 +174,10 @@ public class OpenCC {
                     if (value != null) {
                         bestMatch = value;
                         bestLen = len;
-                        break; // stop checking other dicts
+                        break; // found, break out of dicts loop
                     }
                 }
-                if (bestMatch != null) break; // stop checking shorter lengths
+                if (bestMatch != null) break; // found, break out of len loop
             }
 
             if (bestMatch != null) {
@@ -183,18 +192,32 @@ public class OpenCC {
         return sb.toString();
     }
 
-    public List<int[]> getSplitRanges(String text) {
+    public List<int[]> getSplitRanges(String text, boolean inclusive) {
         List<int[]> result = new ArrayList<>();
         int start = 0;
-        for (int i = 0; i < text.length(); i++) {
+        final int textLength = text.length(); // Cache text length
+
+        for (int i = 0; i < textLength; i++) {
             if (delimiters.contains(text.charAt(i))) {
-                result.add(new int[]{start, i + 1});
-                start = i + 1;
+                if (inclusive) {
+                    // Optimized: Directly add the inclusive range
+                    result.add(new int[]{start, i + 1});
+                } else {
+                    // Optimized: Avoid adding empty ranges if i == start
+                    if (i > start) {
+                        result.add(new int[]{start, i});     // before delimiter
+                    }
+                    result.add(new int[]{i, i + 1});         // delimiter itself
+                }
+                start = i + 1; // Update start for the next segment
             }
         }
-        if (start < text.length()) {
-            result.add(new int[]{start, text.length()});
+
+        // Add the last segment if it exists
+        if (start < textLength) {
+            result.add(new int[]{start, textLength});
         }
+
         return result;
     }
 

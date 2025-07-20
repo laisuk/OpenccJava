@@ -21,7 +21,7 @@ public class OpenCCBenchmark {
         converter = new OpenCC("s2t");
 
         // Base text of ~25 characters
-        String base = "汉字转换测试，性能表现测试表视图";
+        String base = "这是用于，汉字转换测试，性能表现测试的表视图文本。";
 
         // Repeat base text to required sizes
         text100 = base.repeat(4);       // ~100 chars
