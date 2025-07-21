@@ -34,6 +34,12 @@ application {
     mainClass.set("openccjavacli.Main")
 }
 
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "openccjavacli.Main"
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
 }
@@ -55,7 +61,7 @@ distributions {
 
             // Include dicts/ from project root into dist/dicts/
             from("dicts") {
-                into("dicts")
+                into("bin/dicts")
             }
         }
     }

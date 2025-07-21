@@ -6,27 +6,73 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.IntStream;
 
+/**
+ * OpenCC is a pure Java implementation of the Open Chinese Convert (OpenCC) system.
+ * It provides simplified-traditional Chinese text conversion using preloaded dictionaries.
+ *
+ * <p>This class supports multiple configurations such as s2t, t2s, s2tw, tw2s, etc.
+ * It loads dictionaries from a bundled JSON file or falls back to raw dict text files.
+ *
+ * <p>Conversion is stateless and thread-safe, with thread-local StringBuilder optimization
+ * for performance.
+ */
 public class OpenCC {
+
+    /**
+     * Loaded dictionary data containing phrase/character maps and their max lengths.
+     */
     private final DictionaryMaxlength dictionary;
+
+    /**
+     * Cached DictRefs to avoid redundant config resolution.
+     */
     private final Map<String, DictRefs> configCache = new HashMap<>();
+
+    /**
+     * Set of characters considered as delimiters during segmentation.
+     */
     private final Set<Character> delimiters = DictRefs.DELIMITERS;
+
+    /**
+     * Current conversion configuration key (e.g., s2t, t2s).
+     */
     private String config = "s2t";
+
+    /**
+     * Stores the last error message encountered, if any.
+     */
     private String lastError;
 
+    /**
+     * Maximum capacity for thread-local StringBuilder (used during conversion).
+     */
     private static final int MAX_SB_CAPACITY = 1024;
+
+    /**
+     * Thread-local StringBuilder to minimize memory allocations.
+     */
     private static final ThreadLocal<StringBuilder> threadLocalSb =
             ThreadLocal.withInitial(() -> new StringBuilder(MAX_SB_CAPACITY));
 
+    /**
+     * Constructs an OpenCC instance using the default configuration ("s2t").
+     */
     public OpenCC() {
         this("s2t");
     }
 
+    /**
+     * Constructs an OpenCC instance with a specified configuration.
+     * Loads dictionaries from JSON or fallback text files.
+     *
+     * @param config the conversion configuration key to use
+     * @throws RuntimeException if loading dictionaries fails
+     */
     public OpenCC(String config) {
         try {
             this.dictionary = new File("dicts/dictionary_maxlength.json").exists()
                     ? DictionaryMaxlength.fromJson("dicts/dictionary_maxlength.json")
                     : DictionaryMaxlength.fromDicts();
-
         } catch (Exception e) {
             this.lastError = e.getMessage();
             throw new RuntimeException("Failed to load text dictionaries", e);
@@ -35,6 +81,12 @@ public class OpenCC {
         setConfig(config);
     }
 
+    /**
+     * Sets the current conversion configuration if supported.
+     * Defaults to "s2t" on invalid input and sets an error message.
+     *
+     * @param config the new configuration key
+     */
     public void setConfig(String config) {
         if (getSupportedConfigs().contains(config)) {
             this.config = config;
@@ -44,23 +96,56 @@ public class OpenCC {
         }
     }
 
+    /**
+     * Returns the current conversion configuration.
+     *
+     * @return the configuration key
+     */
     public String getConfig() {
         return config;
     }
 
+    /**
+     * Returns the most recent error message encountered.
+     *
+     * @return the last error message, or null if none
+     */
     public String getLastError() {
         return lastError;
     }
 
+    /**
+     * Returns the list of supported configuration keys.
+     *
+     * @return list of supported configs
+     */
     public static List<String> getSupportedConfigs() {
         return List.of("s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s",
                 "t2tw", "tw2t", "t2twp", "tw2tp", "t2hk", "hk2t", "t2jp", "jp2t");
     }
 
+    /**
+     * Converts the given input text using the current configuration.
+     * Punctuation conversion is disabled by default.
+     *
+     * @param input the text to convert
+     * @return the converted result
+     */
     public String convert(String input) {
-        return convert(input, false); // default punctuation = true
+        return convert(input, false); // default punctuation = false
     }
 
+    /**
+     * Converts the given input text using the current configuration.
+     *
+     * <p>The method dispatches the conversion to the corresponding
+     * configuration logic (e.g., s2t, t2s, s2tw, etc.). If the configuration
+     * is unsupported, it returns an error string and sets {@code lastError}.
+     *
+     * @param input       the text to convert
+     * @param punctuation whether to convert punctuation characters
+     * @return the converted result, or an error string if config is invalid
+     */
     public String convert(String input, boolean punctuation) {
         return switch (config) {
             case "s2t" -> s2t(input, punctuation);
@@ -86,41 +171,73 @@ public class OpenCC {
         };
     }
 
+    /**
+     * Retrieves the {@link DictRefs} for a given conversion configuration key.
+     *
+     * <p>This method checks the internal cache first. If no entry is found,
+     * it creates a new {@code DictRefs} object using the relevant dictionary entries
+     * from {@link DictionaryMaxlength}, supporting up to 3 rounds of replacements.
+     *
+     * <p>The result is cached for future lookups to avoid recomputation.
+     *
+     * @param key the configuration key (e.g., "s2t", "tw2sp")
+     * @return a {@code DictRefs} instance representing the translation rules,
+     * or {@code null} if the key is unsupported
+     */
     private DictRefs getDictRefs(String key) {
         if (configCache.containsKey(key)) return configCache.get(key);
+
         var d = dictionary;
+
         DictRefs refs = switch (key) {
             case "s2t" -> new DictRefs(List.of(d.st_phrases, d.st_characters));
             case "t2s" -> new DictRefs(List.of(d.ts_phrases, d.ts_characters));
-            case "s2tw" -> new DictRefs(List.of(d.st_phrases, d.st_characters)).withRound2(List.of(d.tw_variants));
-            case "tw2s" ->
-                    new DictRefs(List.of(d.tw_variants_rev_phrases, d.tw_variants_rev)).withRound2(List.of(d.ts_phrases, d.ts_characters));
-            case "s2twp" ->
-                    new DictRefs(List.of(d.st_phrases, d.st_characters)).withRound2(List.of(d.tw_phrases)).withRound3(List.of(d.tw_variants));
-            case "tw2sp" ->
-                    new DictRefs(List.of(d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev)).withRound2(List.of(d.ts_phrases, d.ts_characters));
-            case "s2hk" -> new DictRefs(List.of(d.st_phrases, d.st_characters)).withRound2(List.of(d.hk_variants));
-            case "hk2s" ->
-                    new DictRefs(List.of(d.hk_variants_rev_phrases, d.hk_variants_rev)).withRound2(List.of(d.ts_phrases, d.ts_characters));
+            case "s2tw" -> new DictRefs(List.of(d.st_phrases, d.st_characters))
+                    .withRound2(List.of(d.tw_variants));
+            case "tw2s" -> new DictRefs(List.of(d.tw_variants_rev_phrases, d.tw_variants_rev))
+                    .withRound2(List.of(d.ts_phrases, d.ts_characters));
+            case "s2twp" -> new DictRefs(List.of(d.st_phrases, d.st_characters))
+                    .withRound2(List.of(d.tw_phrases))
+                    .withRound3(List.of(d.tw_variants));
+            case "tw2sp" -> new DictRefs(List.of(d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev))
+                    .withRound2(List.of(d.ts_phrases, d.ts_characters));
+            case "s2hk" -> new DictRefs(List.of(d.st_phrases, d.st_characters))
+                    .withRound2(List.of(d.hk_variants));
+            case "hk2s" -> new DictRefs(List.of(d.hk_variants_rev_phrases, d.hk_variants_rev))
+                    .withRound2(List.of(d.ts_phrases, d.ts_characters));
             default -> null;
         };
+
         if (refs != null) configCache.put(key, refs);
         return refs;
     }
 
+
+    /**
+     * Applies dictionary-based replacements to the input text using segment-based processing.
+     *
+     * <p>If the text contains multiple segments (e.g., based on punctuation/delimiters),
+     * each segment is processed separately. Large inputs are processed in parallel for performance.
+     *
+     * @param text      the original text to convert
+     * @param dicts     the list of dictionaries (in order of priority) to apply
+     * @param maxLength the maximum phrase length to match in the dictionaries
+     * @return the converted text
+     */
     public String segmentReplace(String text, List<DictEntry> dicts, int maxLength) {
         if (text == null || text.isEmpty()) return text;
 
         List<int[]> ranges = getSplitRanges(text, true);
         int numSegments = ranges.size();
 
+        // Fast path: entire text is one uninterrupted segment
         if (numSegments == 1 &&
                 ranges.get(0)[0] == 0 &&
                 ranges.get(0)[1] == text.length()) {
-            return convertSegment(text, dicts, maxLength); // Fast path
+            return convertSegment(text, dicts, maxLength);
         }
 
-        // Use parallelism if input is large enough
+        // Use parallel stream if input is large or highly segmented
         boolean useParallel = text.length() > 10_000 || numSegments > 100;
 
         if (useParallel) {
@@ -132,7 +249,7 @@ public class OpenCC {
                 segments[i] = convertSegment(segment, dicts, maxLength);
             });
 
-            // Reconstruct result
+            // Join all converted segments
             StringBuilder sb = new StringBuilder(text.length());
             for (String seg : segments) {
                 sb.append(seg);
@@ -140,6 +257,7 @@ public class OpenCC {
 
             return sb.toString();
         } else {
+            // Fallback: sequential processing
             StringBuilder sb = new StringBuilder(text.length());
             for (int[] range : ranges) {
                 String segment = text.substring(range[0], range[1]);
@@ -149,6 +267,20 @@ public class OpenCC {
         }
     }
 
+    /**
+     * Converts a single segment using the specified dictionaries with longest-match-first strategy.
+     *
+     * <p>If the segment is a single delimiter character, it is returned as-is.
+     * Otherwise, the method performs greedy matching from left to right,
+     * trying to match the longest possible substrings found in the dictionaries.
+     *
+     * <p>This method reuses a thread-local {@code StringBuilder} to reduce allocations.
+     *
+     * @param segment   the text segment to convert
+     * @param dicts     the list of dictionaries to apply (highest priority first)
+     * @param maxLength the maximum phrase length to consider
+     * @return the converted segment
+     */
     public String convertSegment(String segment, List<DictEntry> dicts, int maxLength) {
         if (segment.length() == 1 && delimiters.contains(segment.charAt(0))) {
             return segment;
@@ -174,10 +306,10 @@ public class OpenCC {
                     if (value != null) {
                         bestMatch = value;
                         bestLen = len;
-                        break; // found, break out of dicts loop
+                        break; // found match, stop searching this word
                     }
                 }
-                if (bestMatch != null) break; // found, break out of len loop
+                if (bestMatch != null) break; // found match, move to next position
             }
 
             if (bestMatch != null) {
@@ -192,6 +324,21 @@ public class OpenCC {
         return sb.toString();
     }
 
+    /**
+     * Splits the input text into a list of index ranges based on delimiter characters.
+     *
+     * <p>This method is used to divide long text into smaller segments for conversion.
+     * A segment is defined as a contiguous run of non-delimiter characters, optionally
+     * followed by or isolated with a delimiter depending on the {@code inclusive} flag.
+     *
+     * <p>Each returned {@code int[]} contains two elements:
+     * [start index (inclusive), end index (exclusive)].
+     *
+     * @param text      the input text to segment
+     * @param inclusive whether to include delimiters as part of the preceding segment ({@code true})
+     *                  or as separate segments ({@code false})
+     * @return a list of (start, end) index ranges representing the segments
+     */
     public List<int[]> getSplitRanges(String text, boolean inclusive) {
         List<int[]> result = new ArrayList<>();
         int start = 0;
@@ -221,6 +368,14 @@ public class OpenCC {
         return result;
     }
 
+
+    /**
+     * Converts Simplified Chinese to Traditional Chinese.
+     *
+     * @param input       the text in Simplified Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Traditional Chinese
+     */
     public String s2t(String input, boolean punctuation) {
         var refs = getDictRefs("s2t");
         if (refs == null) return input;
@@ -228,6 +383,13 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
     }
 
+    /**
+     * Converts Traditional Chinese to Simplified Chinese.
+     *
+     * @param input       the text in Traditional Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Simplified Chinese
+     */
     public String t2s(String input, boolean punctuation) {
         var refs = getDictRefs("t2s");
         if (refs == null) return input;
@@ -235,6 +397,13 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
     }
 
+    /**
+     * Converts Simplified Chinese to Traditional Chinese (Taiwan standard).
+     *
+     * @param input       the text in Simplified Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Traditional Chinese (Taiwan)
+     */
     public String s2tw(String input, boolean punctuation) {
         var refs = getDictRefs("s2tw");
         if (refs == null) return input;
@@ -242,6 +411,13 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
     }
 
+    /**
+     * Converts Traditional Chinese (Taiwan) to Simplified Chinese.
+     *
+     * @param input       the text in Traditional Chinese (Taiwan)
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Simplified Chinese
+     */
     public String tw2s(String input, boolean punctuation) {
         var refs = getDictRefs("tw2s");
         if (refs == null) return input;
@@ -249,6 +425,13 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
     }
 
+    /**
+     * Converts Simplified Chinese to Traditional Chinese (Taiwan with phrase and variant adjustments).
+     *
+     * @param input       the text in Simplified Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in full Taiwan-style Traditional Chinese
+     */
     public String s2twp(String input, boolean punctuation) {
         var refs = getDictRefs("s2twp");
         if (refs == null) return input;
@@ -256,6 +439,13 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
     }
 
+    /**
+     * Converts Taiwan-style Traditional Chinese to Simplified Chinese.
+     *
+     * @param input       the text in Taiwan Traditional Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Simplified Chinese
+     */
     public String tw2sp(String input, boolean punctuation) {
         var refs = getDictRefs("tw2sp");
         if (refs == null) return input;
@@ -263,6 +453,13 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
     }
 
+    /**
+     * Converts Simplified Chinese to Traditional Chinese (Hong Kong standard).
+     *
+     * @param input       the text in Simplified Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Hong Kong-style Traditional Chinese
+     */
     public String s2hk(String input, boolean punctuation) {
         var refs = getDictRefs("s2hk");
         if (refs == null) return input;
@@ -270,6 +467,13 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
     }
 
+    /**
+     * Converts Hong Kong-style Traditional Chinese to Simplified Chinese.
+     *
+     * @param input       the text in Traditional Chinese (HK)
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Simplified Chinese
+     */
     public String hk2s(String input, boolean punctuation) {
         var refs = getDictRefs("hk2s");
         if (refs == null) return input;
@@ -277,66 +481,163 @@ public class OpenCC {
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
     }
 
+    /**
+     * Converts Traditional Chinese to Taiwan Traditional variants.
+     *
+     * @param input the Traditional Chinese input
+     * @return the text converted to Taiwan-style Traditional Chinese
+     */
     public String t2tw(String input) {
         var refs = new DictRefs(List.of(dictionary.tw_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+    /**
+     * Converts Traditional Chinese to Taiwan Traditional with phrases and variants.
+     *
+     * @param input the Traditional Chinese input
+     * @return the converted Taiwan Traditional Chinese with phrases and variants
+     */
     public String t2twp(String input) {
         var refs = new DictRefs(List.of(dictionary.tw_phrases))
                 .withRound2(List.of(dictionary.tw_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+    /**
+     * Converts Taiwan Traditional Chinese to base Traditional Chinese.
+     *
+     * @param input the Taiwan Traditional input
+     * @return the converted base Traditional Chinese text
+     */
     public String tw2t(String input) {
         var refs = new DictRefs(List.of(dictionary.tw_variants_rev_phrases, dictionary.tw_variants_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+    /**
+     * Converts Taiwan Traditional Chinese to base Traditional Chinese, including phrase reversal.
+     *
+     * @param input the Taiwan Traditional input
+     * @return the fully reverted Traditional Chinese text
+     */
     public String tw2tp(String input) {
         var refs = new DictRefs(List.of(dictionary.tw_variants_rev_phrases, dictionary.tw_variants_rev))
                 .withRound2(List.of(dictionary.tw_phrases_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+    /**
+     * Converts Traditional Chinese to Hong Kong Traditional variants.
+     *
+     * @param input the Traditional Chinese input
+     * @return the converted text using HK Traditional variants
+     */
     public String t2hk(String input) {
         var refs = new DictRefs(List.of(dictionary.hk_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+    /**
+     * Converts Hong Kong Traditional Chinese to base Traditional Chinese.
+     *
+     * @param input the HK Traditional Chinese input
+     * @return the converted base Traditional Chinese text
+     */
     public String hk2t(String input) {
         var refs = new DictRefs(List.of(dictionary.hk_variants_rev_phrases, dictionary.hk_variants_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+    /**
+     * Converts Traditional Chinese to Japanese Kanji variants.
+     *
+     * @param input the Traditional Chinese input
+     * @return the text converted to Japanese-style Kanji variants
+     */
     public String t2jp(String input) {
         var refs = new DictRefs(List.of(dictionary.jp_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+    /**
+     * Converts Japanese-style Kanji back to Traditional Chinese.
+     *
+     * @param input the Japanese Kanji-style Chinese input
+     * @return the converted Traditional Chinese text
+     */
     public String jp2t(String input) {
         var refs = new DictRefs(List.of(dictionary.jps_phrases, dictionary.jps_characters, dictionary.jp_variants_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
+
+    /**
+     * Converts each character in the input text from Simplified Chinese to Traditional Chinese.
+     *
+     * <p>This method uses only the character-level dictionary (`st_characters`) and does not
+     * apply phrase or context-based replacements.
+     *
+     * @param input the input text in Simplified Chinese
+     * @return the text converted to Traditional Chinese, character by character
+     */
     public String st(String input) {
         return convertSegment(input, List.of(dictionary.st_characters), 1);
     }
 
+    /**
+     * Converts each character in the input text from Traditional Chinese to Simplified Chinese.
+     *
+     * <p>This method uses only the character-level dictionary (`ts_characters`) and does not
+     * apply phrase or context-based replacements.
+     *
+     * @param input the input text in Traditional Chinese
+     * @return the text converted to Simplified Chinese, character by character
+     */
     public String ts(String input) {
         return convertSegment(input, List.of(dictionary.ts_characters), 1);
     }
 
+    /**
+     * Attempts to detect whether the input text is written in Traditional or Simplified Chinese.
+     *
+     * <p>This method removes non-Chinese characters, then analyzes the first ~200 UTF-8 bytes
+     * (about 60–70 characters) for mismatches between the input and its conversion to
+     * Simplified and Traditional Chinese.
+     *
+     * <p>Return codes:
+     * <ul>
+     *   <li>0 – Undetermined or mixed/other content</li>
+     *   <li>1 – Likely Traditional Chinese</li>
+     *   <li>2 – Likely Simplified Chinese</li>
+     * </ul>
+     *
+     * @param input the input text to check
+     * @return an integer code representing the detected Chinese variant
+     */
     public int zhoCheck(String input) {
         if (input == null || input.isEmpty()) return 0;
+
         String stripped = DictRefs.STRIP_REGEX.matcher(input).replaceAll("");
         int limit = DictRefs.findMaxUtf8Length(stripped, 200);
         String slice = stripped.substring(0, Math.min(limit, stripped.length()));
+
         if (!slice.equals(ts(slice))) return 1;
         if (!slice.equals(st(slice))) return 2;
         return 0;
     }
 
+    /**
+     * Translates punctuation characters in the input string using the provided character map.
+     *
+     * <p>This method performs a simple character-by-character substitution based on the map.
+     * It is typically used to convert punctuation between fullwidth Simplified/Traditional Chinese styles
+     * (e.g., 「」『』 ↔ “ ” ‘ ’).
+     *
+     * @param input the original string to process
+     * @param map   a mapping from source punctuation characters to their target equivalents
+     * @return a new string with punctuation characters translated
+     */
     private String translatePunctuation(String input, Map<Character, Character> map) {
         StringBuilder sb = new StringBuilder(input.length());
         for (char c : input.toCharArray()) {
@@ -344,4 +645,5 @@ public class OpenCC {
         }
         return sb.toString();
     }
+
 }

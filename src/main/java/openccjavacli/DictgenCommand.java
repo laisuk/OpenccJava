@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Command(name = "dictgen", description = "Generate dictionary for OpenCC", mixinStandardHelpOptions = true)
+@Command(name = "dictgen", description = "\033[1;34mGenerate dictionary for OpenccJava\033[0m", mixinStandardHelpOptions = true)
 public class DictgenCommand implements Runnable {
 
     @Option(names = {"-f", "--format"}, description = "Dictionary format: [json]", defaultValue = "json")
