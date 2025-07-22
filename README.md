@@ -189,6 +189,15 @@ Convert Office documents using OpenccJava
   -V, --version           Print version information and exit.
 ```
 
+#### Optional flags:
+
+- `--punct`: Enable punctuation conversion.
+- `--auto-ext`: Auto-append extension like `_converted`.
+- `--keep-font` / `--no-keep-font`: Preserve original fonts (Office only).
+- `--in-enc` / `--out-enc`: Specify encoding (e.g. `GBK`, `BIG5`, `UTF-8`).
+- `--format`: Force document format (e.g., `docx`, `epub`).
+- `--list-configs`: Show supported OpenCC configs.
+
 #### OpenccJava Dictionary Generator
 
 Generate JSON dictionary from raw `dicts/*.txt`
@@ -203,18 +212,9 @@ Generate dictionary for OpenccJava
   -V, --version             Print version information and exit.
 ```
 
-#### Optional flags:
-
-- `--punct`: Enable punctuation conversion.
-- `--auto-ext`: Auto-append extension like `_converted`.
-- `--keep-font` / `--no-keep-font`: Preserve original fonts (Office only).
-- `--in-enc` / `--out-enc`: Specify encoding (e.g. `GBK`, `BIG5`, `UTF-8`).
-- `--format`: Force document format (e.g., `docx`, `epub`).
-- `--list-configs`: Show supported OpenCC configs.
-
 ## Encoding Notes
 
-During CLI console input/output on some non UTF-8 encoded console:
+CLI console input/output on some non UTF-8 encoded console:
 
 - On **Windows Simplified Chinese**, use:  
   `--in-enc=GBK --out-enc=GBK`
