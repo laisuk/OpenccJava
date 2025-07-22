@@ -61,7 +61,7 @@ distributions {
 
             // Include dicts/ from project root into dist/dicts/
             from("dicts") {
-                into("bin/dicts")
+                into("dicts")
             }
         }
     }
