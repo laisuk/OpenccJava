@@ -1,6 +1,6 @@
 # OpenccJava
 
-Java port of OpenCC with Office/EPUB document support and CLI tools.
+**Java port of OpenCC** with **Office/EPUB** document support and **CLI** tools.
 
 ## Features
 
