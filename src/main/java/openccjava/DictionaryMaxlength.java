@@ -117,14 +117,39 @@ public class DictionaryMaxlength {
         return fromJson(new File(path));
     }
 
+    /**
+     * Loads a {@code DictionaryMaxlength} instance from a JSON input stream.
+     * <p>
+     * This method is typically used to load a precompiled dictionary from a resource
+     * bundled within the application JAR or classpath (e.g., {@code /dicts/dictionary_maxlength.json}).
+     * It is useful when the JSON file is embedded as a resource rather than stored on the filesystem.
+     * </p>
+     *
+     * @param in the input stream containing the JSON data
+     * @return the populated {@code DictionaryMaxlength} object
+     * @throws IOException if the JSON cannot be read or parsed
+     */
+    public static DictionaryMaxlength fromJson(InputStream in) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(in, DictionaryMaxlength.class);
+    }
 
     /**
-     * Loads all dictionary files from the default directory and constructs a {@code DictionaryMaxlength} instance.
+     * Loads all dictionary files from the default "dicts" directory.
      *
      * @return the fully populated {@code DictionaryMaxlength} object
-     * @throws RuntimeException if any dictionary fails to load or parse
      */
     public static DictionaryMaxlength fromDicts() {
+        return fromDicts("dicts");
+    }
+
+    /**
+     * Loads all dictionary files from the specified base directory.
+     *
+     * @param basePath the path to the directory containing dictionary .txt files
+     * @return the fully populated {@code DictionaryMaxlength} object
+     */
+    public static DictionaryMaxlength fromDicts(String basePath) {
         DictionaryMaxlength instance = new DictionaryMaxlength();
 
         Map<String, String> paths = Map.ofEntries(
@@ -148,7 +173,7 @@ public class DictionaryMaxlength {
 
         for (Map.Entry<String, String> entry : paths.entrySet()) {
             try {
-                String content = loadDictFile(entry.getValue());
+                String content = loadDictFile(basePath, entry.getValue());
                 DictEntry loaded = loadDictionaryMaxlength(content);
                 Field field = DictionaryMaxlength.class.getField(entry.getKey());
                 field.set(instance, loaded);
@@ -161,25 +186,26 @@ public class DictionaryMaxlength {
     }
 
     /**
-     * Loads the dictionary file content from filesystem or classpath.
+     * Loads the dictionary file content from a specified base directory or classpath.
      *
+     * @param basePath the base directory path (e.g., "dicts" or "custom_dicts")
      * @param filename the dictionary filename (e.g. "STCharacters.txt")
      * @return the dictionary file content as UTF-8 string
      * @throws IOException if the file is not found or unreadable
      */
-    private static String loadDictFile(String filename) throws IOException {
-        Path filePath = Paths.get("dicts", filename);
+    private static String loadDictFile(String basePath, String filename) throws IOException {
+        Path filePath = Paths.get(basePath, filename);
         if (Files.exists(filePath)) {
             return Files.readString(filePath, StandardCharsets.UTF_8);
         }
 
-        try (InputStream in = DictionaryMaxlength.class.getResourceAsStream("/dicts/" + filename)) {
+        try (InputStream in = DictionaryMaxlength.class.getResourceAsStream("/" + basePath + "/" + filename)) {
             if (in != null) {
                 return new String(in.readAllBytes(), StandardCharsets.UTF_8);
             }
         }
 
-        throw new FileNotFoundException("Dictionary not found: " + filename);
+        throw new FileNotFoundException("Dictionary not found in " + basePath + ": " + filename);
     }
 
     /**

@@ -2,9 +2,15 @@ package openccjava;
 
 import openccjava.DictionaryMaxlength.DictEntry;
 
-import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.IntStream;
+
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 
 /**
  * OpenCC is a pure Java implementation of the Open Chinese Convert (OpenCC) system.
@@ -17,6 +23,30 @@ import java.util.stream.IntStream;
  * for performance.
  */
 public class OpenCC {
+    /**
+     * Internal logger used for diagnostic and fallback messages.
+     * Logging is disabled by default to avoid console output in GUI applications.
+     */
+    private static final Logger LOGGER = Logger.getLogger(OpenCC.class.getName());
+
+    static {
+        // Disable logging by default
+        LOGGER.setLevel(Level.OFF);
+    }
+
+    /**
+     * Enables or disables verbose logging for OpenCC.
+     * <p>
+     * When enabled, the logger will print informational messages about dictionary loading,
+     * fallback behavior, and other diagnostics to the console or log handler.
+     * When disabled (default), logging is suppressed to avoid cluttering GUI or user-facing environments.
+     * </p>
+     *
+     * @param enabled {@code true} to enable logging, {@code false} to disable it
+     */
+    public static void setVerboseLogging(boolean enabled) {
+        LOGGER.setLevel(enabled ? Level.INFO : Level.OFF);
+    }
 
     /**
      * Loaded dictionary data containing phrase/character maps and their max lengths.
@@ -62,20 +92,61 @@ public class OpenCC {
     }
 
     /**
-     * Constructs an OpenCC instance with a specified configuration.
-     * Loads dictionaries from JSON or fallback text files.
+     * Constructs an OpenCC instance with a specified conversion configuration.
+     * <p>
+     * This constructor attempts to load the dictionary data in the following order:
+     * </p>
+     * <ol>
+     *   <li><b>File system:</b> Attempts to load {@code dicts/dictionary_maxlength.json} from the current working directory.</li>
+     *   <li><b>Classpath resource:</b> If not found on the file system, attempts to load the same JSON from the application's resources (e.g. {@code /dicts/dictionary_maxlength.json} inside the JAR).</li>
+     *   <li><b>Plain text fallback:</b> If the JSON is not found in either location, falls back to loading individual dictionary text files from {@code dicts/} using {@link DictionaryMaxlength#fromDicts()}.</li>
+     * </ol>
+     *  <p><i>Informational log messages</i> are emitted when a dictionary is successfully loaded from a specific source.</p>
+     *  <p><i>Warnings</i> are logged if the loader falls back to text-based dictionaries.</p>
      *
-     * @param config the conversion configuration key to use
-     * @throws RuntimeException if loading dictionaries fails
+     * @param config the OpenCC conversion configuration key (e.g. "s2t", "tw2sp")
+     * @throws RuntimeException if any dictionary source fails to load or parse
      */
     public OpenCC(String config) {
         try {
-            this.dictionary = new File("dicts/dictionary_maxlength.json").exists()
-                    ? DictionaryMaxlength.fromJson("dicts/dictionary_maxlength.json")
-                    : DictionaryMaxlength.fromDicts();
+            Path jsonPath = Path.of("dicts", "dictionary_maxlength.json");
+
+            if (Files.exists(jsonPath)) {
+                this.dictionary = DictionaryMaxlength.fromJson(jsonPath.toString());
+                LOGGER.info("Loaded dictionary from file system.");
+            } else {
+                try (InputStream in = DictionaryMaxlength.class.getResourceAsStream("/dicts/dictionary_maxlength.json")) {
+                    if (in != null) {
+                        this.dictionary = DictionaryMaxlength.fromJson(in);
+                        LOGGER.info("Loaded dictionary from embedded resource.");
+                    } else {
+                        this.dictionary = DictionaryMaxlength.fromDicts();
+                        LOGGER.warning("Falling back to plain text dictionaries.");
+                    }
+                }
+            }
+
         } catch (Exception e) {
             this.lastError = e.getMessage();
-            throw new RuntimeException("Failed to load text dictionaries", e);
+            throw new RuntimeException("Failed to load dictionaries", e);
+        }
+
+        setConfig(config);
+    }
+
+    /**
+     * Constructs an OpenCC instance using plain text dictionaries from the given directory.
+     * Skips JSON and directly loads .txt files (e.g., for user-customized dictionaries).
+     *
+     * @param config   the conversion configuration key to use
+     * @param dictPath the path to the text dictionary directory
+     */
+    public OpenCC(String config, Path dictPath) {
+        try {
+            this.dictionary = DictionaryMaxlength.fromDicts(dictPath.toString());
+        } catch (Exception e) {
+            this.lastError = e.getMessage();
+            throw new RuntimeException("Failed to load text dictionaries from: " + dictPath, e);
         }
 
         setConfig(config);
@@ -147,6 +218,11 @@ public class OpenCC {
      * @return the converted result, or an error string if config is invalid
      */
     public String convert(String input, boolean punctuation) {
+        if (input == null || input.isEmpty()) {
+            lastError = "Input text is null or empty";
+            return lastError;
+        }
+
         return switch (config) {
             case "s2t" -> s2t(input, punctuation);
             case "t2s" -> t2s(input, punctuation);
@@ -211,7 +287,6 @@ public class OpenCC {
         if (refs != null) configCache.put(key, refs);
         return refs;
     }
-
 
     /**
      * Applies dictionary-based replacements to the input text using segment-based processing.
@@ -367,7 +442,6 @@ public class OpenCC {
 
         return result;
     }
-
 
     /**
      * Converts Simplified Chinese to Traditional Chinese.
@@ -570,7 +644,6 @@ public class OpenCC {
         var refs = new DictRefs(List.of(dictionary.jps_phrases, dictionary.jps_characters, dictionary.jp_variants_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
-
 
     /**
      * Converts each character in the input text from Simplified Chinese to Traditional Chinese.

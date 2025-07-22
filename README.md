@@ -17,12 +17,16 @@ Reusable Java library for programmatic conversion.
 
 #### Usage
 
-```java
+```java 
 import openccjava.core.OpenCC;
 
-OpenCC converter = new OpenCC("s2t");
-String result = converter.convert("汉字转换");
-System.out.println(result); // → 漢字轉換
+public class Example {
+    public static void main(String[] args) {
+        OpenCC converter = new OpenCC("s2t");
+        String result = converter.convert("汉字转换");
+        System.out.println(result); // → 漢字轉換 
+    }
+}
 ```
 
 You can also set punctuation conversion:
@@ -74,4 +78,6 @@ bin/OpenccJava.bat convert --office -c s2t -i book.docx -o book_converted.docx
 
 ## License
 
-MIT
+- MIT License.
+- © Laisuk.
+- See [LICENSE](./LICENSE) for details.
