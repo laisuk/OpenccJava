@@ -3,8 +3,9 @@ package openccjavacli;
 import openccjava.DictionaryMaxlength;
 import picocli.CommandLine.*;
 
-import java.io.File;
-import java.nio.file.Paths;
+import java.io.*;
+import java.net.URL;
+import java.nio.file.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +25,19 @@ public class DictgenCommand implements Runnable {
     @Override
     public void run() {
         try {
+            File dictFolder = new File("dicts");
+            if (!dictFolder.exists() || !dictFolder.isDirectory()) {
+                System.out.print(BLUE + "Local 'dicts/' not found, proceed to download from GitHub otherwise use built-in dictionaries (Y/n): " + RESET);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                String input = reader.readLine().trim().toLowerCase();
+
+                if (input.isEmpty() || input.equals("y") || input.equals("yes")) {
+                    downloadDictsFromGithub(dictFolder.toPath());
+                } else {
+                    System.out.println("Using built-in dictionaries.");
+                }
+            }
+
             String defaultOutput = "json".equals(format) ? "dictionary_maxlength.json" : null;
             if (defaultOutput == null) {
                 LOGGER.severe("Unsupported format: " + format);
@@ -33,7 +47,7 @@ public class DictgenCommand implements Runnable {
             String outputFile = (output != null) ? output : defaultOutput;
             File outputPath = Paths.get(outputFile).toAbsolutePath().toFile();
 
-            DictionaryMaxlength dicts = DictionaryMaxlength.fromDicts();
+            DictionaryMaxlength dicts = DictionaryMaxlength.fromDicts(); // Uses either file or built-in
 
             if ("json".equals(format)) {
                 dicts.serializeToJson(outputPath.getAbsolutePath());
@@ -43,6 +57,34 @@ public class DictgenCommand implements Runnable {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Exception during dictionary generation", e);
             System.exit(1);
+        }
+    }
+
+    private void downloadDictsFromGithub(Path dictDir) throws IOException {
+        String[] dictFiles = {
+                "STCharacters.txt", "STPhrases.txt", "TSCharacters.txt", "TSPhrases.txt",
+                "TWPhrases.txt", "TWPhrasesRev.txt", "TWVariants.txt", "TWVariantsRev.txt", "TWVariantsRevPhrases.txt",
+                "HKVariants.txt", "HKVariantsRev.txt", "HKVariantsRevPhrases.txt",
+                "JPShinjitaiCharacters.txt", "JPShinjitaiPhrases.txt", "JPVariants.txt", "JPVariantsRev.txt"
+        };
+
+        String baseUrl = "https://raw.githubusercontent.com/laisuk/OpenccJava/master/dicts/";
+
+        Files.createDirectories(dictDir);
+
+        for (String fileName : dictFiles) {
+            String fileUrl = baseUrl + fileName;
+            Path outputPath = dictDir.resolve(fileName);
+
+            System.out.print(BLUE + "Downloading: " + fileName + "... " + RESET);
+
+            try (InputStream in = new URL(fileUrl).openStream()) {
+                Files.copy(in, outputPath, StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("done");
+            } catch (IOException e) {
+                System.out.println("Failed to download " + fileName);
+                LOGGER.warning("Failed to download " + fileUrl + ": " + e.getMessage());
+            }
         }
     }
 }
