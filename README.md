@@ -232,6 +232,13 @@ This project supports parallel processing for high-performance batch conversion.
 
 ---
 
+
+## Projects That Use `openccjava`
+
+[OpenccJavFX]{https://github.com/laisuk/OpenccJavaFX}
+
+---
+
 ## License
 
 - MIT License.
