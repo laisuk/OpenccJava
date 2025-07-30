@@ -25,15 +25,7 @@ publishing {
             version = "1.0.1"
         }
     }
-
-    repositories {
-        maven {
-            name = "localOutput"
-            url = layout.buildDirectory.dir("repo").get().asFile.toURI()
-        }
-    }
 }
-
 
 dependencies {
     // JSON serialization/deserialization
