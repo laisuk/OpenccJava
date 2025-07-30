@@ -6,8 +6,8 @@ plugins {
 }
 
 
-group = "io.github.laisuk"
-version = "unspecified"
+group = "com.github.laisuk"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -17,6 +17,9 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+            groupId = "com.github.laisuk"
+            artifactId = "openccjava"
+            version = "1.0.0"
         }
     }
 }

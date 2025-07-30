@@ -3,7 +3,7 @@ plugins {
     application
 }
 
-group = "io.github.laisuk"
+group = "com.github.laisuk"
 version = "1.0.0"
 
 repositories {
