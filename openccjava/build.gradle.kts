@@ -22,7 +22,7 @@ tasks.withType<Javadoc> {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
+        create<MavenPublication>("mavenJava") {
             from(components["java"])
             groupId = "com.github.laisuk"
             artifactId = "openccjava"
