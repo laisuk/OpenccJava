@@ -64,6 +64,13 @@ public class OfficeHelper {
     }
 
     /**
+     * Constructs an instance of {@code OfficeHelper}.
+     */
+    public OfficeHelper() {
+        // No initialization required
+    }
+
+    /**
      * Converts an Office or EPUB document using the given OpenCC converter.
      *
      * <p>This method performs the following steps:

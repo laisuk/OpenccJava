@@ -1,10 +1,13 @@
 plugins {
-    java
     id("java-library")
     id("maven-publish")
     id("me.champeau.jmh") version "0.7.3"
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
 group = "com.github.laisuk"
 version = "1.0.0"
@@ -22,7 +25,15 @@ publishing {
             version = "1.0.0"
         }
     }
+
+    repositories {
+        maven {
+            name = "localOutput"
+            url = layout.buildDirectory.dir("repo").get().asFile.toURI()
+        }
+    }
 }
+
 
 dependencies {
     // JSON serialization/deserialization
@@ -48,3 +59,8 @@ jmh {
     iterations.set(5)
     fork.set(1)
 }
+
+//tasks.register("forcePublish") {
+//    dependsOn("publishMavenJavaPublicationToMavenLocal")
+//}
+

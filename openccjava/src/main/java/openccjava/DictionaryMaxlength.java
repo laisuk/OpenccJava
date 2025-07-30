@@ -24,8 +24,18 @@ import java.util.*;
  *     <li>{@code dict}: key-value pairs of source→target</li>
  *     <li>{@code maxLength}: the longest phrase/key length</li>
  * </ul>
+ * Holds multiple dictionary entries, each with a defined maximum key length.
+ * Used for efficient longest-match text conversion.
  */
 public class DictionaryMaxlength {
+    /**
+     * Constructs an empty {@code DictionaryMaxlength} instance.
+     * All dictionary entries must be assigned manually.
+     */
+    public DictionaryMaxlength() {
+        // No-op constructor for deserialization or manual setup
+    }
+
     /**
      * Represents a dictionary entry with mapping data and max phrase length.
      */
@@ -50,7 +60,10 @@ public class DictionaryMaxlength {
         }
 
         /**
-         * Constructs a dictionary entry with data and computed max length
+         * Constructs a new dictionary entry.
+         *
+         * @param dict      The dictionary mapping strings.
+         * @param maxLength The maximum key length in the dictionary.
          */
         public DictEntry(Map<String, String> dict, int maxLength) {
             this.dict = dict;
@@ -59,21 +72,78 @@ public class DictionaryMaxlength {
     }
 
     // Dictionary fields (populated via JSON or fallback loading)
+    // Simplified to Traditional
+    /**
+     * Simplified character mappings.
+     */
     public DictEntry st_characters;
+    /**
+     * Simplified phrase mappings.
+     */
     public DictEntry st_phrases;
+
+    // Traditional to Simplified
+    /**
+     * Traditional character mappings.
+     */
     public DictEntry ts_characters;
+    /**
+     * Traditional phrase mappings.
+     */
     public DictEntry ts_phrases;
+
+    // Traditional to Taiwan
+    /**
+     * Taiwan phrase mappings.
+     */
     public DictEntry tw_phrases;
+    /**
+     * Taiwan phrase reverse mappings.
+     */
     public DictEntry tw_phrases_rev;
+    /**
+     * Taiwan variant mappings.
+     */
     public DictEntry tw_variants;
+    /**
+     * Taiwan variant reverse mappings.
+     */
     public DictEntry tw_variants_rev;
+    /**
+     * Taiwan variant reverse phrase mappings.
+     */
     public DictEntry tw_variants_rev_phrases;
+
+    // Hong Kong variants
+    /**
+     * Hong Kong variant mappings.
+     */
     public DictEntry hk_variants;
+    /**
+     * Hong Kong variant reverse mappings.
+     */
     public DictEntry hk_variants_rev;
+    /**
+     * Hong Kong variant reverse phrase mappings.
+     */
     public DictEntry hk_variants_rev_phrases;
+
+    // Japanese Shinjitai
+    /**
+     * Japanese Shinjitai character mappings.
+     */
     public DictEntry jps_characters;
+    /**
+     * Japanese Shinjitai phrase mappings.
+     */
     public DictEntry jps_phrases;
+    /**
+     * Japanese variant mappings.
+     */
     public DictEntry jp_variants;
+    /**
+     * Japanese variant reverse mappings.
+     */
     public DictEntry jp_variants_rev;
 
     /**
