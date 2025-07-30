@@ -10,19 +10,23 @@ java {
 }
 
 group = "com.github.laisuk"
-version = "1.0.1"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
 }
 
+tasks.withType<Javadoc> {
+    options.encoding = "UTF-8"
+}
+
 publishing {
     publications {
-        create<MavenPublication>("mavenJava") {
+        create<MavenPublication>("maven") {
             from(components["java"])
             groupId = "com.github.laisuk"
             artifactId = "openccjava"
-            version = "1.0.1"
+            version = "1.0.0"
         }
     }
 }
