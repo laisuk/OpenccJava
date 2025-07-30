@@ -1,5 +1,7 @@
 # OpenccJava
 
+[![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
+
 **Java** port of **OpenCC** with **Office/EPUB** document support and **CLI** tools.
 
 ## Features

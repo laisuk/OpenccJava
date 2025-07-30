@@ -1,13 +1,24 @@
 plugins {
     java
+    id("java-library")
+    id("maven-publish")
     id("me.champeau.jmh") version "0.7.3"
 }
+
 
 group = "io.github.laisuk"
 version = "1.0.0"
 
 repositories {
     mavenCentral()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+        }
+    }
 }
 
 dependencies {
