@@ -17,8 +17,6 @@ dependencies {
     // Core CLI parser
     implementation("info.picocli:picocli:4.7.7")
     annotationProcessor("info.picocli:picocli-codegen:4.7.7")
-
-
 }
 
 application {
@@ -43,7 +41,7 @@ jmh {
 
 distributions {
     main {
-        distributionBaseName.set("openccjavacli")
+        distributionBaseName.set("OpenccJavaCli")
         contents {
             // Include README.md into docs/
             from("../../README.md") {

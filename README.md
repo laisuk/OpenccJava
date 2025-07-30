@@ -17,6 +17,104 @@
 
 Reusable Java library for programmatic conversion.
 
+## 🚀 Installation / Setup
+
+### Option 1: Use with [JitPack](https://jitpack.io)
+
+#### ➕ Gradle
+
+**Groovy**:
+
+```groovy
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'com.github.laisuk:OpenccJava:openccjava-v1.0.0' // or replace with latest tag
+}
+
+```
+
+**Kotlin**:
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    implementation("com.github.laisuk:OpenccJava:openccjava-v1.0.0") // replace with latest tag if needed
+}
+
+```
+
+#### ➕ Maven
+
+```xml
+
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+<dependency>
+    <groupId>com.github.laisuk</groupId>
+    <artifactId>OpenccJava</artifactId>
+    <version>openccjava-v1.0.0</version>
+</dependency>
+</dependencies>
+```
+
+> 📝 Replace `openccjava-v1.0.0` with the latest [tag](https://github.com/laisuk/OpenccJava/tags) if needed.
+
+### Option 2: Clone and Build Locally
+
+```bash
+git clone https://github.com/laisuk/OpenccJava.git
+cd OpenccJava
+./gradlew build
+```
+
+- Built `.jar` will be in `openccjava/build/libs/`.
+- CLI tools are built in `openccjavacli/build/libs/`.
+
+### Option 3: Local Drop-In Module
+
+If you don’t want to rely on JitPack:
+
+1. Copy the `openccjava/` folder into your own project.
+2. Edit settings.gradle:
+
+```groovy
+include("openccjava")
+```
+
+1. Add to your dependencies:
+
+```groovy
+implementation project(":openccjava")
+```
+
+That’s it! No Internet required, no JARs to manage.
+
+### 🧩 Required Dependencies
+
+`OpenccJava` uses the following libraries:
+
+- [Jackson Core](https://github.com/FasterXML/jackson-core)
+- [Jackson Databind](https://github.com/FasterXML/jackson-databind)
+
+These are automatically included via Gradle or JitPack.  
+If you use `OpenCC` in a modular or standalone context, ensure these are present on the classpath.
+
+---
+
 ## 📖 OpenccJava API Usage
 
 `OpenCC` provides conversion between Simplified and Traditional Chinese (and variants) using configurable dictionaries.
@@ -129,7 +227,7 @@ silent.
 
 ---
 
-### `opencccli`
+### `openccjavacli`
 
 Command-line tool based on `openccjava`.
 
@@ -139,16 +237,16 @@ Command-line tool based on `openccjava`.
 ./gradlew distZip
 ```
 
-Zip file will be created in: `build/distributions/opencccli-<version>.zip`
+Zip file will be created in: `openccjavacli/build/distributions/openccjavacli-<version>.zip`
 
 #### Run (after extracting)
 
 ```bash
-bin/OpenccJava.bat convert -c s2t -i input.txt -o output.txt
+bin/OpenccJavaCli.bat convert -c s2t -i input.txt -o output.txt
 ```
 
 ```bash
-OpenccJava convert --help                                                           
+bin/OpenccJavaCli convert --help                                                           
 Usage: opencccli convert [-hpV] [--list-configs] -c=<conversion> [-i=<file>]
                          [--in-enc=<encoding>] [-o=<file>]
                          [--out-enc=<encoding>]
@@ -168,11 +266,11 @@ Convert plain text using OpenccJava
 #### Office document conversion:
 
 ```bash
-bin/OpenccJava.bat office -c s2t -i book.docx -o book_converted.docx
+bin/OpenccJavaCli.bat office -c s2t -i book.docx -o book_converted.docx
 ```
 
 ```bash
-OpenccJava office --help 
+bin/OpenccJavaCli office --help 
 Usage: opencccli office [-hpV] [--auto-ext] [--[no-]keep-font] -c=<conversion>
                         [--format=<format>] -i=<file> [-o=<file>]
 Convert Office documents using OpenccJava
@@ -203,7 +301,7 @@ Convert Office documents using OpenccJava
 Generate JSON dictionary from raw `dicts/*.txt`
 
 ```bash
-OpenccJava dictgen --help
+OpenccJavaCli dictgen --help
 Usage: opencccli dictgen [-hV] [-f=<format>] [-o=<filename>]
 Generate dictionary for OpenccJava
   -f, --format=<format>     Dictionary format: [json]
@@ -231,7 +329,6 @@ This project supports parallel processing for high-performance batch conversion.
 👉 Read more: [🚀 Parallel Data Processing Notes](NOTES.md)
 
 ---
-
 
 ## Projects That Use `openccjava`
 

@@ -69,7 +69,7 @@ public class ConvertCommand implements Runnable {
                                 : inputCharset;
                     }
                     System.err.println("Input (Charset: " + inputCharset + ")");
-                    System.err.println("Input text to convert, <Ctrl+D> (Unix) <Ctrl-Z> (Windows) to submit:");
+                    System.err.println(BLUE + "Input text to convert, <Ctrl+D> (Unix) <Ctrl-Z> (Windows) to submit:" + RESET);
                 }
                 inputText = new String(System.in.readAllBytes(), inputCharset);
             }
