@@ -2,4 +2,4 @@ jdk:
   - openjdk17
 
 install:
-  - ./gradlew :openccjava:publish
+  - ./gradlew clean :openccjava:publish
