@@ -1,7 +1,6 @@
 plugins {
     java
     application
-    id("me.champeau.jmh") version "0.7.3"
 }
 
 group = "io.github.laisuk"
@@ -31,12 +30,6 @@ tasks.withType<Jar> {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-jmh {
-    warmupIterations.set(3)
-    iterations.set(5)
-    fork.set(1)
 }
 
 distributions {
