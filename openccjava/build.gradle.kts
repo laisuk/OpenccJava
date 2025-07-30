@@ -10,7 +10,7 @@ java {
 }
 
 group = "com.github.laisuk"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -22,7 +22,7 @@ publishing {
             from(components["java"])
             groupId = "com.github.laisuk"
             artifactId = "openccjava"
-            version = "1.0.0"
+            version = "1.0.1"
         }
     }
 
