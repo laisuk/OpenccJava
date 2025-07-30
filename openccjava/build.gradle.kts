@@ -16,11 +16,6 @@ repositories {
     mavenCentral()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 tasks.withType<Javadoc> {
     options.encoding = "UTF-8"
 }
@@ -34,7 +29,20 @@ publishing {
             version = "1.0.0"
         }
     }
+    repositories {
+        maven {
+            name = "localOutput"
+            url = layout.buildDirectory.dir("repo").get().asFile.toURI()
+        }
+    }
 }
+
+tasks.register<Copy>("copyToM2") {
+    dependsOn("publishMavenJavaPublicationToLocalOutputRepository")
+    from(layout.buildDirectory.dir("repo"))
+    into("${System.getProperty("user.home")}/.m2/repository")
+}
+
 
 dependencies {
     // JSON serialization/deserialization
