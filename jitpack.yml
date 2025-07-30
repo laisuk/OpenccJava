@@ -2,4 +2,5 @@ jdk:
   - openjdk17
 
 install:
+    - ./gradlew :openccjava:publishMavenJavaPublicationToLocalOutputRepository
     - ./gradlew :openccjava:copyToM2
