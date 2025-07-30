@@ -34,6 +34,3 @@ jmh {
     iterations.set(5)
     fork.set(1)
 }
-
-
-
