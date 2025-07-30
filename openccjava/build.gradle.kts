@@ -7,7 +7,7 @@ plugins {
 
 
 group = "io.github.laisuk"
-version = "1.0.0"
+version = "unspecified"
 
 repositories {
     mavenCentral()
