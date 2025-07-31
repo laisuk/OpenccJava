@@ -20,7 +20,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 }
 
-
 tasks.withType<Javadoc> {
     options.encoding = "UTF-8"
 }
@@ -47,7 +46,6 @@ tasks.register<Copy>("copyToM2") {
     from(layout.buildDirectory.dir("repo"))
     into("${System.getProperty("user.home")}/.m2/repository")
 }
-
 
 dependencies {
     // JSON serialization/deserialization
