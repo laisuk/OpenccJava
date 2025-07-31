@@ -16,6 +16,11 @@ repositories {
     mavenCentral()
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+}
+
+
 tasks.withType<Javadoc> {
     options.encoding = "UTF-8"
 }
