@@ -448,20 +448,30 @@ public class OfficeHelper {
      * @return the format-specific font extraction {@link Pattern}, or {@code null} if unsupported
      */
     private static Pattern getFontPattern(String format) {
-        return switch (format) {
-            case "docx" -> Pattern.compile("(w:(?:eastAsia|ascii|hAnsi|cs)=\")(.*?)(\")");
-
-            case "xlsx" -> Pattern.compile("(val=\")(.*?)(\")");
-
-            case "pptx" -> Pattern.compile("(typeface=\")(.*?)(\")");
-
-            case "odt", "ods", "odp" ->
-                    Pattern.compile("((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=[\"'])([^\"']+)([\"'])");
-
-            case "epub" -> Pattern.compile("(font-family\\s*:\\s*)([^;\"']+)([;\"'])?");
-
-            default -> null;
-        };
+        Pattern pattern;
+        switch (format) {
+            case "docx":
+                pattern = Pattern.compile("(w:(?:eastAsia|ascii|hAnsi|cs)=\")(.*?)(\")");
+                break;
+            case "xlsx":
+                pattern = Pattern.compile("(val=\")(.*?)(\")");
+                break;
+            case "pptx":
+                pattern = Pattern.compile("(typeface=\")(.*?)(\")");
+                break;
+            case "odt":
+            case "ods":
+            case "odp":
+                pattern = Pattern.compile("((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=[\"'])([^\"']+)([\"'])");
+                break;
+            case "epub":
+                pattern = Pattern.compile("(font-family\\s*:\\s*)([^;\"']+)([;\"'])?");
+                break;
+            default:
+                pattern = null;
+                break;
+        }
+        return pattern;
     }
 
     /**

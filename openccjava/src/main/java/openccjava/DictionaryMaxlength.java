@@ -42,7 +42,7 @@ public class DictionaryMaxlength {
     @JsonFormat(shape = JsonFormat.Shape.ARRAY)
     public static class DictEntry {
         /**
-         * Key-value dictionary (e.g., "&#x7535;&#x8111;" &rarr; "&#x8A08;&#x7B97;&#x6A5F;")
+         * Key-value dictionary (e.g., "电脑" → "計算機")
          */
         public Map<String, String> dict;
 

@@ -223,28 +223,63 @@ public class OpenCC {
             return lastError;
         }
 
-        return switch (config) {
-            case "s2t" -> s2t(input, punctuation);
-            case "t2s" -> t2s(input, punctuation);
-            case "s2tw" -> s2tw(input, punctuation);
-            case "tw2s" -> tw2s(input, punctuation);
-            case "s2twp" -> s2twp(input, punctuation);
-            case "tw2sp" -> tw2sp(input, punctuation);
-            case "s2hk" -> s2hk(input, punctuation);
-            case "hk2s" -> hk2s(input, punctuation);
-            case "t2tw" -> t2tw(input);
-            case "t2twp" -> t2twp(input);
-            case "tw2t" -> tw2t(input);
-            case "tw2tp" -> tw2tp(input);
-            case "t2hk" -> t2hk(input);
-            case "hk2t" -> hk2t(input);
-            case "t2jp" -> t2jp(input);
-            case "jp2t" -> jp2t(input);
-            default -> {
+        String result;
+        switch (config) {
+            case "s2t":
+                result = s2t(input, punctuation);
+                break;
+            case "t2s":
+                result = t2s(input, punctuation);
+                break;
+            case "s2tw":
+                result = s2tw(input, punctuation);
+                break;
+            case "tw2s":
+                result = tw2s(input, punctuation);
+                break;
+            case "s2twp":
+                result = s2twp(input, punctuation);
+                break;
+            case "tw2sp":
+                result = tw2sp(input, punctuation);
+                break;
+            case "s2hk":
+                result = s2hk(input, punctuation);
+                break;
+            case "hk2s":
+                result = hk2s(input, punctuation);
+                break;
+            case "t2tw":
+                result = t2tw(input);
+                break;
+            case "t2twp":
+                result = t2twp(input);
+                break;
+            case "tw2t":
+                result = tw2t(input);
+                break;
+            case "tw2tp":
+                result = tw2tp(input);
+                break;
+            case "t2hk":
+                result = t2hk(input);
+                break;
+            case "hk2t":
+                result = hk2t(input);
+                break;
+            case "t2jp":
+                result = t2jp(input);
+                break;
+            case "jp2t":
+                result = jp2t(input);
+                break;
+            default:
                 lastError = "Unsupported config: " + config;
-                yield lastError;
-            }
-        };
+                result = lastError;
+                break;
+        }
+
+        return result;
     }
 
     /**
@@ -264,25 +299,43 @@ public class OpenCC {
         if (configCache.containsKey(key)) return configCache.get(key);
 
         var d = dictionary;
+        DictRefs refs = null;
 
-        DictRefs refs = switch (key) {
-            case "s2t" -> new DictRefs(List.of(d.st_phrases, d.st_characters));
-            case "t2s" -> new DictRefs(List.of(d.ts_phrases, d.ts_characters));
-            case "s2tw" -> new DictRefs(List.of(d.st_phrases, d.st_characters))
-                    .withRound2(List.of(d.tw_variants));
-            case "tw2s" -> new DictRefs(List.of(d.tw_variants_rev_phrases, d.tw_variants_rev))
-                    .withRound2(List.of(d.ts_phrases, d.ts_characters));
-            case "s2twp" -> new DictRefs(List.of(d.st_phrases, d.st_characters))
-                    .withRound2(List.of(d.tw_phrases))
-                    .withRound3(List.of(d.tw_variants));
-            case "tw2sp" -> new DictRefs(List.of(d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev))
-                    .withRound2(List.of(d.ts_phrases, d.ts_characters));
-            case "s2hk" -> new DictRefs(List.of(d.st_phrases, d.st_characters))
-                    .withRound2(List.of(d.hk_variants));
-            case "hk2s" -> new DictRefs(List.of(d.hk_variants_rev_phrases, d.hk_variants_rev))
-                    .withRound2(List.of(d.ts_phrases, d.ts_characters));
-            default -> null;
-        };
+        switch (key) {
+            case "s2t":
+                refs = new DictRefs(List.of(d.st_phrases, d.st_characters));
+                break;
+            case "t2s":
+                refs = new DictRefs(List.of(d.ts_phrases, d.ts_characters));
+                break;
+            case "s2tw":
+                refs = new DictRefs(List.of(d.st_phrases, d.st_characters))
+                        .withRound2(List.of(d.tw_variants));
+                break;
+            case "tw2s":
+                refs = new DictRefs(List.of(d.tw_variants_rev_phrases, d.tw_variants_rev))
+                        .withRound2(List.of(d.ts_phrases, d.ts_characters));
+                break;
+            case "s2twp":
+                refs = new DictRefs(List.of(d.st_phrases, d.st_characters))
+                        .withRound2(List.of(d.tw_phrases))
+                        .withRound3(List.of(d.tw_variants));
+                break;
+            case "tw2sp":
+                refs = new DictRefs(List.of(d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev))
+                        .withRound2(List.of(d.ts_phrases, d.ts_characters));
+                break;
+            case "s2hk":
+                refs = new DictRefs(List.of(d.st_phrases, d.st_characters))
+                        .withRound2(List.of(d.hk_variants));
+                break;
+            case "hk2s":
+                refs = new DictRefs(List.of(d.hk_variants_rev_phrases, d.hk_variants_rev))
+                        .withRound2(List.of(d.ts_phrases, d.ts_characters));
+                break;
+            default:
+                break;
+        }
 
         if (refs != null) configCache.put(key, refs);
         return refs;

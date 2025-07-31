@@ -4,6 +4,8 @@ import openccjava.DictionaryMaxlength;
 import picocli.CommandLine.*;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.logging.Level;
@@ -78,9 +80,18 @@ public class DictgenCommand implements Runnable {
 
             System.out.print(BLUE + "Downloading: " + fileName + "... " + RESET);
 
-            try (InputStream in = new URL(fileUrl).openStream()) {
-                Files.copy(in, outputPath, StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("done");
+            try {
+                // Use URI to parse and construct the URL string
+                URI uri = new URI(fileUrl);
+                URL url = uri.toURL(); // Convert URI to URL
+
+                try (InputStream in = url.openStream()) { // Now openStream on the URL
+                    Files.copy(in, outputPath, StandardCopyOption.REPLACE_EXISTING);
+                    System.out.println("done");
+                }
+            } catch (URISyntaxException e) {
+                System.out.println("Failed to create URI for " + fileName);
+                LOGGER.warning("Failed to create URI for " + fileUrl + ": " + e.getMessage());
             } catch (IOException e) {
                 System.out.println("Failed to download " + fileName);
                 LOGGER.warning("Failed to download " + fileUrl + ": " + e.getMessage());
