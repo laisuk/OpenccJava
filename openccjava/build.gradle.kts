@@ -16,8 +16,12 @@ repositories {
     mavenCentral()
 }
 
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+//java {
+//    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+//}
+
+tasks.withType<JavaCompile> {
+    options.release = 11 // This implies sourceCompatibility and targetCompatibility
 }
 
 tasks.withType<Javadoc> {
@@ -33,19 +37,19 @@ publishing {
             version = "1.0.0"
         }
     }
-    repositories {
-        maven {
-            name = "localOutput"
-            url = layout.buildDirectory.dir("repo").get().asFile.toURI()
-        }
-    }
+//    repositories {
+//        maven {
+//            name = "localOutput"
+//            url = layout.buildDirectory.dir("repo").get().asFile.toURI()
+//        }
+//    }
 }
 
-tasks.register<Copy>("copyToM2") {
-    dependsOn("publishMavenJavaPublicationToLocalOutputRepository")
-    from(layout.buildDirectory.dir("repo"))
-    into("${System.getProperty("user.home")}/.m2/repository")
-}
+//tasks.register<Copy>("copyToM2") {
+//    dependsOn("publishMavenJavaPublicationToLocalOutputRepository")
+//    from(layout.buildDirectory.dir("repo"))
+//    into("${System.getProperty("user.home")}/.m2/repository")
+//}
 
 dependencies {
     // JSON serialization/deserialization
