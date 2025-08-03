@@ -9,6 +9,7 @@ java {
     withSourcesJar()
 }
 
+
 group = "com.github.laisuk"
 version = "1.0.0"
 
@@ -74,4 +75,31 @@ jmh {
     warmupIterations.set(3)
     iterations.set(5)
     fork.set(1)
+}
+
+// Fat JAR generation using plain Jar task (manual approach)
+tasks.register<Jar>("fatJar") {
+    group = "build"
+    description = "Assembles a fat JAR containing the main classes and all dependencies."
+
+    archiveBaseName.set("openccjava-fat")
+    archiveClassifier.set("") // Optional: "" or "all"
+    archiveVersion.set(project.version.toString())
+
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get()
+            .filter { it.name.endsWith(".jar") }
+            .map { zipTree(it) }
+    })
+
+    manifest {
+        attributes["Implementation-Title"] = "OpenccJava"
+        attributes["Implementation-Version"] = version
+        attributes["Automatic-Module-Name"] = "openccjava"
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
