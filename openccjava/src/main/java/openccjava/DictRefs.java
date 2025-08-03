@@ -2,7 +2,6 @@ package openccjava;
 
 import openccjava.DictionaryMaxlength.DictEntry;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
