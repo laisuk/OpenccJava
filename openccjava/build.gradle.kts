@@ -1,6 +1,7 @@
 plugins {
     id("java-library")
     id("maven-publish")
+    id("signing")
     id("me.champeau.jmh") version "0.7.3"
 }
 
@@ -9,17 +10,12 @@ java {
     withSourcesJar()
 }
 
-
 group = "com.github.laisuk"
 version = "1.0.0"
 
 repositories {
     mavenCentral()
 }
-
-//java {
-//    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
-//}
 
 tasks.withType<JavaCompile> {
     options.release = 11 // This implies sourceCompatibility and targetCompatibility
@@ -36,6 +32,30 @@ publishing {
             groupId = "com.github.laisuk"
             artifactId = "openccjava"
             version = "1.0.0"
+
+            pom {
+                name.set("OpenccJava")
+                description.set("Java implementation of OpenCC conversion and dictionary support.")
+                url.set("https://github.com/laisuk/OpenccJava")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("laisuk")
+                        name.set("Laisuk Lai")
+                        email.set("laisuk@yahoo.com")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/laisuk/OpenccJava.git")
+                    developerConnection.set("scm:git:ssh://github.com:laisuk/OpenccJava.git")
+                    url.set("https://github.com/laisuk/OpenccJava")
+                }
+            }
         }
     }
 //    repositories {
@@ -51,6 +71,11 @@ publishing {
 //    from(layout.buildDirectory.dir("repo"))
 //    into("${System.getProperty("user.home")}/.m2/repository")
 //}
+
+signing {
+    useGpgCmd()
+    sign(publishing.publications["mavenJava"])
+}
 
 dependencies {
     // JSON serialization/deserialization
@@ -102,4 +127,5 @@ tasks.register<Jar>("fatJar") {
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude("META-INF/versions/**") // 👈 prevent multiversion bloat
 }

@@ -70,3 +70,22 @@ val fatJar = tasks.register<Jar>("fatJar") {
 
     archiveClassifier.set("all")
 }
+
+val signFatJar by tasks.register<Exec>("signFatJar") {
+    group = "signing"
+    description = "Signs the fat JAR using GPG."
+
+    dependsOn(fatJar)
+
+    val fatJarFile = fatJar.get().archiveFile.get().asFile
+
+    commandLine(
+        "gpg",
+        "--armor",
+        "--batch",
+        "--yes",
+        "--detach-sign",
+        "--output", "${fatJarFile.absolutePath}.asc",
+        fatJarFile.absolutePath
+    )
+}
