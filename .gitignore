@@ -42,3 +42,6 @@ bin/
 .DS_Store
 
 .idea/
+
+# Ignore user-specific Gradle config
+gradle.properties

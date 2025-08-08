@@ -34,10 +34,10 @@ class DictionaryLibTest {
     @Test
     void testSerializeAndDeserializeJson() throws IOException {
         // Save to test file
-        original.serializeToJson(TEST_JSON_OUTPUT);
+        original.serializeToJsonNoDeps(TEST_JSON_OUTPUT);
 
         // Load again
-        DictionaryMaxlength loaded = DictionaryMaxlength.fromJson(TEST_JSON_OUTPUT);
+        DictionaryMaxlength loaded = DictionaryMaxlength.fromJsonFileNoDeps(TEST_JSON_OUTPUT);
 
         // Validate one field at least
         assertEquals(
@@ -75,7 +75,7 @@ class DictionaryLibTest {
         String outputPath = "dictionary_maxlength.json";
 
         // Serialize
-        assertDoesNotThrow(() -> dict.serializeToJson(outputPath));
+        assertDoesNotThrow(() -> dict.serializeToJsonNoDeps(outputPath));
 
         // Confirm file is written
         File file = new File(outputPath);

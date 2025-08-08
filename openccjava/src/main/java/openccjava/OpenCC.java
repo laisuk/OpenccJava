@@ -112,12 +112,12 @@ public class OpenCC {
             Path jsonPath = Path.of("dicts", "dictionary_maxlength.json");
 
             if (Files.exists(jsonPath)) {
-                this.dictionary = DictionaryMaxlength.fromJson(jsonPath.toString());
+                this.dictionary = DictionaryMaxlength.fromJsonNoDeps(jsonPath);
                 LOGGER.info("Loaded dictionary from file system.");
             } else {
                 try (InputStream in = DictionaryMaxlength.class.getResourceAsStream("/dicts/dictionary_maxlength.json")) {
                     if (in != null) {
-                        this.dictionary = DictionaryMaxlength.fromJson(in);
+                        this.dictionary = DictionaryMaxlength.fromJsonNoDeps(in);
                         LOGGER.info("Loaded dictionary from embedded resource.");
                     } else {
                         this.dictionary = DictionaryMaxlength.fromDicts();

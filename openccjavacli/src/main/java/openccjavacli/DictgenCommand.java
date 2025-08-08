@@ -52,7 +52,7 @@ public class DictgenCommand implements Runnable {
             DictionaryMaxlength dicts = DictionaryMaxlength.fromDicts(); // Uses either file or built-in
 
             if ("json".equals(format)) {
-                dicts.serializeToJson(outputPath.getAbsolutePath());
+                dicts.serializeToJsonNoDeps(outputPath.getAbsolutePath());
                 System.out.println(BLUE + "Dictionary saved in JSON format at: " + outputPath + RESET);
             }
 
