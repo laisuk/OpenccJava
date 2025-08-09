@@ -6,6 +6,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.0.1] - 2025-08-08
+
+### Changed
+
+- Dropped all Jackson JSON dependencies to reduce JAR size and improve startup time.
+- Implemented `MiniDictJson`, a minimal, schema-specific JSON parser and serializer for `DictionaryMaxlength`.
+- `DictionaryMaxlength.fromJsonNoDeps()` and related methods now use `MiniDictJson` internally.
+- `serializeToJsonNoDeps()` and `serializeToJsonStringNoDeps()` added for Jackson-free JSON export.
+- Code refactored for **JDK 11+ compatibility** (removed enhanced `switch` syntax and newer language constructs).
+- All CLI and library functions verified to work without Jackson present on the classpath.
+- Resulting JARs (`openccjava` and `openccjavacli`) are now fully self-contained and **module-info friendly**.
+
+---
+
 ## [1.0.0] - 2025-07-30
 
 ### Added

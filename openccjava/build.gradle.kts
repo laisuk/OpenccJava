@@ -125,6 +125,7 @@ signing {
     sign(publishing.publications["mavenJava"])
 }
 
+/*
 // Fat JAR generation
 tasks.register<Jar>("fatJar") {
     group = "build"
@@ -232,3 +233,4 @@ tasks.register<Exec>("verifyFatJarSig") {
         )
     }
 }
+*/

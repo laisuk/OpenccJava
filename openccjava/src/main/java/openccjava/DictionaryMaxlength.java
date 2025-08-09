@@ -455,7 +455,7 @@ public class DictionaryMaxlength {
     public void serializeToJsonNoDeps(String outputPath) throws IOException {
         try (Writer w = new BufferedWriter(
                 new OutputStreamWriter(new FileOutputStream(outputPath), StandardCharsets.UTF_8))) {
-            writeJsonNoDeps(w, /*pretty*/ true, true);
+            writeJsonNoDeps(w, /*pretty*/ true, /*sortKeys*/ true);
         }
     }
 
@@ -468,7 +468,7 @@ public class DictionaryMaxlength {
      */
     public void serializeToJsonNoDeps(Path outputPath) throws IOException {
         try (Writer w = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8)) {
-            writeJsonNoDeps(w, /*pretty*/ true, true);
+            writeJsonNoDeps(w, /*pretty*/ true, /*sortKeys*/ true);
         }
     }
 
@@ -480,8 +480,8 @@ public class DictionaryMaxlength {
      * @throws IOException if an I/O error occurs while generating the JSON
      */
     public String serializeToJsonStringNoDeps() throws IOException {
-        StringWriter sw = new StringWriter(1 << 20); // pre-size to ~1MB to reduce reallocs
-        writeJsonNoDeps(sw, /*pretty*/ false, false);
+        StringWriter sw = new StringWriter(1 << 20); // pre-size to ~1MB to reduce reallocates
+        writeJsonNoDeps(sw, /*pretty*/ false, /*sortKeys*/ false);
         return sw.toString();
     }
 
@@ -493,7 +493,7 @@ public class DictionaryMaxlength {
      */
     public String serializeToJsonStringNoDepsCompact() throws IOException {
         StringWriter sw = new StringWriter(1 << 20);
-        writeJsonNoDeps(sw, /*pretty*/ false, false);
+        writeJsonNoDeps(sw, /*pretty*/ false, /*sortKeys*/ false);
         return sw.toString();
     }
 
