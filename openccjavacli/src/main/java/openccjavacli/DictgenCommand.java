@@ -21,22 +21,44 @@ public class DictgenCommand implements Runnable {
     private String output;
 
     private static final Logger LOGGER = Logger.getLogger(DictgenCommand.class.getName());
+    private static final String GREEN = "\033[1;32m";
     private static final String BLUE = "\033[1;34m";
     private static final String RESET = "\033[0m";
 
     @Override
     public void run() {
         try {
-            File dictFolder = new File("dicts");
-            if (!dictFolder.exists() || !dictFolder.isDirectory()) {
-                System.out.print(BLUE + "Local 'dicts/' not found, proceed to download from GitHub otherwise use built-in dictionaries (Y/n): " + RESET);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                String input = reader.readLine().trim().toLowerCase();
+            Path cwd = Paths.get("").toAbsolutePath().normalize();
+            Path localDicts = cwd.resolve("dicts").normalize();
 
-                if (input.isEmpty() || input.equals("y") || input.equals("yes")) {
-                    downloadDictsFromGithub(dictFolder.toPath());
-                } else {
-                    System.out.println("Using built-in dictionaries.");
+            // Securely check for ../dicts
+            boolean hasParentDicts = false;
+            Path parentDicts = cwd.resolveSibling("dicts").normalize();
+            if (parentDicts.getParent() != null &&
+                    parentDicts.getParent().equals(cwd.getParent()) &&
+                    Files.isDirectory(parentDicts)) {
+                hasParentDicts = true;
+                System.out.println(GREEN + "Found 'dicts/' in parent: " + parentDicts + RESET);
+            }
+
+            if (Files.isDirectory(localDicts)) {
+                System.out.println(GREEN + "Using local 'dicts/' at: " + localDicts + RESET);
+            } else if (!hasParentDicts) {
+                // Neither exists — prompt to download into current directory
+                System.out.print(BLUE +
+                        "Local 'dicts/' not found (also not in '../dicts'). " +
+                        "Download from GitHub? (Y/n): " + RESET);
+
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+                    String input = reader.readLine();
+                    input = (input == null ? "" : input.trim().toLowerCase());
+                    if (input.isEmpty() || input.equals("y") || input.equals("yes")) {
+                        Files.createDirectories(localDicts);
+                        downloadDictsFromGithub(localDicts);
+                        System.out.println(GREEN + "Dictionaries downloaded to: " + localDicts + RESET);
+                    } else {
+                        System.out.println("Using built-in dictionaries (fallback).");
+                    }
                 }
             }
 
@@ -49,7 +71,8 @@ public class DictgenCommand implements Runnable {
             String outputFile = (output != null) ? output : defaultOutput;
             File outputPath = Paths.get(outputFile).toAbsolutePath().toFile();
 
-            DictionaryMaxlength dicts = DictionaryMaxlength.fromDicts(); // Uses either file or built-in
+            // Uses triple-level fallback: ./dicts → ../dicts → built-ins
+            DictionaryMaxlength dicts = DictionaryMaxlength.fromDicts();
 
             if ("json".equals(format)) {
                 dicts.serializeToJsonNoDeps(outputPath.getAbsolutePath());
