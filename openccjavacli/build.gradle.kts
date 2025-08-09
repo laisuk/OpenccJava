@@ -71,7 +71,7 @@ val fatJar = tasks.register<Jar>("fatJar") {
     archiveClassifier.set("all")
 }
 
-val signFatJar by tasks.register<Exec>("signFatJar") {
+tasks.register<Exec>("signFatJar") {
     group = "signing"
     description = "Signs the fat JAR using GPG."
 
@@ -88,4 +88,34 @@ val signFatJar by tasks.register<Exec>("signFatJar") {
         "--output", "${fatJarFile.absolutePath}.asc",
         fatJarFile.absolutePath
     )
+}
+
+tasks.register<Exec>("verifyFatJarSig") {
+    group = "signing"
+    description = "Verifies the fat JAR signature (skips if files missing)."
+
+    val jarFile: Provider<RegularFile> =
+        layout.buildDirectory.file("libs/openccjavacli-${project.version}-all.jar")
+
+    val ascFile: Provider<RegularFile> = jarFile.flatMap { rf ->
+        // wrap File -> Provider<File> before layout.file(...)
+        layout.file(provider { rf.asFile.resolveSibling(rf.asFile.name + ".asc") })
+    }
+
+    onlyIf {
+        val jar = jarFile.get().asFile
+        val asc = ascFile.get().asFile
+        if (!jar.exists() || !asc.exists()) {
+            logger.lifecycle("Skipping verify: missing ${if (!jar.exists()) jar else asc}")
+            false
+        } else true
+    }
+
+    doFirst {
+        commandLine(
+            "gpg", "--verify",
+            ascFile.get().asFile.absolutePath,
+            jarFile.get().asFile.absolutePath
+        )
+    }
 }
