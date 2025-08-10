@@ -614,9 +614,13 @@ public class DictionaryMaxlength {
         boolean firstKV = true;
 
         if (sortKeys) {
-            // Deterministic, alphabetical by key
+            // Deterministic: sort by key length (asc), then alphabetically
             String[] keys = entry.dict.keySet().toArray(new String[0]);
-            java.util.Arrays.sort(keys);
+            java.util.Arrays.sort(keys, (a, b) -> {
+                int d = a.length() - b.length();
+                return (d != 0) ? d : a.compareTo(b);
+            });
+
             for (String k : keys) {
                 if (!firstKV) {
                     w.write(",");
@@ -633,7 +637,6 @@ public class DictionaryMaxlength {
                 firstKV = false;
             }
         } else {
-            // Original iteration order (e.g., insertion order if LinkedHashMap)
             for (java.util.Map.Entry<String, String> kv : entry.dict.entrySet()) {
                 if (!firstKV) {
                     w.write(",");
@@ -650,6 +653,7 @@ public class DictionaryMaxlength {
                 firstKV = false;
             }
         }
+
 
         w.write(nl);
         w.write(ind2);
