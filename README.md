@@ -63,7 +63,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:openccjava-v1.0.0' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.0.1' // replace with latest tag
 }
 ```
 
@@ -81,7 +81,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>openccjava-v1.0.0</version>
+<version>v1.0.1</version>
 </dependency>
 ```
 
