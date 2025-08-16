@@ -110,13 +110,10 @@ That’s it! No Internet required, no JARs to manage.
 
 ### 🧩 Required Dependencies
 
-`OpenccJava` uses the following libraries:
+- `openccjava` (the core library) has **no external runtime dependencies**.
+- `openccjavacli` (the command-line tool) bundles [picocli](https://picocli.info) automatically when built with `./gradlew distZip`.
 
-- [Jackson Core](https://github.com/FasterXML/jackson-core)
-- [Jackson Databind](https://github.com/FasterXML/jackson-databind)
-
-These are automatically included via Gradle or JitPack.  
-If you use `OpenCC` in a modular or standalone context, ensure these are present on the classpath.
+👉 If you only use the library in your project (`io.github.laisuk:openccjava`), you don’t need to add anything else to your classpath.
 
 ---
 
