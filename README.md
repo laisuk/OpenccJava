@@ -22,42 +22,47 @@ Reusable Java library for programmatic conversion.
 
 ## 🚀 Installation / Setup
 
-### Option 1: Use with [JitPack](https://jitpack.io)
+### Option 1: Use from Maven Central
 
-#### ➕ Gradle
+**Gradle (Kotlin DSL):**
+```kotlin
+dependencies {
+    implementation("io.github.laisuk:openccjava:1.0.1")
+}
+```
 
-**Groovy**:
+**Gradle (Groovy):**
+```groovy
+dependencies {
+    implementation 'io.github.laisuk:openccjava:1.0.1'
+}
+```
 
+**Maven:**
+```xml
+<dependency>
+  <groupId>io.github.laisuk</groupId>
+  <artifactId>openccjava</artifactId>
+  <version>1.0.1</version>
+</dependency>
+```
+
+### Option 2: Use with [JitPack](https://jitpack.io)
+(Alternative if you want to build directly from GitHub tags)
+
+**Gradle:**
 ```groovy
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
 }
-
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:openccjava-v1.0.0' // or replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:openccjava-v1.0.0' // replace with latest tag
 }
-
 ```
 
-**Kotlin**:
-
-```kotlin
-repositories {
-    mavenCentral()
-    maven("https://jitpack.io")
-}
-
-dependencies {
-    implementation("com.github.laisuk:OpenccJava:openccjava-v1.0.0") // replace with latest tag if needed
-}
-
-```
-
-#### ➕ Maven
-
+**Maven:**
 ```xml
-
 <repositories>
     <repository>
         <id>jitpack.io</id>
@@ -65,18 +70,15 @@ dependencies {
     </repository>
 </repositories>
 
-<dependencies>
 <dependency>
-    <groupId>com.github.laisuk</groupId>
-    <artifactId>OpenccJava</artifactId>
-    <version>openccjava-v1.0.0</version>
+  <groupId>com.github.laisuk</groupId>
+  <artifactId>OpenccJava</artifactId>
+  <version>openccjava-v1.0.0</version>
 </dependency>
-</dependencies>
 ```
 
-> 📝 Replace `openccjava-v1.0.0` with the latest [tag](https://github.com/laisuk/OpenccJava/tags) if needed.
 
-### Option 2: Clone and Build Locally
+### Option 3: Clone and Build Locally
 
 ```bash
 git clone https://github.com/laisuk/OpenccJava.git
