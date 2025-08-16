@@ -497,6 +497,24 @@ public class DictionaryMaxlength {
         return sw.toString();
     }
 
+    /**
+     * Serializes this {@code DictionaryMaxlength} to a compact JSON file (UTF-8), no external libraries.
+     * <p>
+     * Compact form = no indentation/newlines, natural key order (sortKeys=false).
+     *
+     * @param outputPath destination path (will be created or truncated)
+     * @throws IOException if writing fails
+     */
+    public void serializeToJsonFileNoDepsCompact(Path outputPath) throws IOException {
+        // Use a buffered UTF-8 writer for speed and correctness.
+        try (Writer w = new BufferedWriter(
+                new OutputStreamWriter(Files.newOutputStream(outputPath), StandardCharsets.UTF_8),
+                1 << 20)) {
+            writeJsonNoDeps(w, /* pretty */ false, /* sortKeys */ false);
+            w.flush();
+        }
+    }
+
     // --- Implementation ----------------------------------------------------------
 
     /**

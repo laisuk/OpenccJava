@@ -20,6 +20,9 @@ public class DictgenCommand implements Runnable {
     @Option(names = {"-o", "--output"}, paramLabel = "<filename>", description = "Output filename")
     private String output;
 
+    @Option(names = {"-c", "--compact"}, description = "Enable non-indented JSON output (default: false)")
+    private boolean compact;
+
     private static final Logger LOGGER = Logger.getLogger(DictgenCommand.class.getName());
     private static final String GREEN = "\033[1;32m";
     private static final String BLUE = "\033[1;34m";
@@ -69,13 +72,19 @@ public class DictgenCommand implements Runnable {
             }
 
             String outputFile = (output != null) ? output : defaultOutput;
-            File outputPath = Paths.get(outputFile).toAbsolutePath().toFile();
+            Path outputPath = Paths.get(outputFile).toAbsolutePath();
 
             // Uses triple-level fallback: ./dicts → ../dicts → built-ins
             DictionaryMaxlength dicts = DictionaryMaxlength.fromDicts();
 
             if ("json".equals(format)) {
-                dicts.serializeToJsonNoDeps(outputPath.getAbsolutePath());
+                if (compact) {
+                    // Minified (no indentation/newlines), UTF-8, no external deps
+                    dicts.serializeToJsonFileNoDepsCompact(outputPath);
+                } else {
+                    // Existing pretty/default path (keep prior behavior)
+                    dicts.serializeToJsonNoDeps(outputPath);
+                }
                 System.out.println(BLUE + "Dictionary saved in JSON format at: " + outputPath + RESET);
             }
 
