@@ -1,5 +1,6 @@
 # OpenccJava
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.laisuk/openccjava.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.laisuk/openccjava)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
 **Java** port of **OpenCC** with **Office/EPUB** document support and **CLI** tools.

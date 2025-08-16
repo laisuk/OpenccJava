@@ -1,3 +1,9 @@
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.util.Base64
+
 plugins {
     id("java-library")
     id("maven-publish")
@@ -73,13 +79,13 @@ publishing {
 
             pom {
                 name.set("OpenccJava")
-                description.set("Java implementation of OpenCC conversion and dictionary support.")
+                description.set("Java implementation of Traditional and Simplified Chinese text conversion with dictionary support.")
                 url.set("https://github.com/laisuk/OpenccJava")
 
                 licenses {
                     license {
                         name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
+                        url.set("https://raw.githubusercontent.com/laisuk/OpenccJava/master/LICENSE")
                     }
                 }
 
@@ -92,10 +98,27 @@ publishing {
                 }
 
                 scm {
-                    connection.set("scm:git:git://github.com/laisuk/OpenccJava.git")
-                    developerConnection.set("scm:git:ssh://github.com:laisuk/OpenccJava.git")
+                    connection.set("scm:git:https://github.com/laisuk/OpenccJava.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/laisuk/OpenccJava.git")
                     url.set("https://github.com/laisuk/OpenccJava")
                 }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "ossrh-staging-api"
+            // Staging for releases:
+            url = uri(
+                if (version.toString().endsWith("SNAPSHOT"))
+                    "https://central.sonatype.com/repository/maven-snapshots/"
+                else
+                    "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+            )
+            credentials {
+                username = System.getenv("OSSRH_USERNAME") ?: findProperty("ossrhUsername") as String?
+                password = System.getenv("OSSRH_PASSWORD") ?: findProperty("ossrhPassword") as String?
             }
         }
     }
@@ -125,112 +148,37 @@ signing {
     sign(publishing.publications["mavenJava"])
 }
 
-/*
-// Fat JAR generation
-tasks.register<Jar>("fatJar") {
-    group = "build"
-    description = "Assembles a fat JAR containing main classes and all dependencies."
 
-    archiveBaseName.set("openccjava-fat")
-    archiveClassifier.set("") // keep as main artifact name
-    archiveVersion.set(project.version.toString())
+val portalUser = (System.getenv("OSSRH_USERNAME") ?: findProperty("ossrhUsername") as String?)
+val portalPass = (System.getenv("OSSRH_PASSWORD") ?: findProperty("ossrhPassword") as String?)
+val portalAuth = Base64.getEncoder().encodeToString("${portalUser}:${portalPass}".toByteArray())
 
-    // Reproducible builds
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
+// Use your root namespace (groupId root), e.g. "io.github.laisuk"
+val portalNamespace = "io.github.laisuk"
 
-    // Include our own compiled outputs
-    from(sourceSets.main.get().output)
-
-    // Unpack all runtime deps into the fat jar
-    dependsOn(configurations.runtimeClasspath)
-    from({
-        configurations.runtimeClasspath.get()
-            .filter { it.name.endsWith(".jar") }
-            .map { zipTree(it) }
-    })
-
-    // Prevent JPMS hijack + remove broken signatures from shaded deps
-    // - Strip module descriptors (ours and from deps, including MRJAR)
-    // - Strip signature files that become invalid when shading
-    exclude(
-        "module-info.class",
-        "META-INF/versions/**/module-info.class",
-        "META-INF/*.SF",
-        "META-INF/*.DSA",
-        "META-INF/*.RSA"
-    )
-
-    // Optional: if you don't need multi-release class variants, keep this.
-    // If you *do* need them, remove the next line.
-    exclude("META-INF/versions/**")
-
-    // Services: if you rely on ServiceLoader, consider merging service files.
-    // With plain Jar we usually just keep first occurrence:
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    manifest {
-        attributes(
-            "Implementation-Title" to "OpenccJava",
-            "Implementation-Version" to project.version.toString(),
-            "Automatic-Module-Name" to "io.github.laisuk.openccjava"
-        )
+// Triggers the Portal to ingest the staging upload so it shows up in central.sonatype.com
+tasks.register("uploadToPortal") {
+    group = "publishing"
+    description = "Notify Central Portal to ingest the last staging upload"
+    doLast {
+        require(!portalUser.isNullOrBlank() && !portalPass.isNullOrBlank()) {
+            "Missing OSSRH portal credentials (OSSRH_USERNAME/OSSRH_PASSWORD or ossrhUsername/ossrhPassword)."
+        }
+        val url = "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/$portalNamespace"
+        val client = HttpClient.newHttpClient()
+        val req = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Authorization", "Bearer $portalAuth")
+            .POST(HttpRequest.BodyPublishers.noBody())
+            .build()
+        val resp = client.send(req, HttpResponse.BodyHandlers.ofString())
+        if (resp.statusCode() !in 200..299) {
+            throw RuntimeException("Portal upload failed: ${resp.statusCode()} ${resp.body()}")
+        } else {
+            println("Portal upload ok: ${resp.statusCode()}")
+        }
     }
 }
 
-// (Optional) make `gradlew build` produce the fat jar by default:
-// tasks.named("build") { dependsOn("fatJar") }
-
-// Sign fatjar
-val signFatJar by tasks.register<Exec>("signFatJar") {
-    group = "signing"
-    description = "Signs the existing fat JAR with GPG (does not build it)."
-
-    // This is just a path to the file; task won't try to build it.
-    val jarFile = layout.buildDirectory.file("libs/openccjava-fat-${project.version}.jar")
-
-    // Up-to-date tracking
-    inputs.file(jarFile)
-    outputs.file(jarFile.map { file(it.asFile.absolutePath + ".asc") })
-
-    commandLine(
-        "gpg",
-        "--armor",
-        "--batch",
-        "--yes",
-        "--detach-sign",
-        "--output", jarFile.map { it.asFile.absolutePath + ".asc" }.get(),
-        jarFile.get().asFile.absolutePath
-    )
-}
-
-tasks.register<Exec>("verifyFatJarSig") {
-    group = "signing"
-    description = "Verifies the fat JAR signature (skips if files missing)."
-
-    val jarFile: Provider<RegularFile> =
-        layout.buildDirectory.file("libs/openccjava-fat-${project.version}.jar")
-
-    val ascFile: Provider<RegularFile> = jarFile.flatMap { rf ->
-        // wrap File -> Provider<File> before layout.file(...)
-        layout.file(provider { rf.asFile.resolveSibling(rf.asFile.name + ".asc") })
-    }
-
-    onlyIf {
-        val jar = jarFile.get().asFile
-        val asc = ascFile.get().asFile
-        if (!jar.exists() || !asc.exists()) {
-            logger.lifecycle("Skipping verify: missing ${if (!jar.exists()) jar else asc}")
-            false
-        } else true
-    }
-
-    doFirst {
-        commandLine(
-            "gpg", "--verify",
-            ascFile.get().asFile.absolutePath,
-            jarFile.get().asFile.absolutePath
-        )
-    }
-}
-*/
+// Typical CI sequence: publish → uploadToPortal
+tasks.named("publish") { finalizedBy("uploadToPortal") }
