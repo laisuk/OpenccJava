@@ -151,7 +151,7 @@ signing {
 
 val portalUser = (System.getenv("OSSRH_USERNAME") ?: findProperty("ossrhUsername") as String?)
 val portalPass = (System.getenv("OSSRH_PASSWORD") ?: findProperty("ossrhPassword") as String?)
-val portalAuth = Base64.getEncoder().encodeToString("${portalUser}:${portalPass}".toByteArray())
+val portalAuth: String = Base64.getEncoder().encodeToString("${portalUser}:${portalPass}".toByteArray())
 
 // Use your root namespace (groupId root), e.g. "io.github.laisuk"
 val portalNamespace = "io.github.laisuk"
