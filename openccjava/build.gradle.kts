@@ -124,20 +124,25 @@ publishing {
     }
 
     // Optional: publish to local repo directory (for testing)
+   /*
     repositories {
         maven {
             name = "localOutput"
             url = layout.buildDirectory.dir("repo").get().asFile.toURI()
         }
     }
+    */
 }
 
 // Optional: Copy to ~/.m2/repository after publishing
+/*
+
 tasks.register<Copy>("copyToM2") {
     dependsOn("publishMavenJavaPublicationToLocalOutputRepository")
     from(layout.buildDirectory.dir("repo"))
     into("${System.getProperty("user.home")}/.m2/repository")
 }
+*/
 
 //signing {
 //    useGpgCmd()
