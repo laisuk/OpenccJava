@@ -25,6 +25,7 @@ Reusable Java library for programmatic conversion.
 ### Option 1: Use from Maven Central
 
 **Gradle (Kotlin DSL):**
+
 ```kotlin
 dependencies {
     implementation("io.github.laisuk:openccjava:1.0.1")
@@ -32,6 +33,7 @@ dependencies {
 ```
 
 **Gradle (Groovy):**
+
 ```groovy
 dependencies {
     implementation 'io.github.laisuk:openccjava:1.0.1'
@@ -39,18 +41,22 @@ dependencies {
 ```
 
 **Maven:**
+
 ```xml
+
 <dependency>
-  <groupId>io.github.laisuk</groupId>
-  <artifactId>openccjava</artifactId>
-  <version>1.0.1</version>
+    <groupId>io.github.laisuk</groupId>
+    <artifactId>openccjava</artifactId>
+    <version>1.0.1</version>
 </dependency>
 ```
 
 ### Option 2: Use with [JitPack](https://jitpack.io)
+
 (Alternative if you want to build directly from GitHub tags)
 
 **Gradle:**
+
 ```groovy
 repositories {
     mavenCentral()
@@ -62,7 +68,9 @@ dependencies {
 ```
 
 **Maven:**
+
 ```xml
+
 <repositories>
     <repository>
         <id>jitpack.io</id>
@@ -71,12 +79,11 @@ dependencies {
 </repositories>
 
 <dependency>
-  <groupId>com.github.laisuk</groupId>
-  <artifactId>OpenccJava</artifactId>
-  <version>openccjava-v1.0.0</version>
+<groupId>com.github.laisuk</groupId>
+<artifactId>OpenccJava</artifactId>
+<version>openccjava-v1.0.0</version>
 </dependency>
 ```
-
 
 ### Option 3: Clone and Build Locally
 
@@ -111,9 +118,11 @@ That’s it! No Internet required, no JARs to manage.
 ### 🧩 Required Dependencies
 
 - `openccjava` (the core library) has **no external runtime dependencies**.
-- `openccjavacli` (the command-line tool) bundles [picocli](https://picocli.info) automatically when built with `./gradlew distZip`.
+- `openccjavacli` (the command-line tool) bundles [picocli](https://picocli.info) automatically when built with
+  `./gradlew distZip`.
 
-👉 If you only use the library in your project (`io.github.laisuk:openccjava`), you don’t need to add anything else to your classpath.
+👉 If you only use the library in your project (`io.github.laisuk:openccjava`), you don’t need to add anything else to
+your classpath.
 
 ---
 
