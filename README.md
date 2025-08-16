@@ -60,7 +60,7 @@ dependencies {
 ```groovy
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
+    maven { url = uri("https://jitpack.io") }
 }
 dependencies {
     implementation 'com.github.laisuk:OpenccJava:v1.0.1' // replace with latest tag
