@@ -2,6 +2,6 @@ jdk:
   - openjdk11
 
 install:
-    - ./gradlew :openccjava:publishMavenJavaPublicationToLocalOutputRepository
+    - ./gradlew Psigning.skip=true :openccjava:publishMavenJavaPublicationToLocalOutputRepository
     - ./gradlew :openccjava:copyToM2
 #  - ./gradlew -Psigning.skip=true publishToMavenLocal
