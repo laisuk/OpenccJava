@@ -139,9 +139,18 @@ tasks.register<Copy>("copyToM2") {
     into("${System.getProperty("user.home")}/.m2/repository")
 }
 
+//signing {
+//    useGpgCmd()
+//    sign(publishing.publications["mavenJava"])
+//}
+
 signing {
     useGpgCmd()
-    sign(publishing.publications["mavenJava"])
+    // Only sign if we’re not publishing locally
+    val isLocal = gradle.startParameter.taskNames.any { it.contains("publishToMavenLocal") || it.contains("LocalOutput") }
+    if (!isLocal) {
+        sign(publishing.publications["mavenJava"])
+    }
 }
 
 val portalUser = (System.getenv("OSSRH_USERNAME") ?: findProperty("ossrhUsername") as String?)
