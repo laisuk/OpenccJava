@@ -3,7 +3,8 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.laisuk/openccjava.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.laisuk/openccjava)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
-**Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB** document support and **CLI** tools.
+**Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB** document
+support and **CLI** tools.
 
 ## Features
 
@@ -325,15 +326,48 @@ Generate dictionary for OpenccJava
   -V, --version             Print version information and exit.
 ```
 
-## Encoding Notes
+---
 
-CLI console input/output on some non UTF-8 encoded console:
+## 🧾 Encodings (Charsets)
 
-- On **Windows Simplified Chinese**, use:  
-  `--in-enc=GBK --out-enc=GBK`
-- On **Traditional Chinese Windows**, use:  
-  `--in-enc=BIG5 --out-enc=BIG5`
-- UTF-8 terminals (Linux/macOS/Windows Terminal with `chcp 65001`) work without flags.
+- **Linux/macOS**: Terminals are UTF-8 by default. You usually don’t need to set anything.
+- **Windows**: The console isn’t always UTF-8. If you’re piping or using non-UTF-8 files, set encodings explicitly.
+
+### CLI flags (recommended)
+
+- `--in-enc <name>`   : Charset for reading input files (default: UTF-8)
+- `--out-enc <name>`  : Charset for writing output files (default: UTF-8)
+- `--con-enc <name>`  : Charset for *console* stdin/stdout on Windows (default: UTF-8)
+
+> The charset `<name>` is any value accepted by Java’s `Charset.forName(...)`.  
+> Names are **case-insensitive** and aliases are supported.
+
+#### Common charsets (quick list)
+
+- **Unicode**: `UTF-8`, `UTF-16`, `UTF-16LE`, `UTF-16BE`
+- **Chinese (Traditional/Simplified)**: `Big5`, `Big5-HKSCS`, `GBK`, `GB18030`, `GB2312`
+- **Japanese**: `Shift_JIS`, `windows-31j` (aka MS932), `EUC-JP`, `ISO-2022-JP`
+- **Korean**: `EUC-KR`, `MS949` (aka `x-windows-949`)
+- **SE Asia**: `TIS-620` (Thai), `windows-1258` (Vietnamese)
+- **Cyrillic**: `windows-1251`, `KOI8-R`, `KOI8-U`, `ISO-8859-5`
+- **Western Europe**: `ISO-8859-1`, `windows-1252`, `ISO-8859-15`
+- **Others (selected)**: `ISO-8859-2/3/4/7/8/9/13/16`, `windows-1250/1253/1254/1255/1256/1257`
+
+> Tip: `GB2312` is commonly an alias handled via `EUC-CN`/`GBK` on modern JDKs. Prefer `GBK` or `GB18030`.
+
+### Examples
+
+```bash
+# Linux/macOS (files)
+openccjavacli convert -c t2s -i in_big5.txt --in-enc Big5 -o out_utf8.txt --out-enc UTF-8
+
+# Windows (pipe Big5 into the tool, keep console in GBK)
+Get-Content .\in_big5.txt -Encoding Big5 | openccjavacli.bat convert -c t2s -p --con-enc GBK
+
+# Force UTF-8 console on Windows (PowerShell 7+)
+$OutputEncoding = [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+openccjavacli.bat convert -c s2t -p --con-enc UTF-8
+```
 
 ---
 
