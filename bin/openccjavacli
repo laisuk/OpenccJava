@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+JRE=java
+# Pick the newest JAR from build/libs
+JAR=$(ls -t openccjavacli/build/libs/openccjavacli-*.jar | head -n 1)
+LIB="lib/*"
+
+if [[ ! -f "$JAR" ]]; then
+  echo "Error: no JAR found in openccjavacli/build/libs/"
+  exit 1
+fi
+
+"$JRE" -cp "$JAR:$LIB" openccjavacli.Main "$@"
