@@ -139,7 +139,7 @@ graalvmNative {
         named("main") {
             imageName.set("openccjavacli")
             // Build args: fast startup, useful stacktraces; add -Ob during dev for quicker builds.
-            buildArgs.addAll("--no-fallback", "-H:+ReportExceptionStackTraces")
+            buildArgs.addAll("--no-fallback", "-H:+ReportExceptionStackTraces", "-H:+AddAllCharsets")
 
             // Embed resources: autodetect everything under src/main/resources,
             // and explicitly include our dicts (regex, not glob).
@@ -193,4 +193,8 @@ tasks.register<Zip>("nativeDistZip") {
 
     // docs
     from(rootProject.file("README.md")) { into("docs") }
+
+    from("dicts") {
+        into("dicts")
+    }
 }

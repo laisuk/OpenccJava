@@ -258,11 +258,15 @@ bin/OpenccJavaCli.bat convert -c s2t -i input.txt -o output.txt
 
 ```bash
 bin/OpenccJavaCli convert --help                                                           
-Usage: opencccli convert [-hpV] [--list-configs] -c=<conversion> [-i=<file>]
-                         [--in-enc=<encoding>] [-o=<file>]
-                         [--out-enc=<encoding>]
+Usage: openccjavacli convert [-hpV] [--list-configs] -c=<conversion>
+                             [--con-enc=<encoding>] [-i=<file>]
+                             [--in-enc=<encoding>] [-o=<file>]
+                             [--out-enc=<encoding>]
 Convert plain text using OpenccJava
   -c, --config=<conversion>  Conversion configuration
+      --con-enc=<encoding>   Console encoding for interactive mode. Ignored if
+                               not attached to a terminal. Common <encoding>:
+                               UTF-8, GBK, Big5
   -h, --help                 Show this help message and exit.
   -i, --input=<file>         Input file
       --in-enc=<encoding>    Input encoding

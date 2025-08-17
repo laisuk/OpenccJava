@@ -6,7 +6,6 @@ import picocli.CommandLine.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.Objects;
 import java.util.logging.*;
 
 /**
@@ -35,9 +34,18 @@ public class ConvertCommand implements Runnable {
     @Option(names = {"--out-enc"}, paramLabel = "<encoding>", defaultValue = "UTF-8", description = "Output encoding")
     private String outEncoding;
 
+    @Option(
+            names = "--con-enc",
+            paramLabel = "<encoding>",
+            description = "Console encoding for interactive mode. Ignored if not attached to a terminal. Common <encoding>: UTF-8, GBK, Big5",
+            defaultValue = "UTF-8"
+    )
+    private String consoleEncoding;
+
     private static final Logger LOGGER = Logger.getLogger(ConvertCommand.class.getName());
     private static final String BLUE = "\033[1;34m";
     private static final String RESET = "\033[0m";
+
 
     @Override
     public void run() {
@@ -58,17 +66,15 @@ public class ConvertCommand implements Runnable {
             if (input != null) {
                 inputText = Files.readString(input.toPath(), Charset.forName(inEncoding));
             } else {
-                Charset inputCharset = Charset.forName(inEncoding);
+                Charset inputCharset = Charset.forName(normEnc(inEncoding));
                 if (System.console() != null) {
+                    inputCharset = Charset.forName(normEnc(consoleEncoding));
                     if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                        System.err.println("Notes: If your terminal shows garbage characters, try adding:");
-                        System.err.println("       --in-enc=GBK --out-enc=GBK   (Simplified Chinese Windows)");
-                        System.err.println("       --in-enc=BIG5 --out-enc=BIG5 (Traditional Chinese Windows)");
-                        inputCharset = Objects.equals(inEncoding, "UTF-8")
-                                ? Charset.forName("GBK")
-                                : inputCharset;
+                        System.err.println("Notes: If your terminal shows garbage characters, try setting:");
+                        System.err.println("       --con-enc=GBK (Simplified Chinese Windows)");
+                        System.err.println("       --con-enc=BIG5 (Traditional Chinese Windows)");
                     }
-                    System.err.println("Input (Charset: " + inputCharset + ")");
+                    System.err.println("Input (Charset: " + inputCharset.name() + ")");
                     System.err.println(BLUE + "Input text to convert, <Ctrl+D> (Unix) <Ctrl-Z> (Windows) to submit:" + RESET);
                 }
                 inputText = new String(System.in.readAllBytes(), inputCharset);
@@ -79,13 +85,8 @@ public class ConvertCommand implements Runnable {
             if (output != null) {
                 Files.writeString(output.toPath(), outputText, Charset.forName(outEncoding));
             } else {
-                Charset outputCharset = Charset.forName(outEncoding);
-                if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                    outputCharset = Objects.equals(outEncoding, "UTF-8")
-                            ? Charset.forName("GBK")
-                            : outputCharset;
-                }
-                System.err.println("Output (Charset: " + outputCharset + ")");
+                Charset outputCharset = Charset.forName(normEnc(consoleEncoding));
+                System.err.println("Output (Charset: " + outputCharset.name() + ")");
                 System.out.write(outputText.getBytes(outputCharset));
             }
 
@@ -101,4 +102,21 @@ public class ConvertCommand implements Runnable {
             System.exit(1);
         }
     }
+
+    private static String normEnc(String name) {
+        if (name == null) return null;
+        String n = name.trim();
+        switch (n.toUpperCase(java.util.Locale.ROOT)) {
+            case "UTF8":
+                return "UTF-8";
+            case "CP936":
+            case "GB2312":
+                return "GBK";
+            case "CP950":
+                return "Big5";
+            default:
+                return n;
+        }
+    }
+
 }
