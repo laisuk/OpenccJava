@@ -60,7 +60,7 @@ distributions {
             // Include external dicts for JVM users who want editable files.
             // Prefer keeping the authoritative copies under src/main/resources/dicts
             // so both JAR and Native image embed them reliably.
-            from("dicts") {
+            from("../dicts") {
                 into("dicts")
             }
         }
