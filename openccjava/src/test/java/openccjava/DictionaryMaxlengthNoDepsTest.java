@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 //import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,15 +31,18 @@ public class DictionaryMaxlengthNoDepsTest {
 
         assertNotNull(d.st_characters);
         assertEquals(1, d.st_characters.maxLength);
-        assertEquals(Map.of("汉", "漢", "发", "發"), d.st_characters.dict);
+        Map<String, String> expectedStChars = new LinkedHashMap<>();
+        expectedStChars.put("汉", "漢");
+        expectedStChars.put("发", "發");
+        assertEquals(expectedStChars, d.st_characters.dict);
 
         assertNotNull(d.st_phrases);
         assertEquals(2, d.st_phrases.maxLength);
-        assertEquals(Map.of("后台", "後台"), d.st_phrases.dict);
+        assertEquals(Collections.singletonMap("后台", "後台"), d.st_phrases.dict);
 
         assertNotNull(d.jps_characters);
         assertEquals(1, d.jps_characters.maxLength);
-        assertEquals(Map.of("芸", "藝"), d.jps_characters.dict);
+        assertEquals(Collections.singletonMap("芸", "藝"), d.jps_characters.dict);
 
         // Unknown key ignored — no assertion needed for unknown_block
     }
@@ -55,7 +60,8 @@ public class DictionaryMaxlengthNoDepsTest {
     @Test
     void loadsFromPathNoDeps(@TempDir Path tmp) throws Exception {
         Path json = tmp.resolve("dictionary_maxlength.json");
-        Files.writeString(json, SAMPLE_JSON, StandardCharsets.UTF_8);
+//        Files.writeString(json, SAMPLE_JSON, StandardCharsets.UTF_8);
+        Files.write(json, SAMPLE_JSON.getBytes(StandardCharsets.UTF_8));
 
         DictionaryMaxlength d = DictionaryMaxlength.fromJsonNoDeps(json);
 
@@ -93,17 +99,23 @@ public class DictionaryMaxlengthNoDepsTest {
         byte[] original;
         try (InputStream in = getClass().getResourceAsStream(RESOURCE_PATH)) {
             assertNotNull(in, "Missing test resource " + RESOURCE_PATH);
-            original = in.readAllBytes();
-        }
-        DictionaryMaxlength a = DictionaryMaxlength.fromJsonNoDeps(new ByteArrayInputStream(original));
 
+            // Java 8 replacement for InputStream.readAllBytes()
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] tmpBuf = new byte[8192];
+            int n;
+            while ((n = in.read(tmpBuf)) != -1) {
+                buffer.write(tmpBuf, 0, n);
+            }
+            original = buffer.toByteArray();
+        }
+
+        DictionaryMaxlength a = DictionaryMaxlength.fromJsonNoDeps(new ByteArrayInputStream(original));
         // 2) Serialize back to JSON
         Path out = tmp.resolve("rt.json");
         a.serializeToJsonNoDeps(out);
-
         // 3) Load the emitted JSON again with the no-deps parser
         DictionaryMaxlength b = DictionaryMaxlength.fromJsonNoDeps(out);
-
         // 4) Deep-compare all dict entries
         assertDictionariesEqual(a, b);
     }
@@ -114,16 +126,23 @@ public class DictionaryMaxlengthNoDepsTest {
         String json;
         try (InputStream in = getClass().getResourceAsStream(RESOURCE_PATH)) {
             assertNotNull(in, "Missing test resource " + RESOURCE_PATH);
-            json = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-        DictionaryMaxlength a = DictionaryMaxlength.fromJsonStringNoDeps(json);
 
+            // Java 8 replacement for InputStream.readAllBytes()
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] tmpBuf = new byte[8192];
+            int n;
+            while ((n = in.read(tmpBuf)) != -1) {
+                buffer.write(tmpBuf, 0, n);
+            }
+
+            json = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+        }
+
+        DictionaryMaxlength a = DictionaryMaxlength.fromJsonStringNoDeps(json);
         // Serialize to a String
         String emitted = a.serializeToJsonStringNoDepsCompact();
-
         // Reload via no-deps
         DictionaryMaxlength b = DictionaryMaxlength.fromJsonStringNoDeps(emitted);
-
         // Compare
         assertDictionariesEqual(a, b);
     }

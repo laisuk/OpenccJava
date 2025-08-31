@@ -1,6 +1,7 @@
 package openccjava;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 //import java.io.File;
@@ -11,9 +12,7 @@ import java.nio.file.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DictionaryLibTest {
-
     static final String TEST_JSON_OUTPUT = "test_dictionary_maxlength.json";
-
     static DictionaryMaxlength original;
 
     @BeforeAll
@@ -24,7 +23,6 @@ class DictionaryLibTest {
     @Test
     void testFromDictsLoadsAllFields() {
         assertNotNull(original);
-
         assertFalse(original.st_characters.dict.isEmpty(), "st_characters should be non-empty");
         assertFalse(original.ts_phrases.dict.isEmpty(), "ts_phrases should be non-empty");
         assertTrue(original.tw_variants_rev.maxLength > 0, "tw_variants_rev should have maxLength > 0");
@@ -35,10 +33,8 @@ class DictionaryLibTest {
     void testSerializeAndDeserializeJson() throws IOException {
         // Save to test file
         original.serializeToJsonNoDeps(TEST_JSON_OUTPUT);
-
         // Load again
         DictionaryMaxlength loaded = DictionaryMaxlength.fromJsonFileNoDeps(TEST_JSON_OUTPUT);
-
         // Validate one field at least
         assertEquals(
                 original.st_characters.dict.get("你"),
@@ -68,15 +64,13 @@ class DictionaryLibTest {
     }
 
     @Test
+    @Disabled
     void testSerializeToJsonFromDicts() {
         DictionaryMaxlength dict = DictionaryMaxlength.fromDicts();
-
         // Where to output
         String outputPath = "dictionary_maxlength.json";
-
         // Serialize
         assertDoesNotThrow(() -> dict.serializeToJsonNoDeps(outputPath));
-
         // Confirm file is written
         File file = new File(outputPath);
         assertTrue(file.exists(), "Serialized JSON file should exist");

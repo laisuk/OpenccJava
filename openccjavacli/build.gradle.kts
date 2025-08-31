@@ -1,27 +1,25 @@
 // --- OS helpers ---
-import org.gradle.internal.os.OperatingSystem
+// import org.gradle.internal.jvm.Jvm
 
 plugins {
     java
     application
-    // GraalVM Native Build Tools (AOT compile to a single exe)
-    id("org.graalvm.buildtools.native") version "0.10.2"
+    // --- GraalVM Native Build Tools (AOT compile to a single exe) ---
+    // id("org.graalvm.buildtools.native") version "0.10.2"
 }
 
 group = "io.github.laisuk"
-version = "1.0.1"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // core library (nodeps)
+    // core library (no-deps)
     implementation(project(":openccjava"))
-
     // CLI parser
     implementation("info.picocli:picocli:4.7.7")
-
     // Generate GraalVM reflection config for picocli automatically
     annotationProcessor("info.picocli:picocli-codegen:4.7.7")
 }
@@ -65,11 +63,6 @@ distributions {
             }
         }
     }
-}
-
-// Picocli annotation processor flags → generate META-INF/native-image config
-tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("-Aproject=${project.group}/${project.name}")
 }
 
 // --- Optional: a “fat JAR” for JVM-only users (kept, micro-tuned & documented) ---
@@ -130,71 +123,70 @@ tasks.register<Exec>("verifyFatJarSig") {
     }
 }
 
-// --- GraalVM Native Image (AOT) configuration ---
-graalvmNative {
-    // Let the plugin find GraalVM if Gradle JVM is set to GraalVM; we also hard-pin a launcher below.
-    toolchainDetection.set(true)
+/*
+// --- Uncomment these if using GraalVM native image ---
 
-    binaries {
-        named("main") {
-            imageName.set("openccjavacli")
-            // Build args: fast startup, useful stacktraces; add -Ob during dev for quicker builds.
-            buildArgs.addAll("--no-fallback", "-H:+ReportExceptionStackTraces", "-H:+AddAllCharsets")
-
-            // Embed resources: autodetect everything under src/main/resources,
-            // and explicitly include our dicts (regex, not glob).
-            resources {
-                autodetect()
-                includedPatterns.add("dicts/.*")
-            }
-
-            // Optional: speed dev builds → uncomment for quicker iterations
-            // buildArgs.add("-Ob")
-
-            // Optional: prep for future strictness / add metadata
-            // buildArgs.addAll("--strict-image-heap", "--enable-sbom", "-H:+BuildReport")
-        }
-    }
+// Picocli annotation processor flags → generate META-INF/native-image config
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Aproject=${project.group}/${project.name}")
 }
 
-// Native distribution ZIP: ship only the native binary + docs (no .args/.json/etc.)
-tasks.register<Zip>("nativeDistZip") {
-    dependsOn(tasks.named("nativeCompile"))
+// Only configure GraalVM native if running on Java 11+
+val currentJava = Jvm.current().javaVersion
 
-    val os = OperatingSystem.current()
-    val arch = System.getProperty("os.arch").lowercase().let {
-        when {
-            it.contains("aarch64") || it.contains("arm64") -> "aarch64"
-            else -> "x86_64"
+if (currentJava != null && currentJava.isJava11Compatible) {
+
+    // --- GraalVM Native Image (AOT) configuration ---
+    graalvmNative {
+        toolchainDetection.set(true)
+
+        binaries {
+            named("main") {
+                imageName.set("openccjavacli")
+                buildArgs.addAll("--no-fallback", "-H:+ReportExceptionStackTraces", "-H:+AddAllCharsets")
+
+                resources {
+                    autodetect()
+                    includedPatterns.add("dicts/.*")
+                }
+            }
         }
     }
-    val exeName = if (os.isWindows) "openccjavacli.exe" else "openccjavacli"
 
-    archiveBaseName.set("OpenccJavaCli")
-    archiveClassifier.set(
-        "native-${
+    tasks.register<Zip>("nativeDistZip") {
+        dependsOn(tasks.named("nativeCompile"))
+
+        val os = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem()
+        val arch = System.getProperty("os.arch").lowercase().let {
             when {
-                os.isWindows -> "windows"
-                os.isLinux -> "linux"
-                else -> "macos"
+                it.contains("aarch64") || it.contains("arm64") -> "aarch64"
+                else -> "x86_64"
             }
-        }-$arch"
-    )
-
-    // include only the exe, nothing else from nativeCompile dir
-    from(layout.buildDirectory.file("native/nativeCompile/$exeName")) {
-        into("bin")
-        if (!os.isWindows) {
-            // Gradle 8+: use the new permissions API (octal/symbolic both okay)
-            filePermissions { unix("755") }
-            dirPermissions { unix("755") }
         }
-    }
+        val exeName = if (os.isWindows) "openccjavacli.exe" else "openccjavacli"
 
-    // docs
-    from(rootProject.file("README.md")) { into("docs") }
+        archiveBaseName.set("OpenccJavaCli")
+        archiveClassifier.set(
+            "native-${
+                when {
+                    os.isWindows -> "windows"
+                    os.isLinux -> "linux"
+                    else -> "macos"
+                }
+            }-$arch"
+        )
 
-    from("dicts") {
-        into("dicts")
+        from(layout.buildDirectory.file("native/nativeCompile/$exeName")) {
+            into("bin")
+            if (!os.isWindows) {
+                filePermissions { unix("755") }
+                dirPermissions { unix("755") }
+            }
+        }
+
+        from(rootProject.file("README.md")) { into("docs") }
+        from("../dicts") { into("dicts") }
     }
 }
+
+ */

@@ -127,32 +127,46 @@ public class DictRefs {
     /**
      * A predefined set of characters used as delimiters for text segmentation.
      */
-    public static final Set<Character> DELIMITERS = new HashSet<>(List.of(
-            ' ', '\t', '\n', '\r', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
-            ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~', '＝', '、', '。', '“', '”',
-            '‘', '’', '『', '』', '「', '」', '﹁', '﹂', '—', '－', '（', '）', '《', '》', '〈', '〉', '？', '！', '…', '／',
-            '＼', '︒', '︑', '︔', '︓', '︿', '﹀', '︹', '︺', '︙', '︐', '［', '﹇', '］', '﹈', '︕', '︖', '︰', '︳',
-            '︴', '︽', '︾', '︵', '︶', '｛', '︷', '｝', '︸', '﹃', '﹄', '【', '︻', '】', '︼', '　', '～', '．', '，',
-            '；', '：'
-    ));
+    public static final Set<Character> DELIMITERS;
+
+    static {
+        // Use LinkedHashSet to preserve order (optional, but deterministic)
+        Set<Character> s = new LinkedHashSet<>(Arrays.asList(
+                ' ', '\t', '\n', '\r', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
+                ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~', '＝', '、', '。', '“', '”',
+                '‘', '’', '『', '』', '「', '」', '﹁', '﹂', '—', '－', '（', '）', '《', '》', '〈', '〉', '？', '！', '…', '／',
+                '＼', '︒', '︑', '︔', '︓', '︿', '﹀', '︹', '︺', '︙', '︐', '［', '﹇', '］', '﹈', '︕', '︖', '︰', '︳',
+                '︴', '︽', '︾', '︵', '︶', '｛', '︷', '｝', '︸', '﹃', '﹄', '【', '︻', '】', '︼', '　', '～', '．', '，',
+                '；', '：'
+        ));
+        DELIMITERS = Collections.unmodifiableSet(s);
+    }
 
     /**
      * Mapping of Simplified-style punctuation to Traditional-style punctuation.
      */
-    public static final Map<Character, Character> PUNCT_S2T_MAP = Map.of(
-            '“', '「',
-            '”', '」',
-            '‘', '『',
-            '’', '』'
-    );
+    public static final Map<Character, Character> PUNCT_S2T_MAP;
+
+    static {
+        Map<Character, Character> m = new LinkedHashMap<>();
+        m.put('“', '「');
+        m.put('”', '」');
+        m.put('‘', '『');
+        m.put('’', '』');
+        PUNCT_S2T_MAP = Collections.unmodifiableMap(m);
+    }
 
     /**
      * Mapping of Traditional-style punctuation to Simplified-style punctuation.
      */
-    public static final Map<Character, Character> PUNCT_T2S_MAP = Map.of(
-            '「', '“',
-            '」', '”',
-            '『', '‘',
-            '』', '’'
-    );
+    public static final Map<Character, Character> PUNCT_T2S_MAP;
+
+    static {
+        Map<Character, Character> m = new LinkedHashMap<>();
+        m.put('「', '“');
+        m.put('」', '”');
+        m.put('『', '‘');
+        m.put('』', '’');
+        PUNCT_T2S_MAP = Collections.unmodifiableMap(m);
+    }
 }

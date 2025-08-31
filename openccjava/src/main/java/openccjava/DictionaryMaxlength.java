@@ -178,67 +178,123 @@ public class DictionaryMaxlength {
      * @return the fully populated {@code DictionaryMaxlength} object
      */
     public static DictionaryMaxlength fromDicts(String basePath) {
-        DictionaryMaxlength r = new DictionaryMaxlength();
+        final DictionaryMaxlength r = new DictionaryMaxlength();
 
-        Map<String, String> files = Map.ofEntries(
-                Map.entry("st_characters", "STCharacters.txt"),
-                Map.entry("st_phrases", "STPhrases.txt"),
-                Map.entry("ts_characters", "TSCharacters.txt"),
-                Map.entry("ts_phrases", "TSPhrases.txt"),
-                Map.entry("tw_phrases", "TWPhrases.txt"),
-                Map.entry("tw_phrases_rev", "TWPhrasesRev.txt"),
-                Map.entry("tw_variants", "TWVariants.txt"),
-                Map.entry("tw_variants_rev", "TWVariantsRev.txt"),
-                Map.entry("tw_variants_rev_phrases", "TWVariantsRevPhrases.txt"),
-                Map.entry("hk_variants", "HKVariants.txt"),
-                Map.entry("hk_variants_rev", "HKVariantsRev.txt"),
-                Map.entry("hk_variants_rev_phrases", "HKVariantsRevPhrases.txt"),
-                Map.entry("jps_characters", "JPShinjitaiCharacters.txt"),
-                Map.entry("jps_phrases", "JPShinjitaiPhrases.txt"),
-                Map.entry("jp_variants", "JPVariants.txt"),
-                Map.entry("jp_variants_rev", "JPVariantsRev.txt")
-        );
+        // ----- filenames (ordered, then wrapped unmodifiable) -----
+        final Map<String, String> files = getFiles();
 
-        Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> assign = Map.ofEntries(
-                Map.entry("st_characters", (o, e) -> o.st_characters = e),
-                Map.entry("st_phrases", (o, e) -> o.st_phrases = e),
-                Map.entry("ts_characters", (o, e) -> o.ts_characters = e),
-                Map.entry("ts_phrases", (o, e) -> o.ts_phrases = e),
-                Map.entry("tw_phrases", (o, e) -> o.tw_phrases = e),
-                Map.entry("tw_phrases_rev", (o, e) -> o.tw_phrases_rev = e),
-                Map.entry("tw_variants", (o, e) -> o.tw_variants = e),
-                Map.entry("tw_variants_rev", (o, e) -> o.tw_variants_rev = e),
-                Map.entry("tw_variants_rev_phrases", (o, e) -> o.tw_variants_rev_phrases = e),
-                Map.entry("hk_variants", (o, e) -> o.hk_variants = e),
-                Map.entry("hk_variants_rev", (o, e) -> o.hk_variants_rev = e),
-                Map.entry("hk_variants_rev_phrases", (o, e) -> o.hk_variants_rev_phrases = e),
-                Map.entry("jps_characters", (o, e) -> o.jps_characters = e),
-                Map.entry("jps_phrases", (o, e) -> o.jps_phrases = e),
-                Map.entry("jp_variants", (o, e) -> o.jp_variants = e),
-                Map.entry("jp_variants_rev", (o, e) -> o.jp_variants_rev = e)
-        );
+        // ----- assignment table (ordered, then wrapped unmodifiable) -----
+        final Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> assign = getAssign();
 
-        for (var kv : files.entrySet()) {
-            String dictName = kv.getKey();
-            String filename = kv.getValue();
+        for (Map.Entry<String, String> kv : files.entrySet()) {
+            final String dictName = kv.getKey();
+            final String filename = kv.getValue();
 
-            Path fsPath = Paths.get(basePath, filename);
+            final Path fsPath = Paths.get(basePath, filename);
             try {
-                DictEntry entry;
+                final DictEntry entry;
                 if (Files.exists(fsPath)) {
                     entry = loadDictionaryMaxlength(fsPath);
                 } else {
-                    try (InputStream in = DictionaryMaxlength.class.getResourceAsStream("/" + basePath + "/" + filename)) {
+                    final String resPath = "/" + basePath + "/" + filename;
+                    try (InputStream in = DictionaryMaxlength.class.getResourceAsStream(resPath)) {
                         if (in == null) throw new FileNotFoundException(filename);
                         entry = loadDictionaryMaxlength(in);
                     }
                 }
-                assign.get(dictName).accept(r, entry);
+
+                final BiConsumer<DictionaryMaxlength, DictEntry> setter = assign.get(dictName);
+                if (setter == null) {
+                    throw new IllegalStateException("No assign mapping for dict: " + dictName);
+                }
+                setter.accept(r, entry);
+
             } catch (IOException ex) {
                 throw new RuntimeException("Error loading dict: " + dictName + " (" + filename + ")", ex);
             }
         }
+
         return r;
+    }
+
+    /**
+     * Returns the assignment table mapping dictionary identifiers to setter functions.
+     * <p>
+     * Each entry in the map associates a string key (e.g., {@code "st_characters"})
+     * with a {@link BiConsumer} that, when invoked, assigns a loaded {@link DictEntry}
+     * to the corresponding field of a {@link DictionaryMaxlength} instance.
+     * </p>
+     * <p>
+     * The returned map preserves insertion order and is unmodifiable.
+     * Attempting to modify it will result in an {@link UnsupportedOperationException}.
+     * </p>
+     *
+     * @return an unmodifiable map of dictionary field setters keyed by dictionary name
+     */
+    private static Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> getAssign() {
+        final Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> assign;
+        {
+            Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> m =
+                    new LinkedHashMap<>();
+            m.put("st_characters", (o, e) -> o.st_characters = e);
+            m.put("st_phrases", (o, e) -> o.st_phrases = e);
+            m.put("ts_characters", (o, e) -> o.ts_characters = e);
+            m.put("ts_phrases", (o, e) -> o.ts_phrases = e);
+            m.put("tw_phrases", (o, e) -> o.tw_phrases = e);
+            m.put("tw_phrases_rev", (o, e) -> o.tw_phrases_rev = e);
+            m.put("tw_variants", (o, e) -> o.tw_variants = e);
+            m.put("tw_variants_rev", (o, e) -> o.tw_variants_rev = e);
+            m.put("tw_variants_rev_phrases", (o, e) -> o.tw_variants_rev_phrases = e);
+            m.put("hk_variants", (o, e) -> o.hk_variants = e);
+            m.put("hk_variants_rev", (o, e) -> o.hk_variants_rev = e);
+            m.put("hk_variants_rev_phrases", (o, e) -> o.hk_variants_rev_phrases = e);
+            m.put("jps_characters", (o, e) -> o.jps_characters = e);
+            m.put("jps_phrases", (o, e) -> o.jps_phrases = e);
+            m.put("jp_variants", (o, e) -> o.jp_variants = e);
+            m.put("jp_variants_rev", (o, e) -> o.jp_variants_rev = e);
+            assign = Collections.unmodifiableMap(m);
+        }
+        return assign;
+    }
+
+    /**
+     * Returns the filename mapping for dictionary resources.
+     * <p>
+     * Each entry in the map associates a string key (e.g., {@code "st_characters"})
+     * with the corresponding dictionary file name (e.g., {@code "STCharacters.txt"}).
+     * This mapping is used by {@link #fromDicts(String)} to locate the dictionary
+     * files either on the filesystem or on the classpath.
+     * </p>
+     * <p>
+     * The returned map preserves insertion order and is unmodifiable.
+     * Attempting to modify it will result in an {@link UnsupportedOperationException}.
+     * </p>
+     *
+     * @return an unmodifiable map of dictionary identifiers to file names
+     */
+    private static Map<String, String> getFiles() {
+        final Map<String, String> files;
+        {
+            Map<String, String> m = new LinkedHashMap<>();
+            m.put("st_characters", "STCharacters.txt");
+            m.put("st_phrases", "STPhrases.txt");
+            m.put("ts_characters", "TSCharacters.txt");
+            m.put("ts_phrases", "TSPhrases.txt");
+            m.put("tw_phrases", "TWPhrases.txt");
+            m.put("tw_phrases_rev", "TWPhrasesRev.txt");
+            m.put("tw_variants", "TWVariants.txt");
+            m.put("tw_variants_rev", "TWVariantsRev.txt");
+            m.put("tw_variants_rev_phrases", "TWVariantsRevPhrases.txt");
+            m.put("hk_variants", "HKVariants.txt");
+            m.put("hk_variants_rev", "HKVariantsRev.txt");
+            m.put("hk_variants_rev_phrases", "HKVariantsRevPhrases.txt");
+            m.put("jps_characters", "JPShinjitaiCharacters.txt");
+            m.put("jps_phrases", "JPShinjitaiPhrases.txt");
+            m.put("jp_variants", "JPVariants.txt");
+            m.put("jp_variants_rev", "JPVariantsRev.txt");
+            files = Collections.unmodifiableMap(m);
+        }
+        return files;
     }
 
     /**
@@ -266,7 +322,8 @@ public class DictionaryMaxlength {
 
         for (String raw; (raw = br.readLine()) != null; ) {
             lineNo++;
-            String line = raw.strip();
+//            String line = raw.strip();
+            String line = raw.trim();
             if (line.isEmpty() || line.startsWith("#") || line.startsWith("//")) continue;
 
             int tab = line.indexOf('\t');
@@ -279,16 +336,7 @@ public class DictionaryMaxlength {
             if (lineNo == 1 && !key.isEmpty() && key.charAt(0) == '\uFEFF') key = key.substring(1);
 
             // first token after TAB (space OR tab ends it)
-            String rest = line.substring(tab + 1).stripLeading();
-            int end = -1;
-            for (int i = 0; i < rest.length(); i++) {
-                char c = rest.charAt(i);
-                if (c == ' ' || c == '\t') {
-                    end = i;
-                    break;
-                }
-            }
-            String val = (end >= 0) ? rest.substring(0, end) : rest;
+            String val = getRestString(line, tab);
 
             if (key.isEmpty() || val.isEmpty()) {
                 System.err.println("Warning: empty key/value at line " + lineNo + ": " + raw);
@@ -299,6 +347,26 @@ public class DictionaryMaxlength {
             if (key.length() > maxLength) maxLength = key.length(); // UTF-16 length (keep non-BMA as 2)
         }
         return new DictEntry(dict, maxLength);
+    }
+
+    private static String getRestString(String line, int tab) {
+        String rest = line.substring(tab + 1);
+        // Java 8 replacement for stripLeading()
+        int idx = 0;
+        while (idx < rest.length() && (rest.charAt(idx) == ' ' || rest.charAt(idx) == '\t')) {
+            idx++;
+        }
+        rest = rest.substring(idx);
+
+        int end = -1;
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+            if (c == ' ' || c == '\t') {
+                end = i;
+                break;
+            }
+        }
+        return (end >= 0) ? rest.substring(0, end) : rest;
     }
 
     /**
@@ -333,26 +401,31 @@ public class DictionaryMaxlength {
         }
     }
 
-    // --- No-reflection field assignment table ---
-    private static final Map<String, java.util.function.BiConsumer<DictionaryMaxlength, DictEntry>> ASSIGN =
-            Map.ofEntries(
-                    Map.entry("st_characters", (o, e) -> o.st_characters = e),
-                    Map.entry("st_phrases", (o, e) -> o.st_phrases = e),
-                    Map.entry("ts_characters", (o, e) -> o.ts_characters = e),
-                    Map.entry("ts_phrases", (o, e) -> o.ts_phrases = e),
-                    Map.entry("tw_phrases", (o, e) -> o.tw_phrases = e),
-                    Map.entry("tw_phrases_rev", (o, e) -> o.tw_phrases_rev = e),
-                    Map.entry("tw_variants", (o, e) -> o.tw_variants = e),
-                    Map.entry("tw_variants_rev", (o, e) -> o.tw_variants_rev = e),
-                    Map.entry("tw_variants_rev_phrases", (o, e) -> o.tw_variants_rev_phrases = e),
-                    Map.entry("hk_variants", (o, e) -> o.hk_variants = e),
-                    Map.entry("hk_variants_rev", (o, e) -> o.hk_variants_rev = e),
-                    Map.entry("hk_variants_rev_phrases", (o, e) -> o.hk_variants_rev_phrases = e),
-                    Map.entry("jps_characters", (o, e) -> o.jps_characters = e),
-                    Map.entry("jps_phrases", (o, e) -> o.jps_phrases = e),
-                    Map.entry("jp_variants", (o, e) -> o.jp_variants = e),
-                    Map.entry("jp_variants_rev", (o, e) -> o.jp_variants_rev = e)
-            );
+    // --- No-reflection field assignment table (Java 8 compatible) ---
+    private static final Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> ASSIGN;
+
+    static {
+        Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> m = new LinkedHashMap<>();
+
+        m.put("st_characters", (o, e) -> o.st_characters = e);
+        m.put("st_phrases", (o, e) -> o.st_phrases = e);
+        m.put("ts_characters", (o, e) -> o.ts_characters = e);
+        m.put("ts_phrases", (o, e) -> o.ts_phrases = e);
+        m.put("tw_phrases", (o, e) -> o.tw_phrases = e);
+        m.put("tw_phrases_rev", (o, e) -> o.tw_phrases_rev = e);
+        m.put("tw_variants", (o, e) -> o.tw_variants = e);
+        m.put("tw_variants_rev", (o, e) -> o.tw_variants_rev = e);
+        m.put("tw_variants_rev_phrases", (o, e) -> o.tw_variants_rev_phrases = e);
+        m.put("hk_variants", (o, e) -> o.hk_variants = e);
+        m.put("hk_variants_rev", (o, e) -> o.hk_variants_rev = e);
+        m.put("hk_variants_rev_phrases", (o, e) -> o.hk_variants_rev_phrases = e);
+        m.put("jps_characters", (o, e) -> o.jps_characters = e);
+        m.put("jps_phrases", (o, e) -> o.jps_phrases = e);
+        m.put("jp_variants", (o, e) -> o.jp_variants = e);
+        m.put("jp_variants_rev", (o, e) -> o.jp_variants_rev = e);
+
+        ASSIGN = Collections.unmodifiableMap(m);
+    }
 
     // --- Zero-dependency JSON loading ---
 
@@ -410,7 +483,7 @@ public class DictionaryMaxlength {
      * @throws IOException if reading fails
      */
     public static DictionaryMaxlength fromJsonFileNoDeps(String path) throws IOException {
-        return fromJsonNoDeps(java.nio.file.Path.of(path));
+        return fromJsonNoDeps(java.nio.file.Paths.get(path));
     }
 
     /**
@@ -431,8 +504,8 @@ public class DictionaryMaxlength {
      */
     private static DictionaryMaxlength hydrate(Map<String, DictEntry> all) {
         DictionaryMaxlength r = new DictionaryMaxlength();
-        for (var kv : all.entrySet()) {
-            var setter = ASSIGN.get(kv.getKey());
+        for (Map.Entry<String, DictEntry> kv : all.entrySet()) {
+            BiConsumer<DictionaryMaxlength, DictEntry> setter = ASSIGN.get(kv.getKey());
             if (setter != null) {
                 setter.accept(r, kv.getValue());
             } else {
@@ -454,7 +527,7 @@ public class DictionaryMaxlength {
      */
     public void serializeToJsonNoDeps(String outputPath) throws IOException {
         try (Writer w = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(outputPath), StandardCharsets.UTF_8))) {
+                new OutputStreamWriter(Files.newOutputStream(Paths.get(outputPath)), StandardCharsets.UTF_8))) {
             writeJsonNoDeps(w, /*pretty*/ true, /*sortKeys*/ true);
         }
     }

@@ -68,7 +68,9 @@ final class MiniDictJson {
      * @throws IllegalArgumentException if the JSON is malformed or violates the expected schema
      */
     static Map<String, DictionaryMaxlength.DictEntry> parseToMap(Path path) throws IOException {
-        return parseToMap(Files.readString(path, StandardCharsets.UTF_8));
+        // return parseToMap(Files.readString(path, StandardCharsets.UTF_8));
+        String jsonString = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+        return parseToMap(jsonString);
     }
 
     /**

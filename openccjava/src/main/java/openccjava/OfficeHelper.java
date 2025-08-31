@@ -1,6 +1,7 @@
 package openccjava;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -115,7 +116,10 @@ public class OfficeHelper {
                 Path fullPath = tempDir.resolve(relativePath);
                 if (!Files.isRegularFile(fullPath)) continue;
 
-                String xml = Files.readString(fullPath);
+                // String xml = Files.readString(fullPath);
+                // Java 8: no Files.readString, use readAllBytes
+                byte[] bytes = Files.readAllBytes(fullPath);
+                String xml = new String(bytes);
                 Map<String, String> fontMap = new HashMap<>();
 
                 if (keepFont) {
@@ -123,7 +127,7 @@ public class OfficeHelper {
                     if (pattern != null) {
                         Matcher matcher = pattern.matcher(xml);
                         int counter = 0;
-                        StringBuilder sb = new StringBuilder();
+                        StringBuffer sb = new StringBuffer();
 
                         while (matcher.find()) {
                             String marker = "__F_O_N_T_" + counter++ + "__";
@@ -143,7 +147,10 @@ public class OfficeHelper {
                     }
                 }
 
-                Files.writeString(fullPath, converted);
+                // Files.writeString(fullPath, converted);
+                // Java 8: no Files.writeString, use Files.write
+                // ✅ portable: always UTF-8
+                Files.write(fullPath, converted.getBytes(StandardCharsets.UTF_8));
                 convertedCount++;
             }
 
@@ -320,10 +327,10 @@ public class OfficeHelper {
     private static List<Path> getTargetXmlPaths(String format, Path baseDir) {
         switch (format) {
             case "docx":
-                return List.of(Paths.get("word/document.xml"));
+                return Collections.singletonList(Paths.get("word/document.xml"));
 
             case "xlsx":
-                return List.of(Paths.get("xl/sharedStrings.xml"));
+                return Collections.singletonList(Paths.get("xl/sharedStrings.xml"));
 
             case "pptx": {
                 List<Path> results = new ArrayList<>();
@@ -339,7 +346,7 @@ public class OfficeHelper {
             case "odt":
             case "ods":
             case "odp":
-                return List.of(Paths.get("content.xml"));
+                return Collections.singletonList(Paths.get("content.xml"));
 
             case "epub": {
                 List<Path> epubTargets = new ArrayList<>();

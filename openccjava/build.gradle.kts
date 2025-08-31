@@ -1,8 +1,6 @@
+import java.net.HttpURLConnection
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.util.Base64
+import java.util.*
 
 plugins {
     id("java-library")
@@ -12,7 +10,7 @@ plugins {
 }
 
 group = "io.github.laisuk"
-version = "1.0.1"
+version = "1.0.2"
 
 java {
     withJavadocJar()
@@ -35,11 +33,6 @@ repositories {
 }
 
 dependencies {
-    // JSON
-//    api("com.fasterxml.jackson.core:jackson-databind:2.19.1")
-//    api("com.fasterxml.jackson.core:jackson-core:2.19.1")
-//    api("com.fasterxml.jackson.core:jackson-annotations:2.19.1")
-
     // Testing
     testImplementation(platform("org.junit:junit-bom:5.10.5"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -50,8 +43,14 @@ dependencies {
     jmh("org.openjdk.jmh:jmh-generator-annprocess:1.37")
 }
 
-tasks.withType<JavaCompile> {
-    options.release.set(11)
+tasks.withType<JavaCompile>().configureEach {
+    if (JavaVersion.current().isJava9Compatible) {
+        options.release.set(8)
+    } else {
+        // Fallback for Gradle running on Java 8
+//        sourceCompatibility = "1.8"
+//        targetCompatibility = "1.8"
+    }
 }
 
 tasks.withType<Javadoc> {
@@ -90,7 +89,7 @@ publishing {
 
             pom {
                 name.set("OpenccJava")
-                description.set("Java implementation of Traditional and Simplified Chinese text conversion with dictionary support.")
+                description.set("Pure Java implementation of Traditional and Simplified Chinese text conversion with dictionary support.")
                 url.set("https://github.com/laisuk/OpenccJava")
 
                 licenses {
@@ -128,32 +127,13 @@ publishing {
                     "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
             )
             credentials {
-                username = System.getenv("OSSRH_USERNAME") ?: findProperty("ossrhUsername") as String?
-                password = System.getenv("OSSRH_PASSWORD") ?: findProperty("ossrhPassword") as String?
+                // Use Central Portal token credentials
+                username = findProperty("centralUsername") as String? ?: System.getenv("CENTRAL_USERNAME")
+                password = findProperty("centralPassword") as String? ?: System.getenv("CENTRAL_PASSWORD")
             }
         }
     }
-
-    // Optional: publish to local repo directory (for testing)
-   /*
-    repositories {
-        maven {
-            name = "localOutput"
-            url = layout.buildDirectory.dir("repo").get().asFile.toURI()
-        }
-    }
-    */
 }
-
-// Optional: Copy to ~/.m2/repository after publishing
-/*
-
-tasks.register<Copy>("copyToM2") {
-    dependsOn("publishMavenJavaPublicationToLocalOutputRepository")
-    from(layout.buildDirectory.dir("repo"))
-    into("${System.getProperty("user.home")}/.m2/repository")
-}
-*/
 
 //signing {
 //    useGpgCmd()
@@ -163,14 +143,15 @@ tasks.register<Copy>("copyToM2") {
 signing {
     useGpgCmd()
     // Only sign if we’re not publishing locally
-    val isLocal = gradle.startParameter.taskNames.any { it.contains("publishToMavenLocal") || it.contains("LocalOutput") }
+    val isLocal =
+        gradle.startParameter.taskNames.any { it.contains("publishToMavenLocal") || it.contains("LocalOutput") }
     if (!isLocal) {
         sign(publishing.publications["mavenJava"])
     }
 }
 
-val portalUser = (System.getenv("OSSRH_USERNAME") ?: findProperty("ossrhUsername") as String?)
-val portalPass = (System.getenv("OSSRH_PASSWORD") ?: findProperty("ossrhPassword") as String?)
+val portalUser: String? = (findProperty("centralUsername") as String? ?: System.getenv("CENTRAL_USERNAME"))
+val portalPass: String? = (findProperty("centralPassword") as String? ?: System.getenv("CENTRAL_PASSWORD"))
 val portalAuth: String = Base64.getEncoder().encodeToString("${portalUser}:${portalPass}".toByteArray())
 
 // Use your root namespace (groupId root), e.g. "io.github.laisuk"
@@ -181,24 +162,49 @@ tasks.register("uploadToPortal") {
     group = "publishing"
     description = "Notify Central Portal to ingest the last staging upload"
     doLast {
-        require(!portalUser.isNullOrBlank() && !portalPass.isNullOrBlank()) {
-            "Missing OSSRH portal credentials (OSSRH_USERNAME/OSSRH_PASSWORD or ossrhUsername/ossrhPassword)."
+        val user = portalUser ?: ""
+        val pass = portalPass ?: ""
+        require(user.isNotEmpty() && pass.isNotEmpty()) {
+            "Missing Central Portal credentials (CENTRAL_PORTAL_TOKEN_USER/_PASS or gradle.properties)."
         }
-        val url = "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/$portalNamespace"
-        val client = HttpClient.newHttpClient()
-        val req = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Authorization", "Bearer $portalAuth")
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build()
-        val resp = client.send(req, HttpResponse.BodyHandlers.ofString())
-        if (resp.statusCode() !in 200..299) {
-            throw RuntimeException("Portal upload failed: ${resp.statusCode()} ${resp.body()}")
+
+        val auth = Base64.getEncoder().encodeToString("$user:$pass".toByteArray(Charsets.UTF_8))
+        val urlStr = "https://ossrh-staging-api.central.sonatype.com/" +
+                "manual/upload/defaultRepository/$portalNamespace?publishing_type=user_managed"
+
+        val uri = URI(urlStr)
+        val url = uri.toURL()
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            setRequestProperty("Authorization", "Bearer $auth")
+            doOutput = true
+            useCaches = false
+            connectTimeout = 30_000
+            readTimeout = 60_000
+        }
+
+        // Nobody to send; just open/close the stream to issue the request
+        conn.outputStream.use { /* empty POST body */ }
+
+        val code = conn.responseCode
+        val body = try {
+            (if (code in 200..299) conn.inputStream else conn.errorStream)
+                ?.bufferedReader()?.readText().orEmpty()
+        } catch (_: Exception) {
+            ""
+        }
+
+        conn.disconnect()
+
+        if (code !in 200..299) {
+            throw GradleException("Portal upload failed: $code ${body.take(500)}")
         } else {
-            println("Portal upload ok: ${resp.statusCode()}")
+            println("Portal upload ok: $code")
         }
     }
 }
 
-// Typical CI sequence: publish → uploadToPortal
-tasks.named("publish") { finalizedBy("uploadToPortal") }
+// Only wire the ingestion step for non-SNAPSHOT publishes
+if (!version.toString().endsWith("SNAPSHOT")) {
+    tasks.named("publish") { finalizedBy("uploadToPortal") }
+}

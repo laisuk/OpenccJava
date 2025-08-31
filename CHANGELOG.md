@@ -6,6 +6,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.0.2] - 2025-08-31
+
+### Changed
+
+- Refactored all codes to be Java 8+ compatible
+
+### Fixed
+
+- Artifacts compiled as Java 17+ in GitHub Action (should be Java 11+)
+
+---
+
 ## [1.0.1] - 2025-08-16
 
 ### Changed

@@ -5,12 +5,12 @@ import openccjava.DictionaryMaxlength.DictEntry;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.IntStream;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
-
 
 /**
  * OpenCC is a pure Java implementation of the Open Chinese Convert (OpenCC) system.
@@ -109,7 +109,7 @@ public class OpenCC {
      */
     public OpenCC(String config) {
         try {
-            Path jsonPath = Path.of("dicts", "dictionary_maxlength.json");
+            Path jsonPath = Paths.get("dicts", "dictionary_maxlength.json");
 
             if (Files.exists(jsonPath)) {
                 this.dictionary = DictionaryMaxlength.fromJsonNoDeps(jsonPath);
@@ -191,8 +191,10 @@ public class OpenCC {
      * @return list of supported configs
      */
     public static List<String> getSupportedConfigs() {
-        return List.of("s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s",
-                "t2tw", "tw2t", "t2twp", "tw2tp", "t2hk", "hk2t", "t2jp", "jp2t");
+        return Collections.unmodifiableList(Arrays.asList(
+                "s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s",
+                "t2tw", "tw2t", "t2twp", "tw2tp", "t2hk", "hk2t", "t2jp", "jp2t"
+        ));
     }
 
     /**
@@ -298,42 +300,51 @@ public class OpenCC {
     private DictRefs getDictRefs(String key) {
         if (configCache.containsKey(key)) return configCache.get(key);
 
-        var d = dictionary;
+        final DictionaryMaxlength d = this.dictionary; // no 'var' in Java 8
         DictRefs refs = null;
 
         switch (key) {
             case "s2t":
-                refs = new DictRefs(List.of(d.st_phrases, d.st_characters));
+                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters));
                 break;
+
             case "t2s":
-                refs = new DictRefs(List.of(d.ts_phrases, d.ts_characters));
+                refs = new DictRefs(Arrays.asList(d.ts_phrases, d.ts_characters));
                 break;
+
             case "s2tw":
-                refs = new DictRefs(List.of(d.st_phrases, d.st_characters))
-                        .withRound2(List.of(d.tw_variants));
+                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters))
+                        .withRound2(Collections.singletonList(d.tw_variants));
                 break;
+
             case "tw2s":
-                refs = new DictRefs(List.of(d.tw_variants_rev_phrases, d.tw_variants_rev))
-                        .withRound2(List.of(d.ts_phrases, d.ts_characters));
+                refs = new DictRefs(Arrays.asList(d.tw_variants_rev_phrases, d.tw_variants_rev))
+                        .withRound2(Arrays.asList(d.ts_phrases, d.ts_characters));
                 break;
+
             case "s2twp":
-                refs = new DictRefs(List.of(d.st_phrases, d.st_characters))
-                        .withRound2(List.of(d.tw_phrases))
-                        .withRound3(List.of(d.tw_variants));
+                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters))
+                        .withRound2(Collections.singletonList(d.tw_phrases))
+                        .withRound3(Collections.singletonList(d.tw_variants));
                 break;
+
             case "tw2sp":
-                refs = new DictRefs(List.of(d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev))
-                        .withRound2(List.of(d.ts_phrases, d.ts_characters));
+                refs = new DictRefs(Arrays.asList(d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev))
+                        .withRound2(Arrays.asList(d.ts_phrases, d.ts_characters));
                 break;
+
             case "s2hk":
-                refs = new DictRefs(List.of(d.st_phrases, d.st_characters))
-                        .withRound2(List.of(d.hk_variants));
+                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters))
+                        .withRound2(Collections.singletonList(d.hk_variants));
                 break;
+
             case "hk2s":
-                refs = new DictRefs(List.of(d.hk_variants_rev_phrases, d.hk_variants_rev))
-                        .withRound2(List.of(d.ts_phrases, d.ts_characters));
+                refs = new DictRefs(Arrays.asList(d.hk_variants_rev_phrases, d.hk_variants_rev))
+                        .withRound2(Arrays.asList(d.ts_phrases, d.ts_characters));
                 break;
+
             default:
+                // unknown key -> leave refs null
                 break;
         }
 
@@ -504,7 +515,7 @@ public class OpenCC {
      * @return the converted text in Traditional Chinese
      */
     public String s2t(String input, boolean punctuation) {
-        var refs = getDictRefs("s2t");
+        DictRefs refs = getDictRefs("s2t");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
@@ -518,7 +529,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String t2s(String input, boolean punctuation) {
-        var refs = getDictRefs("t2s");
+        DictRefs refs = getDictRefs("t2s");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
@@ -532,7 +543,7 @@ public class OpenCC {
      * @return the converted text in Traditional Chinese (Taiwan)
      */
     public String s2tw(String input, boolean punctuation) {
-        var refs = getDictRefs("s2tw");
+        DictRefs refs = getDictRefs("s2tw");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
@@ -546,7 +557,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String tw2s(String input, boolean punctuation) {
-        var refs = getDictRefs("tw2s");
+        DictRefs refs = getDictRefs("tw2s");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
@@ -560,7 +571,7 @@ public class OpenCC {
      * @return the converted text in full Taiwan-style Traditional Chinese
      */
     public String s2twp(String input, boolean punctuation) {
-        var refs = getDictRefs("s2twp");
+        DictRefs refs = getDictRefs("s2twp");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
@@ -574,7 +585,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String tw2sp(String input, boolean punctuation) {
-        var refs = getDictRefs("tw2sp");
+        DictRefs refs = getDictRefs("tw2sp");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
@@ -588,7 +599,7 @@ public class OpenCC {
      * @return the converted text in Hong Kong-style Traditional Chinese
      */
     public String s2hk(String input, boolean punctuation) {
-        var refs = getDictRefs("s2hk");
+        DictRefs refs = getDictRefs("s2hk");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_S2T_MAP) : output;
@@ -602,7 +613,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String hk2s(String input, boolean punctuation) {
-        var refs = getDictRefs("hk2s");
+        DictRefs refs = getDictRefs("hk2s");
         if (refs == null) return input;
         String output = refs.applySegmentReplace(input, this::segmentReplace);
         return punctuation ? translatePunctuation(output, DictRefs.PUNCT_T2S_MAP) : output;
@@ -615,7 +626,7 @@ public class OpenCC {
      * @return the text converted to Taiwan-style Traditional Chinese
      */
     public String t2tw(String input) {
-        var refs = new DictRefs(List.of(dictionary.tw_variants));
+        DictRefs refs = new DictRefs(Collections.singletonList(dictionary.tw_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -626,8 +637,8 @@ public class OpenCC {
      * @return the converted Taiwan Traditional Chinese with phrases and variants
      */
     public String t2twp(String input) {
-        var refs = new DictRefs(List.of(dictionary.tw_phrases))
-                .withRound2(List.of(dictionary.tw_variants));
+        DictRefs refs = new DictRefs(Collections.singletonList(dictionary.tw_phrases))
+                .withRound2(Collections.singletonList(dictionary.tw_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -638,7 +649,7 @@ public class OpenCC {
      * @return the converted base Traditional Chinese text
      */
     public String tw2t(String input) {
-        var refs = new DictRefs(List.of(dictionary.tw_variants_rev_phrases, dictionary.tw_variants_rev));
+        DictRefs refs = new DictRefs(Arrays.asList(dictionary.tw_variants_rev_phrases, dictionary.tw_variants_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -649,8 +660,8 @@ public class OpenCC {
      * @return the fully reverted Traditional Chinese text
      */
     public String tw2tp(String input) {
-        var refs = new DictRefs(List.of(dictionary.tw_variants_rev_phrases, dictionary.tw_variants_rev))
-                .withRound2(List.of(dictionary.tw_phrases_rev));
+        DictRefs refs = new DictRefs(Arrays.asList(dictionary.tw_variants_rev_phrases, dictionary.tw_variants_rev))
+                .withRound2(Collections.singletonList(dictionary.tw_phrases_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -661,7 +672,7 @@ public class OpenCC {
      * @return the converted text using HK Traditional variants
      */
     public String t2hk(String input) {
-        var refs = new DictRefs(List.of(dictionary.hk_variants));
+        DictRefs refs = new DictRefs(Collections.singletonList(dictionary.hk_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -672,7 +683,7 @@ public class OpenCC {
      * @return the converted base Traditional Chinese text
      */
     public String hk2t(String input) {
-        var refs = new DictRefs(List.of(dictionary.hk_variants_rev_phrases, dictionary.hk_variants_rev));
+        DictRefs refs = new DictRefs(Arrays.asList(dictionary.hk_variants_rev_phrases, dictionary.hk_variants_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -683,7 +694,7 @@ public class OpenCC {
      * @return the text converted to Japanese-style Kanji variants
      */
     public String t2jp(String input) {
-        var refs = new DictRefs(List.of(dictionary.jp_variants));
+        DictRefs refs = new DictRefs(Collections.singletonList(dictionary.jp_variants));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -694,7 +705,7 @@ public class OpenCC {
      * @return the converted Traditional Chinese text
      */
     public String jp2t(String input) {
-        var refs = new DictRefs(List.of(dictionary.jps_phrases, dictionary.jps_characters, dictionary.jp_variants_rev));
+        DictRefs refs = new DictRefs(Arrays.asList(dictionary.jps_phrases, dictionary.jps_characters, dictionary.jp_variants_rev));
         return refs.applySegmentReplace(input, this::segmentReplace);
     }
 
@@ -708,7 +719,7 @@ public class OpenCC {
      * @return the text converted to Traditional Chinese, character by character
      */
     public String st(String input) {
-        return convertSegment(input, List.of(dictionary.st_characters), 2);
+        return convertSegment(input, Collections.singletonList(dictionary.st_characters), 2);
     }
 
     /**
@@ -721,7 +732,7 @@ public class OpenCC {
      * @return the text converted to Simplified Chinese, character by character
      */
     public String ts(String input) {
-        return convertSegment(input, List.of(dictionary.ts_characters), 2);
+        return convertSegment(input, Collections.singletonList(dictionary.ts_characters), 2);
     }
 
     /**

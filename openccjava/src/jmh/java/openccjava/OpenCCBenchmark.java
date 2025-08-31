@@ -23,11 +23,25 @@ public class OpenCCBenchmark {
         // Base text of ~25 characters
         String base = "这是用于，汉字转换测试，性能表现测试的表视图文本。";
 
-        // Repeat base text to required sizes
-        text100 = base.repeat(4);       // ~100 chars
-        text1000 = base.repeat(40);     // ~1,000 chars
-        text10000 = base.repeat(400);   // ~10,000 chars
-        text100000 = base.repeat(4000); // ~100,000 chars
+        // Use helper to repeat strings
+        text100 = repeat(base, 4);       // ~100 chars
+        text1000 = repeat(base, 40);      // ~1,000 chars
+        text10000 = repeat(base, 400);     // ~10,000 chars
+        text100000 = repeat(base, 4000);    // ~100,000 chars
+    }
+
+    /**
+     * Repeat a string count times (Java 8 compatible).
+     */
+    private static String repeat(String s, int count) {
+        if (s == null || count <= 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(s.length() * count);
+        for (int i = 0; i < count; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
     }
 
     @Benchmark
