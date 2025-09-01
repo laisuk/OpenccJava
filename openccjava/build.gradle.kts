@@ -67,13 +67,32 @@ jmh {
     fork.set(1)
 }
 
+// Helper: turn "1.8"/"8"/"17" into major bytecode (52/61/etc.)
+fun majorFromJavaVersion(vRaw: String): Int {
+    val n = if (vRaw.startsWith("1.")) vRaw.substring(2) else vRaw
+    return n.toInt() + 44
+}
+
 tasks.withType<Jar>().configureEach {
-    manifest {
-        attributes(
-            "Automatic-Module-Name" to "io.github.laisuk.openccjava",
-            "Implementation-Title" to "OpenccJava",
-            "Implementation-Version" to project.version
-        )
+    doFirst {
+        val cj = tasks.withType<JavaCompile>().findByName("compileJava")
+        val rawVer = when {
+            cj?.options?.release?.isPresent == true -> cj.options.release.get().toString()
+            cj != null -> cj.targetCompatibility
+            else -> JavaVersion.current().toString()
+        }
+        val bytecodeJava = if (rawVer == "8") "1.8" else rawVer
+        val major = majorFromJavaVersion(bytecodeJava)
+
+        manifest {
+            attributes(
+                "Automatic-Module-Name" to "io.github.laisuk.openccjava",
+                "Implementation-Title" to "OpenccJava",
+                "Implementation-Version" to project.version,
+                "Major-Bytecode-Number" to major.toString(),
+                "Bytecode-Java-Version" to bytecodeJava
+            )
+        }
     }
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
