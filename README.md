@@ -3,7 +3,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.laisuk/openccjava.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.laisuk/openccjava)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
-**Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB** document
+**Pure Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB** document
 support and **CLI** tools.
 
 ## Features
