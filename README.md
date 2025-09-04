@@ -4,7 +4,7 @@
 [![javadoc](https://javadoc.io/badge2/io.github.laisuk/openccjava/javadoc.svg)](https://javadoc.io/doc/io.github.laisuk/openccjava)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
-**Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB** document
+**Pure Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB** document
 support and **CLI** tools.
 
 ## Features
