@@ -755,7 +755,8 @@ public class OpenCC {
     public int zhoCheck(String input) {
         if (input == null || input.isEmpty()) return 0;
 
-        String stripped = DictRefs.STRIP_REGEX.matcher(input).replaceAll("");
+        int safeLength = Math.min(input.length(), 1000);
+        String stripped = DictRefs.STRIP_REGEX.matcher(input.substring(0, safeLength)).replaceAll("");
         if (stripped.isEmpty()) return 0;
 
         // Take first 100 code points
