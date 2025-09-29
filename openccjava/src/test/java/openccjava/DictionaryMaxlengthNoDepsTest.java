@@ -197,8 +197,11 @@ public class DictionaryMaxlengthNoDepsTest {
         // compare each DictEntry field (no reflection in production code; tests are fine being explicit)
         compare("st_characters", a.st_characters, b.st_characters);
         compare("st_phrases", a.st_phrases, b.st_phrases);
+        compare("st_punctuations", a.st_punctuations, b.st_punctuations);
+
         compare("ts_characters", a.ts_characters, b.ts_characters);
         compare("ts_phrases", a.ts_phrases, b.ts_phrases);
+        compare("ts_punctuations", a.ts_punctuations, b.ts_punctuations);
 
         compare("tw_phrases", a.tw_phrases, b.tw_phrases);
         compare("tw_phrases_rev", a.tw_phrases_rev, b.tw_phrases_rev);

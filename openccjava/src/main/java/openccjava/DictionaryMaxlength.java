@@ -88,6 +88,10 @@ public class DictionaryMaxlength {
      * Simplified phrase mappings.
      */
     public DictEntry st_phrases;
+    /**
+     * Simplified punctuations.
+     */
+    public DictEntry st_punctuations;
 
     // Traditional to Simplified
     /**
@@ -98,6 +102,10 @@ public class DictionaryMaxlength {
      * Traditional phrase mappings.
      */
     public DictEntry ts_phrases;
+    /**
+     * Traditional punctuations.
+     */
+    public DictEntry ts_punctuations;
 
     // Traditional to Taiwan
     /**
@@ -247,8 +255,10 @@ public class DictionaryMaxlength {
                     new LinkedHashMap<>();
             m.put("st_characters", (o, e) -> o.st_characters = e);
             m.put("st_phrases", (o, e) -> o.st_phrases = e);
+            m.put("st_punctuations", (o, e) -> o.st_punctuations = e);
             m.put("ts_characters", (o, e) -> o.ts_characters = e);
             m.put("ts_phrases", (o, e) -> o.ts_phrases = e);
+            m.put("ts_punctuations", (o, e) -> o.ts_punctuations = e);
             m.put("tw_phrases", (o, e) -> o.tw_phrases = e);
             m.put("tw_phrases_rev", (o, e) -> o.tw_phrases_rev = e);
             m.put("tw_variants", (o, e) -> o.tw_variants = e);
@@ -287,8 +297,10 @@ public class DictionaryMaxlength {
             Map<String, String> m = new LinkedHashMap<>();
             m.put("st_characters", "STCharacters.txt");
             m.put("st_phrases", "STPhrases.txt");
+            m.put("st_punctuations", "STPunctuations.txt");
             m.put("ts_characters", "TSCharacters.txt");
             m.put("ts_phrases", "TSPhrases.txt");
+            m.put("ts_punctuations", "TSPunctuations.txt");
             m.put("tw_phrases", "TWPhrases.txt");
             m.put("tw_phrases_rev", "TWPhrasesRev.txt");
             m.put("tw_variants", "TWVariants.txt");
@@ -429,8 +441,10 @@ public class DictionaryMaxlength {
 
         m.put("st_characters", (o, e) -> o.st_characters = e);
         m.put("st_phrases", (o, e) -> o.st_phrases = e);
+        m.put("st_punctuations", (o, e) -> o.st_punctuations = e);
         m.put("ts_characters", (o, e) -> o.ts_characters = e);
         m.put("ts_phrases", (o, e) -> o.ts_phrases = e);
+        m.put("ts_punctuations", (o, e) -> o.ts_punctuations = e);
         m.put("tw_phrases", (o, e) -> o.tw_phrases = e);
         m.put("tw_phrases_rev", (o, e) -> o.tw_phrases_rev = e);
         m.put("tw_variants", (o, e) -> o.tw_variants = e);
@@ -648,8 +662,10 @@ public class DictionaryMaxlength {
         Object[][] fields = {
                 {"st_characters", st_characters},
                 {"st_phrases", st_phrases},
+                {"st_punctuations", st_punctuations},   // NEW
                 {"ts_characters", ts_characters},
                 {"ts_phrases", ts_phrases},
+                {"ts_punctuations", ts_punctuations},   // NEW
                 {"tw_phrases", tw_phrases},
                 {"tw_phrases_rev", tw_phrases_rev},
                 {"tw_variants", tw_variants},
