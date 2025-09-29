@@ -20,6 +20,7 @@ import java.util.function.BiConsumer;
  * <ul>
  *     <li>{@code dict}: key-value pairs of source→target</li>
  *     <li>{@code maxLength}: the longest phrase/key length</li>
+ *     <li>{@code minLength}: the shortest phrase/key length</li>
  * </ul>
  * Holds multiple dictionary entries, each with a defined maximum key length.
  * Used for efficient longest-match text conversion.
