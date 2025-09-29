@@ -49,12 +49,18 @@ public class DictionaryMaxlength {
         public int maxLength;
 
         /**
+         * Minimum phrase length in this dictionary
+         */
+        public int minLength; // NEW
+
+        /**
          * Constructs an empty dictionary entry.
          * <p>Kept for potential future serialization frameworks or manual instantiation.</p>
          */
         public DictEntry() {
             this.dict = new HashMap<>();
             this.maxLength = 0;
+            this.minLength = 0;
         }
 
         /**
@@ -62,10 +68,12 @@ public class DictionaryMaxlength {
          *
          * @param dict      The dictionary mapping strings.
          * @param maxLength The maximum key length in the dictionary.
+         * @param minLength The minimum key length in the dictionary.
          */
-        public DictEntry(Map<String, String> dict, int maxLength) {
-            this.dict = dict;
+        public DictEntry(Map<String, String> dict, int maxLength, int minLength) {
+            this.dict = Objects.requireNonNull(dict, "dict");
             this.maxLength = maxLength;
+            this.minLength = minLength;
         }
     }
 
@@ -318,6 +326,7 @@ public class DictionaryMaxlength {
     private static DictEntry loadDictionaryMaxlength(BufferedReader br) throws IOException {
         Map<String, String> dict = new HashMap<>();
         int maxLength = 1;
+        int minLength = Integer.MAX_VALUE;
         int lineNo = 0;
 
         for (String raw; (raw = br.readLine()) != null; ) {
@@ -344,9 +353,19 @@ public class DictionaryMaxlength {
             }
 
             dict.put(key, val);
-            if (key.length() > maxLength) maxLength = key.length(); // UTF-16 length (keep non-BMA as 2)
+            // Use UTF-16 length (consistent with your existing maxLength logic).
+            // Non-BMP code points count as 2 (same as before).
+            int len = key.length();
+            if (len > maxLength) maxLength = len;
+            if (len < minLength) minLength = len;
         }
-        return new DictEntry(dict, maxLength);
+        if (dict.isEmpty()) {
+            // No entries: keep old behavior; maxLength=1, minLength=1 (or 0 if you prefer).
+            return new DictEntry(dict, 1, 1);
+        } else {
+            if (minLength == Integer.MAX_VALUE) minLength = 1; // defensive, shouldn't happen
+            return new DictEntry(dict, maxLength, minLength);
+        }
     }
 
     private static String getRestString(String line, int tab) {
@@ -745,12 +764,14 @@ public class DictionaryMaxlength {
             }
         }
 
-
         w.write(nl);
         w.write(ind2);
         w.write("}");
         w.write(", ");
         w.write(String.valueOf(entry.maxLength));
+        // NEW: always write minLength in new snapshots
+        w.write(", ");
+        w.write(Integer.toString(entry.minLength));
         w.write(" ]");
         return false;
     }

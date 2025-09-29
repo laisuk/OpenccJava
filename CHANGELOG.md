@@ -6,11 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.0-beta1] - 2025-09-24
+## [1.1.0-beta1] - 2025-09-26
 
 ### Changed
 
 - Update dictionaries
+- Add minLength field to DictEntry
 
 ---
 

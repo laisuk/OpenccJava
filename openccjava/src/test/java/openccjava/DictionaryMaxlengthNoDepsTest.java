@@ -15,12 +15,13 @@ import org.junit.jupiter.api.io.TempDir;
 
 public class DictionaryMaxlengthNoDepsTest {
 
+    // v2 schema: [ {dict}, maxLength, minLength ]
     private static final String SAMPLE_JSON =
             "{\n" +
-                    "  \"st_characters\": [ { \"汉\": \"漢\", \"发\": \"發\" }, 1 ],\n" +
-                    "  \"st_phrases\":    [ { \"后台\": \"後台\" }, 2 ],\n" +
-                    "  \"jps_characters\":[ { \"芸\": \"藝\" }, 1 ],\n" +
-                    "  \"unknown_block\": [ { \"x\": \"y\" }, 9 ]\n" +
+                    "  \"st_characters\": [ { \"汉\": \"漢\", \"发\": \"發\" }, 1, 1 ],\n" +
+                    "  \"st_phrases\":    [ { \"后台\": \"後台\" }, 2, 2 ],\n" +
+                    "  \"jps_characters\":[ { \"芸\": \"藝\" }, 1, 1 ],\n" +
+                    "  \"unknown_block\": [ { \"x\": \"y\" }, 9, 1 ]\n" +
                     "}";
 
     private static final String RESOURCE_PATH = "/dicts/dictionary_maxlength.json";
@@ -31,6 +32,7 @@ public class DictionaryMaxlengthNoDepsTest {
 
         assertNotNull(d.st_characters);
         assertEquals(1, d.st_characters.maxLength);
+        assertEquals(1, d.st_characters.minLength);
         Map<String, String> expectedStChars = new LinkedHashMap<>();
         expectedStChars.put("汉", "漢");
         expectedStChars.put("发", "發");
@@ -38,10 +40,12 @@ public class DictionaryMaxlengthNoDepsTest {
 
         assertNotNull(d.st_phrases);
         assertEquals(2, d.st_phrases.maxLength);
+        assertEquals(2, d.st_phrases.minLength);
         assertEquals(Collections.singletonMap("后台", "後台"), d.st_phrases.dict);
 
         assertNotNull(d.jps_characters);
         assertEquals(1, d.jps_characters.maxLength);
+        assertEquals(1, d.jps_characters.minLength);
         assertEquals(Collections.singletonMap("芸", "藝"), d.jps_characters.dict);
 
         // Unknown key ignored — no assertion needed for unknown_block
@@ -147,6 +151,46 @@ public class DictionaryMaxlengthNoDepsTest {
         assertDictionariesEqual(a, b);
     }
 
+    @Test
+    void loadsFromStringNoDeps_usesHelpers() {
+        DictionaryMaxlength actual = DictionaryMaxlength.fromJsonStringNoDeps(SAMPLE_JSON);
+
+        // Build expected with only the blocks present in SAMPLE_JSON
+        DictionaryMaxlength expected = new DictionaryMaxlength();
+
+        Map<String, String> stChars = new LinkedHashMap<>();
+        stChars.put("汉", "漢");
+        stChars.put("发", "發");
+        expected.st_characters = new DictionaryMaxlength.DictEntry(stChars, 1, 1);
+
+        Map<String, String> stPhrases = new LinkedHashMap<>();
+        stPhrases.put("后台", "後台");
+        expected.st_phrases = new DictionaryMaxlength.DictEntry(stPhrases, 2, 2);
+
+        Map<String, String> jpsChars = new LinkedHashMap<>();
+        jpsChars.put("芸", "藝");
+        expected.jps_characters = new DictionaryMaxlength.DictEntry(jpsChars, 1, 1);
+
+        // All other fields remain null in both expected and actual.
+        assertDictionariesEqual(expected, actual);
+    }
+
+    @Test
+    void roundTripSerializeAndParseNoDeps_withHelpers() throws IOException {
+        DictionaryMaxlength d1 = DictionaryMaxlength.fromJsonStringNoDeps(SAMPLE_JSON);
+        String jsonOut = d1.serializeToJsonStringNoDeps();   // writer always emits minLength now
+        DictionaryMaxlength d2 = DictionaryMaxlength.fromJsonStringNoDeps(jsonOut);
+
+        assertDictionariesEqual(d1, d2);
+    }
+
+    @Test
+    void rejectsV1SchemaWithoutMinLength() {
+        String v1 = "{ \"st_characters\": [ { \"汉\": \"漢\" }, 1 ] }";
+        assertThrows(IllegalArgumentException.class,
+                () -> DictionaryMaxlength.fromJsonStringNoDeps(v1));
+    }
+
     // ---- helpers ----
 
     private static void assertDictionariesEqual(DictionaryMaxlength a, DictionaryMaxlength b) {
@@ -177,6 +221,7 @@ public class DictionaryMaxlengthNoDepsTest {
         assertNotNull(x, name + " is null on left but not on right");
         assertNotNull(y, name + " is null on right but not on left");
         assertEquals(x.maxLength, y.maxLength, name + ".maxLength");
+        assertEquals(x.minLength, y.minLength, name + ".minLength"); // NEW
         assertEquals(x.dict, y.dict, name + ".dict");
     }
 }

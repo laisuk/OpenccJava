@@ -63,6 +63,7 @@ class DictionaryLibTest {
         Files.deleteIfExists(Paths.get(TEST_JSON_OUTPUT));
     }
 
+    // Use this to generate JSON file when modify DictionaryMaxlength structure
     @Test
     @Disabled
     void testSerializeToJsonFromDicts() {

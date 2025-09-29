@@ -12,8 +12,8 @@ import java.util.*;
  * <p><strong>Supported schema</strong> (top-level object of named dictionary entries):
  * <pre>{@code
  * {
- *   "st_characters": [ { "汉": "漢", ... }, 1 ],
- *   "st_phrases":    [ { "后台": "後台", ... }, 2 ],
+ *   "st_characters": [ { "汉": "漢", ... }, 2, 1 ],
+ *   "st_phrases":    [ { "后台": "後台", ... }, 16, 2 ],
  *   ...
  * }
  * }</pre>
@@ -44,9 +44,13 @@ import java.util.*;
  * <em>without</em> bringing Jackson as a dependency.</p>
  */
 final class MiniDictJson {
-    /** Entire JSON buffer under parse. */
+    /**
+     * Entire JSON buffer under parse.
+     */
     private final String s;
-    /** Cursor into {@link #s}. */
+    /**
+     * Cursor into {@link #s}.
+     */
     private int i = 0;
 
     /**
@@ -64,7 +68,7 @@ final class MiniDictJson {
      *
      * @param path path to a UTF-8 JSON file
      * @return a map from top-level key to {@link DictionaryMaxlength.DictEntry}
-     * @throws IOException if an I/O error occurs while reading the file
+     * @throws IOException              if an I/O error occurs while reading the file
      * @throws IllegalArgumentException if the JSON is malformed or violates the expected schema
      */
     static Map<String, DictionaryMaxlength.DictEntry> parseToMap(Path path) throws IOException {
@@ -80,7 +84,7 @@ final class MiniDictJson {
      *
      * @param in input stream containing UTF-8 JSON
      * @return a map from top-level key to {@link DictionaryMaxlength.DictEntry}
-     * @throws IOException if an I/O error occurs while reading the stream
+     * @throws IOException              if an I/O error occurs while reading the stream
      * @throws IllegalArgumentException if the JSON is malformed or violates the expected schema
      */
     static Map<String, DictionaryMaxlength.DictEntry> parseToMap(InputStream in) throws IOException {
@@ -154,16 +158,26 @@ final class MiniDictJson {
         expect('[');
         skipWs();
 
-        Map<String, String> map = readStringMap(); // first element: object
+        Map<String, String> map = readStringMap();  // first element: object
         skipWs();
         expect(',');
         skipWs();
 
-        int maxLen = readInt();                    // second element: int
+        int maxLen = readInt();                     // second element: int
+        skipWs();
+        expect(',');
+        skipWs();
+
+        int minLen = readInt();                     // 3rd: int (mandatory now)
         skipWs();
         expect(']');
 
-        return new DictionaryMaxlength.DictEntry(map, maxLen);
+        // Validation (tighten as you prefer)
+        if (maxLen < 0) throw err("maxLength must be >= 0");
+        if (minLen < 0) throw err("minLength must be >= 0");
+        if (maxLen > 0 && minLen > maxLen) throw err("minLength cannot exceed maxLength");
+
+        return new DictionaryMaxlength.DictEntry(map, maxLen, minLen);
     }
 
     /**
@@ -312,12 +326,16 @@ final class MiniDictJson {
         return has() && s.charAt(i) == c;
     }
 
-    /** @return {@code true} if {@link #i} is within {@link #s} */
+    /**
+     * @return {@code true} if {@link #i} is within {@link #s}
+     */
     private boolean has() {
         return i < s.length();
     }
 
-    /** @return {@code true} if the parser has reached the end of the buffer */
+    /**
+     * @return {@code true} if the parser has reached the end of the buffer
+     */
     private boolean eof() {
         return i >= s.length();
     }
