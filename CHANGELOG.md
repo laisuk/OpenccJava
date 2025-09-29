@@ -11,8 +11,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Update dictionaries
-- Add minLength field to DictEntry
-- Introduce bit-level delimiters check 
+- DictionaryMaxlength: computes and stores `minLength`.
+- JSON writer now emits [map,max,min]
+- Performance: bitset `isDelimiter()`; faster `getSplitRanges()`.
+- No public API breaks.
+
+### Announced
+
+- New JSON blocks: `st_punctuations`, `ts_punctuations` ([ {dict}, maxLength, minLength ]).
+- These are reserved for the next major and not used by runtime conversion yet.
+- `translatePunctuation()` is deprecated and will be removed in v1.1.0.
 
 ---
 
