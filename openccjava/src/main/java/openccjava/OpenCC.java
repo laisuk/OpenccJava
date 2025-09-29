@@ -738,6 +738,21 @@ public class OpenCC {
     /**
      * Attempts to detect whether the input text is written in Traditional or Simplified Chinese.
      *
+     * <p><strong>Refactor notice:</strong> In the next release this method will become
+     * <em>static</em> to align with the conversion dictionaries being initialized via
+     * lazy statics for improved startup and call-site performance. The instance method
+     * will remain for one release as a deprecated shim that delegates to the new
+     * static method, then be removed in a subsequent release.</p>
+     *
+     * <p><strong>Migration:</strong> Replace calls like:
+     * <pre>{@code
+     *   int v = opencc.zhoCheck(text);
+     * }</pre>
+     * with:
+     * <pre>{@code
+     *   int v = OpenCC.zhoCheck(text); // or your class name
+     * }</pre>
+     *
      * <p>This method removes non-Chinese characters, then analyzes the first ~200 UTF-8 bytes
      * (about 60–70 characters) for mismatches between the input and its conversion to
      * Simplified and Traditional Chinese.
