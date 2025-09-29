@@ -28,7 +28,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Refactored all codes to be Java 8+ compatible
+- Refactored all codes to be **Java 8+** compatible
 
 ### Fixed
 
