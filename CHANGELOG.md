@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - Update dictionaries
 - Add minLength field to DictEntry
+- Introduce bit-level delimiters check 
 
 ---
 

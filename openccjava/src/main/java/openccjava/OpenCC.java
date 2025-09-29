@@ -12,6 +12,8 @@ import java.util.stream.IntStream;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import static openccjava.DictRefs.isDelimiter;
+
 /**
  * OpenCC is a pure Java implementation of the Open Chinese Convert (OpenCC) system.
  * It provides simplified-traditional Chinese text conversion using preloaded dictionaries.
@@ -368,16 +370,17 @@ public class OpenCC {
 
         List<int[]> ranges = getSplitRanges(text, true);
         int numSegments = ranges.size();
+        int len = text.length();
 
         // Fast path: entire text is one uninterrupted segment
         if (numSegments == 1 &&
                 ranges.get(0)[0] == 0 &&
-                ranges.get(0)[1] == text.length()) {
+                ranges.get(0)[1] == len) {
             return convertSegment(text, dicts, maxLength);
         }
-
         // Use parallel stream if input is large or highly segmented
-        boolean useParallel = text.length() > 10_000 || numSegments > 100;
+        boolean useParallel = len > 10_000 || numSegments > 100;
+        StringBuilder sb = new StringBuilder(len + (len >> 4));
 
         if (useParallel) {
             String[] segments = new String[numSegments];
@@ -387,23 +390,18 @@ public class OpenCC {
                 String segment = text.substring(range[0], range[1]);
                 segments[i] = convertSegment(segment, dicts, maxLength);
             });
-
             // Join all converted segments
-            StringBuilder sb = new StringBuilder(text.length());
             for (String seg : segments) {
                 sb.append(seg);
             }
-
-            return sb.toString();
         } else {
             // Fallback: sequential processing
-            StringBuilder sb = new StringBuilder(text.length());
             for (int[] range : ranges) {
                 String segment = text.substring(range[0], range[1]);
                 sb.append(convertSegment(segment, dicts, maxLength));
             }
-            return sb.toString();
         }
+        return sb.toString();
     }
 
     /**
@@ -421,13 +419,14 @@ public class OpenCC {
      * @return the converted segment
      */
     public String convertSegment(String segment, List<DictEntry> dicts, int maxLength) {
-        if (segment.length() == 1 && delimiters.contains(segment.charAt(0))) {
+        if (segment.length() == 1 && isDelimiter(segment.charAt(0))) {
             return segment;
         }
 
         int segLen = segment.length();
         StringBuilder sb = threadLocalSb.get();
         sb.setLength(0); // reset for reuse
+        sb.ensureCapacity(segLen + (segLen >> 4));
 
         int i = 0;
         while (i < segLen) {
@@ -439,7 +438,7 @@ public class OpenCC {
                 final int end = i + len;
                 String word = segment.substring(i, end);
                 for (DictEntry entry : dicts) {
-                    if (entry.maxLength < len) continue;
+                    if (entry.maxLength < len || entry.minLength > len) continue;
 
                     String value = entry.dict.get(word);
                     if (value != null) {
@@ -484,7 +483,7 @@ public class OpenCC {
         final int textLength = text.length(); // Cache text length
 
         for (int i = 0; i < textLength; i++) {
-            if (delimiters.contains(text.charAt(i))) {
+            if (isDelimiter(text.charAt(i))) {
                 if (inclusive) {
                     // Optimized: Directly add the inclusive range
                     result.add(new int[]{start, i + 1});
