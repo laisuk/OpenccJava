@@ -21,6 +21,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - New JSON blocks: `st_punctuations`, `ts_punctuations` ([ {dict}, maxLength, minLength ]).
 - These are reserved for the next major and not used by runtime conversion yet.
 - `translatePunctuation()` is deprecated and will be removed in v1.1.0.
+- `zhoCheck()` will be changed from instance to static function in next major version (v1.1.0).
 
 ---
 
