@@ -4,16 +4,26 @@
 [![javadoc](https://javadoc.io/badge2/io.github.laisuk/openccjava/javadoc.svg)](https://javadoc.io/doc/io.github.laisuk/openccjava)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
-**Pure Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB**
-document
-support and **CLI** tools.
+**Pure Java**, **self-contained** implementation of **OpenCC** for **Traditional ↔ Simplified Chinese**
+text conversion, with full **Office/EPUB** document support and a lightweight **CLI**.
 
-## Features
+## ✨ Features
 
-- ✅ High-performance OpenCC-compatible conversion in pure Java.
-- ✅ Supports plain text and Office formats: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.epub`, etc.
-- ✅ Optional font name preservation during Office document conversion.
-- ✅ CLI tool (`OpenccJava.bat`) for converting files or stdin with flexible encoding options.
+- ✅ **High performance** – optimized dictionary lookups, on par with native OpenCC implementations.
+- ✅ **Pure Java, no JNI** – easy to use on any JVM (JDK 1.8+), no native libraries required.
+- ✅ **Wide format support** – convert plain text and Office documents: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.epub`, etc.
+- ✅ **Optional font name preservation** – keep original fonts when processing Office documents.
+- ✅ **CLI tool included** (`OpenccJava.bat`) – convert files or stdin with flexible encoding options.
+- ✅ **Cross-platform** – runs on Windows, Linux, and macOS without extra dependencies.
+- ✅ **Self-contained** – no third-party dependencies, just the JDK.
+- ✅ **Drop-in replacement for OpenCC configs** – supports the same dictionary structure and configs.
+
+## 📦 Distribution
+
+- Available on [Maven Central](https://search.maven.org/artifact/io.github.laisuk/openccjava)
+  and [JitPack](https://jitpack.io/#laisuk/OpenccJava).
+- Works with build tools like **Maven** and **Gradle**.
+- CLI binaries included in GitHub releases.
 
 ---
 
