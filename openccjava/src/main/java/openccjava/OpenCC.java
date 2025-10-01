@@ -370,17 +370,17 @@ public class OpenCC {
 
         List<int[]> ranges = getSplitRanges(text, true);
         int numSegments = ranges.size();
-        int len = text.length();
+        int textLen = text.length();
 
         // Fast path: entire text is one uninterrupted segment
         if (numSegments == 1 &&
                 ranges.get(0)[0] == 0 &&
-                ranges.get(0)[1] == len) {
+                ranges.get(0)[1] == textLen) {
             return convertSegment(text, dicts, maxLength);
         }
         // Use parallel stream if input is large or highly segmented
-        boolean useParallel = len > 10_000 || numSegments > 100;
-        StringBuilder sb = new StringBuilder(len + (len >> 4));
+        boolean useParallel = textLen > 10_000 || numSegments > 100;
+        StringBuilder sb = new StringBuilder(textLen + (textLen >> 4));
 
         if (useParallel) {
             String[] segments = new String[numSegments];
