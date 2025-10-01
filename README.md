@@ -391,3 +391,4 @@ This project supports parallel processing for high-performance batch conversion.
 - MIT License.
 - © Laisuk.
 - See [LICENSE](./LICENSE) for details.
+- See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for bundled OpenCC lexicons (Apache License 2.0).
