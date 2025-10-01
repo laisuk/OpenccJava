@@ -4,7 +4,8 @@
 [![javadoc](https://javadoc.io/badge2/io.github.laisuk/openccjava/javadoc.svg)](https://javadoc.io/doc/io.github.laisuk/openccjava)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
-**Pure Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB** document
+**Pure Java** implementation of **OpenCC** **Traditional/Simplified Chinese text** conversion with **Office/EPUB**
+document
 support and **CLI** tools.
 
 ## Features
@@ -30,7 +31,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.0.1")
+    implementation("io.github.laisuk:openccjava:1.0.3")
 }
 ```
 
@@ -38,7 +39,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.0.1'
+    implementation 'io.github.laisuk:openccjava:1.0.3'
 }
 ```
 
@@ -49,7 +50,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.3</version>
 </dependency>
 ```
 
@@ -65,7 +66,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.0.1' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.0.3' // replace with latest tag
 }
 ```
 
@@ -83,7 +84,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.0.1</version>
+<version>v1.0.3</version>
 </dependency>
 ```
 
@@ -100,7 +101,7 @@ cd OpenccJava
 
 ### Option 3: Local Drop-In Module
 
-If you don’t want to rely on JitPack:
+If you don’t want to rely on `mavenCentral` or `JitPack`:
 
 1. Copy the `openccjava/` folder into your own project.
 2. Edit settings.gradle:
@@ -146,7 +147,7 @@ OpenCC cc = new OpenCC("s2t", Path.of("dicts"));  // Load custom plain-text dict
 import openccjava.OpenCC;
 
 public class Example {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         OpenCC converter = new OpenCC("s2t");
         String result = converter.convert("汉字转换");
         System.out.println(result); // → 漢字轉換 
@@ -167,7 +168,7 @@ String result = converter.convert("“春眠不觉晓”", true);
 import openccjava.OpenCC;
 
 public class Example {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         OpenCC cc = new OpenCC();
         cc.setConfig("t2s");
         String cfg = cc.getConfig();           // → "t2s"
@@ -182,7 +183,7 @@ public class Example {
 import openccjava.OpenCC;
 
 public class Example {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         OpenCC cc = new OpenCC();
         int code = cc.zhoCheck("漢字");  // returns 1 → 1 = Traditional, 2 = Simplified, 0 = Unknown/Mixed
     }
@@ -195,7 +196,7 @@ public class Example {
 import openccjava.OpenCC;
 
 public class Example {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         OpenCC cc = new OpenCC();
         cc.s2t("汉字");            // 漢字 - Simplified → Traditional
         cc.t2s("漢字");            // 汉字 - Traditional → Simplified
@@ -228,7 +229,7 @@ tw2t, tw2tp, hk2t, t2jp, jp2t
 import openccjava.OpenCC;
 
 public class Example {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         OpenCC.setVerboseLogging(true);
     }
 }
