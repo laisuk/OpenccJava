@@ -189,6 +189,10 @@ public class Example {
 
 ### 🧠 Auto Variant Detection
 
+> **Migration Notes**: `zhoCheck()` will be refactored into a static method in the next major release (planned for
+> v1.1.0).  
+> At that time, it should be invoked as `Opencc.zhoCheck()`.
+
 ```java
 import openccjava.OpenCC;
 
