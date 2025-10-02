@@ -1,11 +1,12 @@
-// --- OS helpers ---
-// import org.gradle.internal.jvm.Jvm
+// --- OS helpers for GraalVM ---
+import org.gradle.internal.jvm.Jvm
 
 plugins {
     java
     application
     // --- GraalVM Native Build Tools (AOT compile to a single exe) ---
-    // id("org.graalvm.buildtools.native") version "0.10.2"
+    // Must use Oracle GraalVM JDK to build
+    id("org.graalvm.buildtools.native") version "0.10.2"
 }
 
 group = "io.github.laisuk"
@@ -123,7 +124,6 @@ tasks.register<Exec>("verifyFatJarSig") {
     }
 }
 
-/*
 // --- Uncomment these if using GraalVM native image ---
 
 // Picocli annotation processor flags → generate META-INF/native-image config
@@ -188,5 +188,3 @@ if (currentJava != null && currentJava.isJava11Compatible) {
         from("../dicts") { into("dicts") }
     }
 }
-
- */
