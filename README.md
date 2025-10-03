@@ -10,6 +10,7 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 ## ✨ Features
 
 - ✅ **High performance** – optimized dictionary lookups, on par with native OpenCC implementations.
+- ✅ **Accurate with non-BMP CJK** – correctly handles astral Chinese characters (CJK Ext. B–G, U+20000+), using surrogate-safe scanning and max-match across code points.
 - ✅ **Pure Java, no JNI** – easy to use on any JVM (JDK 1.8+), no native libraries required.
 - ✅ **Wide format support** – convert plain text and Office documents: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.epub`, etc.
 - ✅ **Optional font name preservation** – keep original fonts when processing Office documents.
