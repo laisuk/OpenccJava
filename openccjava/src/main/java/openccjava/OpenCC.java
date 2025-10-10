@@ -157,7 +157,7 @@ public class OpenCC {
      *
      * <p>If all attempts fail, a {@link RuntimeException} is thrown.</p>
      *
-     * <h3>Usage Example:</h3>
+     * <p><strong>Usage Example:</strong></p>
      * <pre>{@code
      * DictionaryMaxlength dict = OpenCC.DictionaryHolder.get();
      * }</pre>

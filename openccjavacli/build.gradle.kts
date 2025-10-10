@@ -1,7 +1,3 @@
-// --- OS helpers for GraalVM ---
-// Must use Oracle GraalVM JDK to build
-//import org.gradle.internal.jvm.Jvm
-
 plugins {
     java
     application
@@ -135,7 +131,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 // Only configure GraalVM native if running on Java 11+
-val currentJava = Jvm.current().javaVersion
+val currentJava = org.gradle.internal.jvm.Jvm.current().javaVersion
 
 if (currentJava != null && currentJava.isJava11Compatible) {
 
@@ -150,11 +146,6 @@ if (currentJava != null && currentJava.isJava11Compatible) {
                     "--no-fallback",
                     "-H:+ReportExceptionStackTraces",
                     "-H:+AddAllCharsets",
-                    "--initialize-at-build-time",
-                    "--native-compiler-options=/O2",
-                    "--native-linker-options=/OPT:REF",
-                    "--native-linker-options=/OPT:ICF",
-                    "--native-linker-options=/SUBSYSTEM:CONSOLE,6.01"
                 )
 
                 resources {
