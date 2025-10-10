@@ -29,7 +29,7 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 - ✅ **Pure Java, no JNI** – easy to use on any JVM (JDK 1.8+), no native libraries required.
 - ✅ **Wide format support** – convert plain text and Office documents: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.epub`, etc.
 - ✅ **Optional font name preservation** – keep original fonts when processing Office documents.
-- ✅ **CLI tool included** (`OpenccJava.bat`) – convert files or stdin with flexible encoding options.
+- ✅ **CLI tool included** (`OpenccJavaCli.bat`) – convert files or stdin with flexible encoding options.
 - ✅ **Cross-platform** – runs on Windows, Linux, and macOS without extra dependencies.
 - ✅ **Self-contained** – no third-party dependencies, just the JDK.
 - ✅ **Drop-in replacement for OpenCC configs** – supports the same dictionary structure and configs.
