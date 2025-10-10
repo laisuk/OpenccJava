@@ -273,7 +273,7 @@ silent.
 
 ---
 
-### 🧩 Example – Converting a .docx Document
+### 🧩 Example – Converting a `.docx` Document
 
 ```java
 import openccjava.OpenCC;
