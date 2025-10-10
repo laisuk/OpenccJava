@@ -146,7 +146,16 @@ if (currentJava != null && currentJava.isJava11Compatible) {
         binaries {
             named("main") {
                 imageName.set("openccjavacli")
-                buildArgs.addAll("--no-fallback", "-H:+ReportExceptionStackTraces", "-H:+AddAllCharsets")
+                buildArgs.addAll(
+                    "--no-fallback",
+                    "-H:+ReportExceptionStackTraces",
+                    "-H:+AddAllCharsets",
+                    "--initialize-at-build-time",
+                    "--native-compiler-options=/O2",
+                    "--native-linker-options=/OPT:REF",
+                    "--native-linker-options=/OPT:ICF",
+                    "--native-linker-options=/SUBSYSTEM:CONSOLE,6.01"
+                )
 
                 resources {
                     autodetect()
