@@ -146,6 +146,41 @@ public class OfficeHelper {
      * @param punctuation whether to convert punctuation characters
      * @param keepFont    whether to preserve font tags/markup during conversion
      * @return a {@link Result} object indicating success or failure
+     * <pre>{@code @example
+     * import openccjava.OpenCC;
+     * import openccjava.OfficeHelper;
+     * import openccjava.OfficeHelper.Result;
+     *
+     * import java.io.File;
+     *
+     * public class Example {
+     *     public static void main(String[] args) {
+     *         // Input and output files
+     *         File input  = new File("example_simplified.docx");
+     *         File output = new File("example_traditional.docx");
+     *
+     *         // Create an OpenCC converter (Simplified → Traditional)
+     *         OpenCC converter = new OpenCC("s2t.json");
+     *
+     *         // Convert the document
+     *         Result result = OfficeHelper.convert(
+     *                 input,
+     *                 output,
+     *                 "docx",      // Supported: docx, xlsx, pptx, odt, epub
+     *                 converter,
+     *                 true,        // Convert punctuation
+     *                 true         // Preserve font names
+     *         );
+     *
+     *         // Show result
+     *         if (result.success) {
+     *             System.out.println("✅ Conversion successful: " + output.getAbsolutePath());
+     *         } else {
+     *             System.err.println("❌ Conversion failed: " + result.message);
+     *         }
+     *     }
+     * }
+     * }</pre>
      */
     public static Result convert(
             File inputFile,
