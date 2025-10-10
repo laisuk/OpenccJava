@@ -20,8 +20,10 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
     - **Pre-allocated buffers** and **minimal** `String` / `char[]` **allocations** to avoid GC overhead during large
       conversions.
     - **Fully parallelized dictionary initialization**, ensuring instant startup after first load.
-      > Result: performance **on par with native OpenCC implementations (C++/Rust)**, verified with
-      multi-million-character benchmarks.
+
+  > Result: performance **on par with native OpenCC implementations (C++/Rust)**, verified with multi-million-character
+  benchmarks.
+
 - ✅ **Accurate with non-BMP CJK** – correctly handles astral Chinese characters (CJK Ext. B–G, U+20000+), using
   surrogate-safe scanning and max-match across code points.
 - ✅ **Pure Java, no JNI** – easy to use on any JVM (JDK 1.8+), no native libraries required.
@@ -283,7 +285,7 @@ import java.io.File;
 public class Example {
     static void main(String[] args) {
         // Input and output files
-        File input  = new File("example_simplified.docx");
+        File input = new File("example_simplified.docx");
         File output = new File("example_traditional.docx");
 
         // Create an OpenCC converter (Simplified → Traditional)
