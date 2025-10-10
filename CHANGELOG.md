@@ -6,6 +6,56 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.0] - 2025-10-10
+
+### Added
+
+- Introduced `StarterIndex` and `UnionCache` to speed up conversion.
+
+### Changed
+
+- **Static dictionary implementation**:  
+  Dictionaries are now loaded once per JVM (lazy-loaded via `DictionaryHolder`) and shared by all `OpenCC` instances.
+    - Improves startup performance and reduces memory usage for GUI apps (e.g. JavaFX) and helper classes (e.g.
+      `OfficeHelper`).
+    - Log messages are emitted on first load:
+        - **INFO** when loaded from file system or embedded resource.
+        - **WARNING** when falling back to plain-text dictionary sources.
+
+- `OpenCC.zhoCheck(String)` is now a **static method** for clarity and consistency.  
+  Existing instance calls `myOpenCC.zhoCheck(text)` will no longer compile.  
+  Use one of:
+    - `OpenCC.zhoCheck(text)` – preferred static usage.
+    - `myOpenCC.zhoCheckInstance(text)` – for backward-compatible instance style.
+
+- Add Starter Length Mask for faster dictionary lookup
+
+### Migration Notes
+
+#### Before (v1.0.3)
+
+```java
+OpenCC cc = new OpenCC("s2t");
+int result = cc.zhoCheck("汉字");
+```
+
+### After (v1.1.0)
+
+```java
+// Preferred static usage
+int result = OpenCC.zhoCheck("汉字");
+
+// Or for compatibility with old instance style
+OpenCC cc = new OpenCC("s2t");
+int result = cc.zhoCheckInstance("汉字");
+
+```
+
+> ⚠️ Note: The dictionary is now shared across all OpenCC instances.  
+> Any modification to the dictionary object will affect all instances in the JVM.
+
+---
+
 ## [1.0.3] - 2025-09-30
 
 ### Changed

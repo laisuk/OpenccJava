@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "io.github.laisuk"
-version = "1.0.3"
+version = "1.1.0"
 
 java {
     withJavadocJar()
