@@ -160,7 +160,7 @@ public class OfficeHelper {
      *         File output = new File("example_traditional.docx");
      *
      *         // Create an OpenCC converter (Simplified → Traditional)
-     *         OpenCC converter = new OpenCC("s2t.json");
+     *         OpenCC converter = new OpenCC("s2t");
      *
      *         // Convert the document
      *         Result result = OfficeHelper.convert(
