@@ -433,11 +433,11 @@ openccjavacli.bat convert -c s2t -p --con-enc UTF-8
 
 ---
 
-### ⚡ Benchmark (verified)
+### ⚡ Benchmark
 
 | Test Case                 | Input Size      | Platform                                      | Time              | Notes                             |
 |---------------------------|-----------------|-----------------------------------------------|-------------------|-----------------------------------|
-| Simplified → Traditional  | 3 million chars | Intel i5-13400 @ 2.5 GHz (Win 11 x64, JDK 21) | **≈ 80 – 150 ms** | Comparable to native C++ OpenCC   |
+| Simplified → Traditional  | 3 million chars | Intel i5-13400 @ 2.5 GHz (Win 11 x64, JDK 21) | **≈ 80 – 150 ms** | Comparable to native coded OpenCC |
 | Traditional → Simplified  | 3 million chars | Same setup                                    | **≈ 90 – 160 ms** | Slight variation due to GC cycles |
 | Office Document (`.docx`) | 1 MB XML text   | Same setup                                    | **< 200 ms**      | Includes XML parse + repack       |
 
