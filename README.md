@@ -247,13 +247,28 @@ Most methods support boolean punctuation as a second parameter.
 List<String> configs = OpenCC.getSupportedConfigs();
 ```
 
-Includes:
+The following configuration keys correspond to OpenCC conversion modes:
 
-```
-s2t, t2s, s2tw, tw2s, s2twp, tw2sp,
-s2hk, hk2s, t2tw, t2twp, t2hk,
-tw2t, tw2tp, hk2t, t2jp, jp2t
-```
+| Config Key | Direction                                    | Description                                                                      |
+|------------|----------------------------------------------|----------------------------------------------------------------------------------|
+| **s2t**    | Simplified → Traditional                     | General conversion from Simplified Chinese to Traditional Chinese.               |
+| **t2s**    | Traditional → Simplified                     | Converts Traditional Chinese text to Simplified Chinese.                         |
+| **s2tw**   | Simplified → Traditional (Taiwan)            | Uses Taiwan-specific vocabulary and character preferences.                       |
+| **tw2s**   | Traditional (Taiwan) → Simplified            | Converts Taiwan Traditional Chinese to Simplified Chinese.                       |
+| **s2twp**  | Simplified → Traditional (Taiwan + phrases)  | Applies Taiwan-specific character and phrase mappings.                           |
+| **tw2sp**  | Traditional (Taiwan + phrases) → Simplified  | Converts Taiwan-phrased Traditional Chinese to Simplified Chinese.               |
+| **s2hk**   | Simplified → Traditional (Hong Kong)         | Uses Hong Kong variant characters and word choices.                              |
+| **hk2s**   | Traditional (Hong Kong) → Simplified         | Converts Hong Kong Traditional Chinese to Simplified Chinese.                    |
+| **t2tw**   | Traditional → Traditional (Taiwan)           | Normalizes Traditional Chinese to Taiwan variant.                                |
+| **t2twp**  | Traditional → Traditional (Taiwan + phrases) | Includes Taiwan-specific phrase-level normalization.                             |
+| **t2hk**   | Traditional → Traditional (Hong Kong)        | Normalizes Traditional Chinese to Hong Kong variant.                             |
+| **tw2t**   | Traditional (Taiwan) → Traditional           | Converts Taiwan variant back to general Traditional Chinese.                     |
+| **tw2tp**  | Traditional (Taiwan + phrases) → Traditional | Converts Taiwan phrased Traditional Chinese to general Traditional.              |
+| **hk2t**   | Traditional (Hong Kong) → Traditional        | Converts Hong Kong variant back to general Traditional Chinese.                  |
+| **t2jp**   | Traditional → Japanese Shinjitai             | Converts Traditional Japanese Kyujitai to Japanese Shinjitai (simplified kanji). |
+| **jp2t**   | Japanese Shinjitai → Traditional             | Converts Japanese Shinjitai characters back to Traditional Japanese Kyujitai.    |
+
+---
 
 ### 📋 Verbose Logging (optional for debug)
 
