@@ -930,12 +930,12 @@ public class OpenCC {
     /**
      * Converts a single text segment using pre-partitioned dictionaries and an optional {@link StarterUnion}.
      *
-     * <h3>Overview</h3>
+     * <p><strong>Overview</strong></p>
      * This method implements the OpenCC-style greedy, phrase-first replacement algorithm with several
      * optimizations to minimize unnecessary lookups. It processes the input string left to right, emitting
      * replacements or original code points as appropriate.
      *
-     * <h3>Algorithm</h3>
+     * <p><strong>Algorithm</strong></p>
      * <ol>
      *   <li><b>Starter pre-check:</b>
      *       If a {@link StarterUnion} is provided and the current code point is not present in its starter
@@ -959,7 +959,7 @@ public class OpenCC {
      *       the cursor advances by one code point.</li>
      * </ol>
      *
-     * <h3>Performance notes</h3>
+     * <p><strong>Performance notes</strong></p>
      * <ul>
      *   <li><b>Union pre-check:</b> avoids creating substrings and hash lookups when no dictionary key can
      *       start with the current code point.</li>
@@ -970,7 +970,7 @@ public class OpenCC {
      *       two code units.</li>
      * </ul>
      *
-     * <h3>Unicode notes</h3>
+     *<p><strong>Unicode notes</strong></p>
      * <ul>
      *   <li>Iteration is performed by Unicode code point.</li>
      *   <li>{@link Character#charCount(int)} determines how many UTF-16 units a code point consumes.</li>
