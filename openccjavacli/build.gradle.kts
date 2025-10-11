@@ -145,7 +145,7 @@ if (currentJava != null && currentJava.isJava11Compatible) {
                 buildArgs.addAll(
                     "--no-fallback",
                     "-H:+ReportExceptionStackTraces",
-                    "-H:+AddAllCharsets",
+                    "-H:+AddAllCharsets"
                 )
 
                 resources {
