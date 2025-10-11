@@ -164,10 +164,11 @@ your classpath.
 ### 🔧 Constructor Overloads
 
 ```java
+OpenCC cc = OpenCC.fromConfig("s2t");             // Uses static helper from config, autoload dicts
 OpenCC cc = new OpenCC();                         // Uses default config "s2t", auto-load dicts
 OpenCC cc = new OpenCC("tw2sp");                  // Specify config
 // @deprecated
-OpenCC cc = new OpenCC("s2t", Path.of("dicts"));  // Load custom plain-text dicts from folder
+OpenCC cc = new OpenCC("s2t", Path.of("dicts"));  // Load custom plain-text dicts from folder (@deprecated)
 ```
 
 ### 🔤 Basic Conversion
