@@ -247,12 +247,11 @@ public final class ConversionPlanCache {
     /**
      * Composite key for caching conversion plans.
      * <p>
-     * A {@code PlanKey} uniquely identifies a plan by:
+     * A {@code PlanKey} uniquely identifies a plan by:</p>
      * <ul>
      *   <li>{@link OpenCC.Config} – the conversion configuration</li>
      *   <li>Punctuation mode – whether punctuation conversion is enabled</li>
      * </ul>
-     * </p>
      *
      * <p>
      * Instances are immutable and provide efficient hashing

@@ -25,7 +25,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Utility class for converting Office-based document formats using OpenCC logic.
  *
- * <p>Supported formats include:
+ * <p>Supported formats include:</p>
  * <ul>
  *   <li>Microsoft Office XML formats: {@code .docx}, {@code .xlsx}, {@code .pptx}</li>
  *   <li>OpenDocument formats: {@code .odt}, {@code .ods}, {@code .odp}</li>
@@ -33,9 +33,9 @@ import java.util.zip.ZipOutputStream;
  * </ul>
  *
  * <p>Internally, the class handles these formats as ZIP archives, extracts and processes
- * their XML/XHTML content, applies OpenCC transformations, and repackages the result.
+ * their XML/XHTML content, applies OpenCC transformations, and repackages the result.</p>
  *
- * <p>This class is designed for use in batch or CLI applications.
+ * <p>This class is designed for use in batch or CLI applications.</p>
  */
 public class OfficeHelper {
     /**
@@ -54,14 +54,14 @@ public class OfficeHelper {
      * Precompiled regular expression patterns for extracting font declarations
      * across supported document formats.
      *
-     * <p>Each pattern provides three capturing groups:
+     * <p>Each pattern provides three capturing groups:</p>
      * <ol>
      *   <li>Prefix (e.g., attribute or CSS property start)</li>
      *   <li>The actual font value</li>
      *   <li>Suffix (e.g., closing quote, semicolon, or delimiter)</li>
      * </ol>
      *
-     * <p>Supported formats and their corresponding attributes:
+     * <p>Supported formats and their corresponding attributes:</p>
      * <ul>
      *   <li><b>docx</b>: {@code w:eastAsia}, {@code w:ascii}, {@code w:hAnsi}, {@code w:cs}</li>
      *   <li><b>xlsx</b>: {@code val}</li>
@@ -73,7 +73,7 @@ public class OfficeHelper {
      *
      * <p>These patterns are used when {@code --keep-font} is enabled to temporarily
      * replace font declarations with markers during OpenCC text conversion,
-     * and then restore them afterward.
+     * and then restore them afterward.</p>
      */
     private static final Map<String, Pattern> FONT_PATTERNS;
 
@@ -129,7 +129,7 @@ public class OfficeHelper {
     /**
      * Converts an Office or EPUB document using the given OpenCC converter.
      *
-     * <p>This method performs the following steps:
+     * <p>This method performs the following steps:</p>
      * <ol>
      *   <li>Unzips the document to a temporary directory</li>
      *   <li>Locates content XML/XHTML files based on the format</li>
@@ -146,7 +146,8 @@ public class OfficeHelper {
      * @param punctuation whether to convert punctuation characters
      * @param keepFont    whether to preserve font tags/markup during conversion
      * @return a {@link Result} object indicating success or failure
-     * <pre>{@code @example
+     * <pre>{@code
+     * // @example
      * import openccjava.OpenCC;
      * import openccjava.OfficeHelper;
      * import openccjava.OfficeHelper.Result;
@@ -272,7 +273,7 @@ public class OfficeHelper {
      * Extracts the contents of a ZIP file to a target directory.
      *
      * <p>This method creates the target directory if it does not exist.
-     * It preserves the relative file structure and avoids ZIP slip attacks by verifying path normalization.
+     * It preserves the relative file structure and avoids ZIP slip attacks by verifying path normalization.</p>
      *
      * @param zipFile   the path to the source ZIP file
      * @param targetDir the directory to extract files into
@@ -302,7 +303,7 @@ public class OfficeHelper {
      *
      * <p>If the source path is a directory, it recursively adds all files under that path
      * using forward-slash (UNIX-style) entry names. If the source is a single file,
-     * only that file is zipped.
+     * only that file is zipped.</p>
      *
      * @param sourcePath  the path to a file or directory to archive
      * @param zipFilePath the destination ZIP file path
@@ -347,14 +348,14 @@ public class OfficeHelper {
     /**
      * Creates a valid EPUB ZIP archive from the extracted source directory.
      *
-     * <p>According to the EPUB specification, the {@code mimetype} file:
+     * <p>According to the EPUB specification, the {@code mimetype} file:</p>
      * <ul>
      *   <li>Must be the first entry in the ZIP archive</li>
      *   <li>Must be stored uncompressed</li>
      * </ul>
      *
      * <p>This method first adds the {@code mimetype} file, then recursively adds the remaining files
-     * in the directory. If the mimetype file is missing, an error {@link Result} is returned.
+     * in the directory. If the mimetype file is missing, an error {@link Result} is returned.</p>
      *
      * @param sourceDir the base directory containing the EPUB structure
      * @param outputZip the path to write the resulting EPUB ZIP file
@@ -414,7 +415,7 @@ public class OfficeHelper {
      *
      * <p>This method identifies the key text-containing XML components based on the input format.
      * For most formats, these are well-defined single paths. For formats like {@code pptx} and
-     * {@code epub}, this method uses recursive file discovery.
+     * {@code epub}, this method uses recursive file discovery.</p>
      *
      * @param format  the file format (e.g., {@code docx}, {@code epub}, {@code odt})
      * @param baseDir the extracted root directory of the document
@@ -506,9 +507,9 @@ public class OfficeHelper {
      * Recursively deletes a directory and all its contents.
      *
      * <p>This method is typically used to clean up temporary extraction folders after document processing.
-     * It walks the file tree in reverse order (files first, then directories) to ensure successful deletion.
+     * It walks the file tree in reverse order (files first, then directories) to ensure successful deletion.</p>
      *
-     * <p>Any deletion failures (e.g. due to file locks) are logged but do not halt execution.
+     * <p>Any deletion failures (e.g. due to file locks) are logged but do not halt execution.</p>
      *
      * @param dirPath the root directory to delete
      */

@@ -11,8 +11,8 @@ import java.util.*;
  * a full lookup.
  * </p>
  *
- * <p>
- * Internally, two {@link BitSet}s are maintained:
+ * <p>Internally, two {@link BitSet}s are maintained:</p>
+ *
  * <ul>
  *   <li>{@code bmpMask} – for all starters in the Basic Multilingual Plane
  *       (U+0000 to U+FFFF)</li>
@@ -197,8 +197,8 @@ public final class StarterUnion {
 
     /**
      * Returns the number of UTF-16 code units required to represent the given starter.
-     * <p>
-     * This is used when advancing through a {@link CharSequence} during conversion.
+     *
+     * <p>This is used when advancing through a {@link CharSequence} during conversion.</p>
      * <ul>
      *   <li>For BMP characters, the return value is {@code 1} (a single {@code char}).</li>
      *   <li>For non-BMP characters (astral planes), the return value is {@code 2}

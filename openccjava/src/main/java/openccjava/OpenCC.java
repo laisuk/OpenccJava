@@ -19,10 +19,10 @@ import static openccjava.DictRefs.isDelimiter;
  * It provides simplified-traditional Chinese text conversion using preloaded dictionaries.
  *
  * <p>This class supports multiple configurations such as s2t, t2s, s2tw, tw2s, etc.
- * It loads dictionaries from a bundled JSON file or falls back to raw dict text files.
+ * It loads dictionaries from a bundled JSON file or falls back to raw dict text files.</p>
  *
  * <p>Conversion is stateless and thread-safe, with thread-local StringBuilder optimization
- * for performance.
+ * for performance.</p>
  */
 public class OpenCC {
     /**
@@ -67,15 +67,93 @@ public class OpenCC {
 
     /**
      * Supported conversion configurations.
-     * <p>
-     * Each constant corresponds to an OpenCC conversion mode, such as
-     * Simplified↔Traditional, or region-specific variants (Taiwan, Hong Kong, Japan).
-     * </p>
+     *
+     * <p>Each constant corresponds to an OpenCC conversion mode,
+     * covering Simplified ↔ Traditional Chinese and region-specific variants
+     * (Taiwan, Hong Kong, Japan). The {@code p} suffix indicates that
+     * phrase-level mappings are also applied.</p>
      */
     public enum Config {
-        S2T, T2S, S2Tw, Tw2S, S2Twp, Tw2Sp,
-        S2Hk, Hk2S, T2Tw, T2Twp, Tw2T, Tw2Tp,
-        T2Hk, Hk2T, T2Jp, Jp2T;
+
+        /**
+         * Simplified → Traditional.
+         */
+        S2T,
+
+        /**
+         * Traditional → Simplified.
+         */
+        T2S,
+
+        /**
+         * Simplified → Traditional (Taiwan).
+         */
+        S2Tw,
+
+        /**
+         * Traditional (Taiwan) → Simplified.
+         */
+        Tw2S,
+
+        /**
+         * Simplified → Traditional (Taiwan, with phrases).
+         */
+        S2Twp,
+
+        /**
+         * Traditional (Taiwan, with phrases) → Simplified.
+         */
+        Tw2Sp,
+
+        /**
+         * Simplified → Traditional (Hong Kong).
+         */
+        S2Hk,
+
+        /**
+         * Traditional (Hong Kong) → Simplified.
+         */
+        Hk2S,
+
+        /**
+         * Traditional → Traditional (Taiwan).
+         */
+        T2Tw,
+
+        /**
+         * Traditional → Traditional (Taiwan, with phrases).
+         */
+        T2Twp,
+
+        /**
+         * Traditional (Taiwan) → Traditional.
+         */
+        Tw2T,
+
+        /**
+         * Traditional (Taiwan, with phrases) → Traditional.
+         */
+        Tw2Tp,
+
+        /**
+         * Traditional → Traditional (Hong Kong).
+         */
+        T2Hk,
+
+        /**
+         * Traditional (Hong Kong) → Traditional.
+         */
+        Hk2T,
+
+        /**
+         * Traditional → Japanese Shinjitai.
+         */
+        T2Jp,
+
+        /**
+         * Japanese Shinjitai → Traditional.
+         */
+        Jp2T;
 
         /**
          * Returns the lowercase string form of this config.
@@ -362,7 +440,7 @@ public class OpenCC {
      *
      * <p>The method dispatches the conversion to the corresponding
      * configuration logic (e.g., s2t, t2s, s2tw, etc.). If the configuration
-     * is unsupported, it returns an error string and sets {@code lastError}.
+     * is unsupported, it returns an error string and sets {@code lastError}.</p>
      *
      * @param input       the text to convert
      * @param punctuation whether to convert punctuation characters
@@ -438,9 +516,9 @@ public class OpenCC {
      *
      * <p>This method checks the internal cache first. If no entry is found,
      * it creates a new {@code DictRefs} object using the relevant dictionary entries
-     * from {@link DictionaryMaxlength}, supporting up to 3 rounds of replacements.
+     * from {@link DictionaryMaxlength}, supporting up to 3 rounds of replacements.</p>
      *
-     * <p>The result is cached for future lookups to avoid recomputation.
+     * <p>The result is cached for future lookups to avoid recomputation.</p>
      *
      * @param key the configuration key (e.g., "s2t", "tw2sp")
      * @return a {@code DictRefs} instance representing the translation rules,
@@ -513,7 +591,7 @@ public class OpenCC {
      * Applies dictionary-based replacements to the input text using segment-based processing.
      *
      * <p>If the text contains multiple segments (e.g., based on punctuation/delimiters),
-     * each segment is processed separately. Large inputs are processed in parallel for performance.
+     * each segment is processed separately. Large inputs are processed in parallel for performance.</p>
      *
      * @param text      the original text to convert
      * @param dicts     the list of dictionaries (in order of priority) to apply
@@ -567,9 +645,9 @@ public class OpenCC {
      *
      * <p>If the segment is a single delimiter character, it is returned as-is.
      * Otherwise, the method performs greedy matching from left to right,
-     * trying to match the longest possible substrings found in the dictionaries.
+     * trying to match the longest possible substrings found in the dictionaries.</p>
      *
-     * <p>This method reuses a thread-local {@code StringBuilder} to reduce allocations.
+     * <p>This method reuses a thread-local {@code StringBuilder} to reduce allocations.</p>
      *
      * @param segment   the text segment to convert
      * @param dicts     the list of dictionaries to apply (highest priority first)
@@ -625,10 +703,10 @@ public class OpenCC {
      *
      * <p>This method is used to divide long text into smaller segments for conversion.
      * A segment is defined as a contiguous run of non-delimiter characters, optionally
-     * followed by or isolated with a delimiter depending on the {@code inclusive} flag.
+     * followed by or isolated with a delimiter depending on the {@code inclusive} flag.</p>
      *
      * <p>Each returned {@code int[]} contains two elements:
-     * [start index (inclusive), end index (exclusive)].
+     * [start index (inclusive), end index (exclusive)].</p>
      *
      * @param text      the input text to segment
      * @param inclusive whether to include delimiters as part of the preceding segment ({@code true})
@@ -669,8 +747,9 @@ public class OpenCC {
     /**
      * Groups dictionary entries into phrase dictionaries and single-character dictionaries,
      * with cached phrase-length bounds.
-     * <p>
-     * This partitioning is used internally to optimize lookup:
+     *
+     * <p>This partitioning is used internally to optimize lookup:</p>
+     *
      * <ul>
      *   <li><b>phraseDicts</b> – dictionaries where {@code maxLength &ge; 3},
      *       searched longest-first during phrase matching</li>
@@ -680,7 +759,6 @@ public class OpenCC {
      *   <li><b>phraseMinLen</b> – the minimum key length across all phrase dictionaries
      *       (0 if none)</li>
      * </ul>
-     * </p>
      */
     private static final class DictPartition {
         /**
@@ -1192,7 +1270,7 @@ public class OpenCC {
      * Converts each character in the input text from Simplified Chinese to Traditional Chinese.
      *
      * <p>This method uses only the character-level dictionary (`st_characters`) and does not
-     * apply phrase or context-based replacements.
+     * apply phrase or context-based replacements.</p>
      *
      * @param input the input text in Simplified Chinese
      * @return the text converted to Traditional Chinese, character by character
@@ -1205,7 +1283,7 @@ public class OpenCC {
      * Converts each character in the input text from Traditional Chinese to Simplified Chinese.
      *
      * <p>This method uses only the character-level dictionary (`ts_characters`) and does not
-     * apply phrase or context-based replacements.
+     * apply phrase or context-based replacements.</p>
      *
      * @param input the input text in Traditional Chinese
      * @return the text converted to Simplified Chinese, character by character
@@ -1219,9 +1297,9 @@ public class OpenCC {
      *
      * <p>This method removes non-Chinese characters, then analyzes the first ~200 UTF-8 bytes
      * (about 60–70 characters) for mismatches between the input and its conversion to
-     * Simplified and Traditional Chinese.
+     * Simplified and Traditional Chinese.</p>
      *
-     * <p>Return codes:
+     * <p>Return codes:</p>
      * <ul>
      *   <li>0 – Undetermined or mixed/other content</li>
      *   <li>1 – Likely Traditional Chinese</li>

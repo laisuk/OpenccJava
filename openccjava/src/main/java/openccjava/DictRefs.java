@@ -10,10 +10,10 @@ import java.util.regex.Pattern;
  * via a user-defined segment replacement function.
  *
  * <p>This class supports up to 3 transformation rounds, each using one or more dictionaries.
- * The {@link #applySegmentReplace(String, SegmentReplaceFn)} method applies these rounds in sequence.
+ * The {@link #applySegmentReplace(String, SegmentReplaceFn)} method applies these rounds in sequence.</p>
  *
  * <p>Utility constants such as punctuation maps, delimiter sets, and strip regex are also defined
- * for use in Chinese variant normalization and segmentation logic.
+ * for use in Chinese variant normalization and segmentation logic.</p>
  */
 public class DictRefs {
     private final List<DictEntry> round1;
@@ -139,7 +139,7 @@ public class DictRefs {
     /**
      * Computes the maximum phrase length from each round's dictionaries.
      *
-     * <p>The result is cached until {@code withRound2()} or {@code withRound3()} is called again.
+     * <p>The result is cached until {@code withRound2()} or {@code withRound3()} is called again.</p>
      *
      * @return a list of max lengths for each round
      */
@@ -162,7 +162,7 @@ public class DictRefs {
     /**
      * Performs multi-round segment replacement with per-round starter unions.
      * <p>
-     * Each round is applied in sequence:
+     * Each round is applied in sequence:</p>
      * <ol>
      *   <li>Round&nbsp;1 is always applied with {@link #u1}.</li>
      *   <li>If defined, round&nbsp;2 is applied with {@link #u2}.</li>
@@ -170,7 +170,7 @@ public class DictRefs {
      * </ol>
      *
      * <p>
-     * The provided {@link SegmentReplaceFnWithUnion} receives:
+     * The provided {@link SegmentReplaceFnWithUnion} receives:</p>
      * <ul>
      *   <li>the current input text,</li>
      *   <li>the list of dictionaries for the round,</li>
@@ -260,7 +260,7 @@ public class DictRefs {
     /**
      * A pattern for stripping non-Chinese symbols (punctuation, whitespace, Latin letters, digits, etc.).
      *
-     * <p>This is used in heuristics such as {@code zhoCheck()} to isolate Chinese text for variant checking.
+     * <p>This is used in heuristics such as {@code zhoCheck()} to isolate Chinese text for variant checking.</p>
      */
     public static final Pattern STRIP_REGEX = Pattern.compile("[!-/:-@\\[-`{-~\\t\\n\\v\\f\\r 0-9A-Za-z_著]");
 

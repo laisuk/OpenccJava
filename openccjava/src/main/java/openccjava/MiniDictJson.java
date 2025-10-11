@@ -9,7 +9,7 @@ import java.util.*;
 /**
  * Minimal, schema-specific JSON reader for {@link DictionaryMaxlength} snapshots.
  *
- * <p><strong>Supported schema</strong> (top-level object of named dictionary entries):
+ * <p><strong>Supported schema</strong> (top-level object of named dictionary entries):</p>
  * <pre>{@code
  * {
  *   "st_characters": [ { "汉": "漢", ... }, 2, 1 ],
@@ -18,13 +18,13 @@ import java.util.*;
  * }
  * }</pre>
  *
- * <p>Each value is an array of exactly two elements:
+ * <p>Each value is an array of exactly two elements:</p>
  * <ol>
  *   <li>a JSON object {@code {string -> string}} for the mapping</li>
  *   <li>a non-negative integer {@code maxLength}</li>
  * </ol>
  *
- * <p><strong>Parser capabilities & limits</strong>:
+ * <p><strong>Parser capabilities & limits</strong>:</p>
  * <ul>
  *   <li>Understands objects {@code { ... }}, arrays {@code [ ... ]} (only in the top-level values),
  *       strings (with escapes), and non-negative integers.</li>

@@ -11,13 +11,13 @@ import java.util.function.BiConsumer;
  * Represents a container for all OpenCC dictionary mappings,
  * including phrase-level and character-level dictionaries.
  *
- * <p>This class supports loading from:
+ * <p>This class supports loading from:</p>
  * <ul>
  *     <li>JSON-serialized form (used in deployments)</li>
  *     <li>Individual dictionary text files (used during development or as fallback)</li>
  * </ul>
  *
- * <p>Each dictionary is stored as a {@link DictEntry} with:
+ * <p>Each dictionary is stored as a {@link DictEntry} with:</p>
  * <ul>
  *     <li>{@code dict}: key-value pairs of source→target</li>
  *     <li>{@code maxLength}: the longest phrase/key length</li>
@@ -339,7 +339,7 @@ public class DictionaryMaxlength {
     /**
      * Parses the content of a dictionary text file into a {@code DictEntry}.
      *
-     * <p>Expected format per line:
+     * <p>Expected format per line:</p>
      * <ul>
      *   <li>Source phrase, followed by a TAB character (<code>'\t'</code>)</li>
      *   <li>Translation text, which may contain additional tokens after a space or tab;
@@ -597,7 +597,7 @@ public class DictionaryMaxlength {
     /**
      * Serializes this {@code DictionaryMaxlength} to a compact JSON file (UTF-8), no external libraries.
      * <p>
-     * Compact form = no indentation/newlines, natural key order (sortKeys=false).
+     * Compact form = no indentation/newlines, natural key order (sortKeys=false).</p>
      *
      * @param outputPath destination path (will be created or truncated)
      * @throws IOException if writing fails
