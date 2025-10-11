@@ -204,6 +204,14 @@ public class DictionaryMaxlength {
         // ----- assignment table (ordered, then wrapped unmodifiable) -----
         final Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> assign = getAssign();
 
+        files.keySet().forEach(name -> {
+            if (!assign.containsKey(name)) {
+                throw new IllegalStateException(
+                        "Missing assignment mapping for dictionary '" + name +
+                                "' (filename=" + files.get(name) + ")");
+            }
+        });
+
         for (Map.Entry<String, String> kv : files.entrySet()) {
             final String dictName = kv.getKey();
             final String filename = kv.getValue();
@@ -212,12 +220,18 @@ public class DictionaryMaxlength {
             try {
                 final DictEntry entry;
                 if (Files.exists(fsPath)) {
-                    entry = loadDictionaryMaxlength(fsPath);
+                    try (BufferedReader br = Files.newBufferedReader(fsPath, StandardCharsets.UTF_8)) {
+                        entry = loadDictionaryMaxlength(br);
+                    }
                 } else {
                     final String resPath = "/" + basePath + "/" + filename;
                     try (InputStream in = DictionaryMaxlength.class.getResourceAsStream(resPath)) {
-                        if (in == null) throw new FileNotFoundException(filename);
-                        entry = loadDictionaryMaxlength(in);
+                        if (in == null) throw new FileNotFoundException("Missing resource: " + resPath +
+                                " (also checked FS: " + fsPath.toAbsolutePath() + ")");
+                        try (BufferedReader br = new BufferedReader(
+                                new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                            entry = loadDictionaryMaxlength(br);
+                        }
                     }
                 }
 
