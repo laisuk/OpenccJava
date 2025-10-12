@@ -2,7 +2,9 @@ package openccjava;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
+import java.util.logging.Level;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,29 +36,71 @@ class OpenCCTest {
     @Test
     void testZhoCheckTraditional() {
         String text = "繁體中文";
-        int result = opencc.zhoCheck(text);
+        int result = OpenCC.zhoCheck(text);
         assertEquals(1, result); // 1 = traditional
     }
 
     @Test
     void testZhoCheckSimplified() {
         String text = "简体中文";
-        int result = opencc.zhoCheck(text);
+        int result = OpenCC.zhoCheck(text);
         assertEquals(2, result); // 2 = simplified
     }
 
     @Test
     void testZhoCheckUnknown() {
         String text = "hello world!";
-        int result = opencc.zhoCheck(text);
+        int result = OpenCC.zhoCheck(text);
         assertEquals(0, result); // not Chinese
     }
 
     @Test
     void testConfigFallback() {
-        OpenCC bad = new OpenCC("invalid_config");
+        OpenCC bad = OpenCC.fromConfig("invalid_config");
         assertEquals("s2t", bad.getConfig());
         assertNotNull(bad.getLastError());
+    }
+
+    @Test
+    void testConfigEnum() {
+        OpenCC.Config configEnum = OpenCC.Config.fromStr("s2twp");
+        String ConfigStr = configEnum.asStr();
+        assertEquals("s2twp", ConfigStr);
+    }
+
+    @Test
+    void testConfigEnumRoundTrip() {
+        // ✅ Case-insensitive matching
+        assertEquals(OpenCC.Config.S2Twp, OpenCC.Config.fromStr("s2twp"));
+        assertEquals(OpenCC.Config.S2Twp, OpenCC.Config.fromStr("S2Twp"));
+        assertEquals(OpenCC.Config.S2Twp, OpenCC.Config.fromStr("S2TWP"));
+        // ✅ Round-trip consistency
+        for (OpenCC.Config cfg : OpenCC.Config.values()) {
+            assertEquals(cfg, OpenCC.Config.fromStr(cfg.asStr()));
+            assertEquals(cfg.asStr(), cfg.asStr().toLowerCase()); // ensure lowercase form
+        }
+    }
+
+    @Test
+    void testInvalidConfigThrows() {
+        // ✅ Null input
+        assertThrows(IllegalArgumentException.class, () -> OpenCC.Config.fromStr(null));
+        // ✅ Unknown config
+        assertThrows(IllegalArgumentException.class, () -> OpenCC.Config.fromStr("invalid"));
+        assertThrows(IllegalArgumentException.class, () -> OpenCC.Config.fromStr("t2xyz"));
+    }
+
+    @Test
+    void testSetVerboseLogging() {
+        // Ensure initial state known
+        OpenCC.setVerboseLogging(false);
+        assertEquals(Level.OFF, OpenCC.LOGGER.getLevel(), "Logger should be OFF when disabled");
+        // Enable verbose logging
+        OpenCC.setVerboseLogging(true);
+        assertEquals(Level.INFO, OpenCC.LOGGER.getLevel(), "Logger should be INFO when enabled");
+        // Disable again
+        OpenCC.setVerboseLogging(false);
+        assertEquals(Level.OFF, OpenCC.LOGGER.getLevel(), "Logger should be OFF when disabled again");
     }
 
     @Test

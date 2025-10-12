@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Introduced `StarterIndex` and `UnionCache` to speed up conversion.
+- Added `OpenCC.setVerboseLogging(boolean)` to enable or disable runtime logging.
+    - When enabled, informational messages about dictionary loading, fallbacks, and diagnostics are printed to the
+      console.
+    - By default, logging is disabled to keep GUI and CLI outputs clean.
 
 ### Changed
 
@@ -28,7 +32,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     - `OpenCC.zhoCheck(text)` – preferred static usage.
     - `myOpenCC.zhoCheckInstance(text)` – for backward-compatible instance style.
 
-- Add Starter Length Mask for faster dictionary lookup
+- Added **Starter Length Mask** for faster dictionary lookup and reduced branching.
 
 ### Migration Notes
 

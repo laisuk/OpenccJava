@@ -26,25 +26,40 @@ import static openccjava.DictRefs.isDelimiter;
  */
 public class OpenCC {
     /**
-     * Internal logger used for diagnostic and fallback messages.
-     * Logging is disabled by default to avoid console output in GUI applications.
+     * Global logger for diagnostic and fallback messages.
+     *
+     * <p>This logger is shared across all {@link OpenCC} instances and is used to report
+     * non-critical events such as dictionary loading, resource fallbacks, or
+     * configuration details. Logging is <strong>disabled by default</strong> to prevent
+     * unwanted console output in GUI or end-user environments.</p>
+     *
+     * <p>To enable logging for debugging or integration testing, call
+     * {@link #setVerboseLogging(boolean)} with {@code true}.</p>
      */
-    private static final Logger LOGGER = Logger.getLogger(OpenCC.class.getName());
+    static final Logger LOGGER = Logger.getLogger(OpenCC.class.getName());
 
     static {
-        // Disable logging by default
+        // Disable logging by default to keep console output clean
         LOGGER.setLevel(Level.OFF);
     }
 
     /**
      * Enables or disables verbose logging for OpenCC.
-     * <p>
-     * When enabled, the logger will print informational messages about dictionary loading,
-     * fallback behavior, and other diagnostics to the console or log handler.
-     * When disabled (default), logging is suppressed to avoid cluttering GUI or user-facing environments.
-     * </p>
      *
-     * @param enabled {@code true} to enable logging, {@code false} to disable it
+     * <p>When enabled, the global {@link #LOGGER} will emit informational messages
+     * related to dictionary loading, resource fallbacks, and runtime diagnostics.
+     * When disabled (the default), all log output is suppressed.</p>
+     *
+     * <p>This setting affects all {@link OpenCC} instances in the current JVM.</p>
+     *
+     * <p>Example:</p>
+     * <pre>{@code
+     * OpenCC.setVerboseLogging(true);
+     * OpenCC converter = new OpenCC("s2t");
+     * converter.convert("汉字"); // Logs diagnostic info
+     * }</pre>
+     *
+     * @param enabled {@code true} to enable verbose logging; {@code false} to disable it
      */
     public static void setVerboseLogging(boolean enabled) {
         LOGGER.setLevel(enabled ? Level.INFO : Level.OFF);
@@ -168,17 +183,37 @@ public class OpenCC {
         }
 
         /**
-         * Parses a string into a {@code Config} constant, case-insensitive.
+         * Parses a string into a corresponding {@code Config} constant, ignoring case.
          *
-         * @param value a string such as {@code "s2t"} or {@code "T2S"}
+         * <p>This method performs a case-insensitive lookup of the provided value
+         * against all available configuration constants. It supports both upper-
+         * and lower-case forms, including mixed-case variants such as
+         * {@code "s2twp"} or {@code "T2Twp"}.</p>
+         *
+         * <p>Example usage:</p>
+         * <pre>{@code
+         * Config c1 = Config.fromStr("s2t");    // returns Config.S2T
+         * Config c2 = Config.fromStr("T2Twp");  // returns Config.T2Twp
+         * Config c3 = Config.fromStr("tw2tp");  // returns Config.Tw2Tp
+         * }</pre>
+         *
+         * @param value the configuration key string (e.g., {@code "s2t"}, {@code "t2s"},
+         *              {@code "t2twp"}, {@code "tw2tp"})
          * @return the matching {@code Config} constant
-         * @throws IllegalArgumentException if {@code value} is {@code null} or does not match any constant
+         * @throws IllegalArgumentException if {@code value} is {@code null} or does not
+         *                                  correspond to any known configuration constant
          */
         public static Config fromStr(String value) {
             if (value == null) {
                 throw new IllegalArgumentException("Config string cannot be null");
             }
-            return Config.valueOf(value.trim().toUpperCase());
+            String trimmed = value.trim();
+            for (Config c : Config.values()) {
+                if (c.name().equalsIgnoreCase(trimmed)) {
+                    return c;
+                }
+            }
+            throw new IllegalArgumentException("Unknown config: " + value);
         }
     }
 
