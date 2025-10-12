@@ -146,8 +146,8 @@ public class OfficeHelper {
      * @param punctuation whether to convert punctuation characters
      * @param keepFont    whether to preserve font tags/markup during conversion
      * @return a {@link Result} object indicating success or failure
+     * <p>Example:</p>
      * <pre>{@code
-     * // @example
      * import openccjava.OpenCC;
      * import openccjava.OfficeHelper;
      * import openccjava.OfficeHelper.Result;
