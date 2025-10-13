@@ -53,7 +53,7 @@ Reusable Java library for programmatic conversion.
 
 ## 🚀 Installation / Setup
 
-### Option 1: Use from Maven Central
+### Option 1: Use from [Maven Central](https://central.sonatype.com/)
 
 **Gradle (Kotlin DSL):**
 
@@ -127,7 +127,7 @@ cd OpenccJava
 - Built `.jar` will be in `openccjava/build/libs/`.
 - CLI tools are built in `openccjavacli/build/libs/`.
 
-### Option 3: Local Drop-In Module
+### Option 4: Local Drop-In Module
 
 If you don’t want to rely on `mavenCentral` or `JitPack`:
 
@@ -145,6 +145,8 @@ implementation project(":openccjava")
 ```
 
 That’s it! No Internet required, no JARs to manage.
+
+---
 
 ### 🧩 Required Dependencies
 
