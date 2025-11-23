@@ -395,7 +395,6 @@ OfficeHelper.convert(
     boolean punctuation,
     boolean keepFont
 )
-
 ```
 
 - You may still use `Result` (the abstract base class) as the return type in legacy code.  
