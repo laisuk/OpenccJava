@@ -609,7 +609,7 @@ This project supports parallel processing for high-performance batch conversion.
 
 ## Projects That Use `openccjava`
 
-[OpenccJavaFX](https://github.com/laisuk/OpenccJavaFX)
+[OpenccJavaFX](https://github.com/laisuk/OpenccJavaFX) - A Chinese text conversion application built with JavaFX, leverages the `OpenccJava` library to provide simplified and traditional Chinese conversion.
 
 ![OpenccJavaFX Screenshot](https://raw.githubusercontent.com/laisuk/OpenccJavaFX/master/assets/image01.png)
 
