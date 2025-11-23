@@ -1,5 +1,8 @@
 name: Publish prebuilt release (from ./install)
 
+permissions:
+  contents: write    # <— allow creating releases
+
 on:
   # Auto-release when you push a tag (e.g. v1.1.1 or 1.1.1)
   push:
