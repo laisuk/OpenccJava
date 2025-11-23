@@ -1,6 +1,6 @@
 # OpenccJava
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.laisuk/openccjava.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.laisuk/openccjava)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.laisuk/openccjava.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.laisuk/openccjava)
 [![javadoc](https://javadoc.io/badge2/io.github.laisuk/openccjava/javadoc.svg)](https://javadoc.io/doc/io.github.laisuk/openccjava)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
@@ -38,7 +38,7 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 
 ## 📦 Distribution
 
-- Available on [Maven Central](https://search.maven.org/artifact/io.github.laisuk/openccjava)
+- Available on [Maven Central](https://central.sonatype.com/artifact/io.github.laisuk/openccjava)
   and [JitPack](https://jitpack.io/#laisuk/OpenccJava).
 - Works with build tools like **Maven** and **Gradle**.
 - CLI binaries included in GitHub releases.
