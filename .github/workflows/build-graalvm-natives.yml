@@ -9,7 +9,6 @@ jobs:
     name: GraalVM Native Image (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
-    # Build on Windows / Linux / macOS runners
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -20,7 +19,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      # Use GraalVM as the JDK (Java 21; ok for Java 8-targeted code)
+      # Use GraalVM as the JDK (Java 21; fine for Java 8-targeted code)
       - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
@@ -28,7 +27,6 @@ jobs:
           java-version: '21'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: gradle
-          # Optional, but nice: adds a native-image report to the job summary
           native-image-job-reports: 'true'
 
       - name: Make Gradle wrapper executable (non-Windows)
@@ -38,15 +36,24 @@ jobs:
       # IMPORTANT:
       # Before running this workflow, ensure you have:
       #  - uncommented the org.graalvm.buildtools.native plugin
-      #  - uncommented the graalvmNative { ... } and nativeDistZip task block
+      #  - uncommented the graalvmNative { ... } + nativeDistZip task block
       - name: Build native distribution ZIP
         run: ./gradlew :openccjavacli:nativeDistZip --no-daemon --stacktrace
 
-      # Upload the OS/arch-specific ZIP produced by nativeDistZip:
-      # openccjavacli/build/distributions/OpenccJavaCli-native-<os>-<arch>.zip
+      # (Optional) Show where the ZIP actually ended up – helpful for debugging paths
+      - name: List native distributions
+        run: |
+          echo "Searching for OpenccJavaCli-native-*.zip under the repo..."
+          find . -maxdepth 6 -type f -name "OpenccJavaCli-native-*.zip" -print || echo "No files found yet"
+
+      # Upload whatever OpenccJavaCli-native-*.zip was produced by the subproject,
+      # regardless of whether the folder is 'openccjavacli', 'OpenccJavaCli', etc.
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenccJavaCli-${{ matrix.os }}-native
-          path: openccjavacli/build/distributions/OpenccJavaCli-native-*.zip
+          path: '**/build/distributions/OpenccJavaCli-native-*.zip'
           if-no-files-found: error
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
