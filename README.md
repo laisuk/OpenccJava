@@ -2,6 +2,8 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.laisuk/openccjava.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.laisuk/openccjava)
 [![javadoc](https://javadoc.io/badge2/io.github.laisuk/openccjava/javadoc.svg)](https://javadoc.io/doc/io.github.laisuk/openccjava)
+[![Total Downloads](https://img.shields.io/github/downloads/laisuk/openccjava/total.svg)](https://github.com/laisuk/openccjava/releases)
+[![Latest Downloads](https://img.shields.io/github/downloads/laisuk/openccjava/latest/total.svg)](https://github.com/laisuk/openccjava/releases/latest)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
 **Pure Java**, **self-contained** implementation of **OpenCC** for **Traditional ↔ Simplified Chinese**
