@@ -1,7 +1,6 @@
 name: Build GraalVM native images
 
 on:
-  # Manual trigger only – run this from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -19,7 +18,6 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      # Use GraalVM as the JDK (Java 21; fine even if you target Java 8)
       - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
@@ -33,24 +31,13 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x ./gradlew
 
-      # IMPORTANT:
-      # Before running this workflow, ensure you have:
-      #  - uncommented org.graalvm.buildtools.native plugin
-      #  - uncommented graalvmNative { ... } and nativeDistZip task
       - name: Build native distribution ZIP
         run: ./gradlew :openccjavacli:nativeDistZip --no-daemon --stacktrace
-
-      # Optional: show what ZIPs were produced (debugging aid)
-      - name: List native distributions
-        run: |
-          echo "Searching for OpenccJavaCli-*-native-*.zip under the repo..."
-          find . -maxdepth 8 -type f -name "OpenccJavaCli-*-native-*.zip" -print || echo "No files found"
 
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenccJavaCli-${{ matrix.os }}-native
-          # Example match: openccjavacli/build/distributions/OpenccJavaCli-1.1.1-native-windows-x86_64.zip
           path: '**/build/distributions/OpenccJavaCli-*-native-*.zip'
           if-no-files-found: error
           compression-level: 6
