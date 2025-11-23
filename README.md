@@ -59,7 +59,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.1.0")
+    implementation("io.github.laisuk:openccjava:1.1.1")
 }
 ```
 
@@ -67,7 +67,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.1.0'
+    implementation 'io.github.laisuk:openccjava:1.1.1'
 }
 ```
 
@@ -78,7 +78,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 </dependency>
 ```
 
@@ -94,7 +94,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.1.0' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.1.1' // replace with latest tag
 }
 ```
 
@@ -112,7 +112,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.1.0</version>
+<version>v1.1.1</version>
 </dependency>
 ```
 
@@ -291,12 +291,12 @@ silent.
 
 ---
 
-### 🧩 Example – Converting a `.docx` Document
+### 🧩 Example – Converting a `.docx` Using `File` → `File` (`FileResult`)
 
 ```java
 import openccjava.OpenCC;
 import openccjava.OfficeHelper;
-import openccjava.OfficeHelper.Result;
+import openccjava.OfficeHelper.FileResult;
 
 import java.io.File;
 
@@ -310,7 +310,7 @@ public class Example {
         OpenCC converter = new OpenCC("s2t");
 
         // Convert the document
-        Result result = OfficeHelper.convert(
+        FileResult result = OfficeHelper.convert(
                 input,
                 output,
                 "docx",      // Supported: docx, xlsx, pptx, odt, epub
@@ -329,6 +329,98 @@ public class Example {
 }
 
 ```
+
+### 🧩 Example – Converting a `.docx` Using `byte[]` → `MemoryResult`
+
+```java
+import openccjava.OpenCC;
+import openccjava.OfficeHelper;
+import openccjava.OfficeHelper.MemoryResult;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class ExampleBytes {
+    static void main(String[] args) throws Exception {
+
+        // Load the document entirely into memory
+        byte[] inputBytes = Files.readAllBytes(Path.of("example_simplified.docx"));
+
+        // Create an OpenCC converter
+        OpenCC converter = new OpenCC("s2t");   // Simplified → Traditional
+
+        // Perform in-memory conversion
+        MemoryResult result = OfficeHelper.convert(
+                inputBytes,
+                "docx",      // Supported: docx, xlsx, pptx, odt, epub
+                converter,
+                true,        // Convert punctuation
+                true         // Keep font names
+        );
+
+        if (result.success) {
+            // Save the converted bytes (optional)
+            Files.write(Path.of("example_traditional.docx"), result.outputBytes);
+            System.out.println("✅ In-memory conversion successful.");
+        } else {
+            System.err.println("❌ Conversion failed: " + result.message);
+        }
+    }
+}
+
+```
+
+### ✔ Notes
+
+- **`MemoryResult`** is returned when you call the **in-memory overload**:
+
+```
+  OfficeHelper.convert(
+      byte[] inputBytes,
+      String format,
+      OpenCC converter,
+      boolean punctuation,
+      boolean keepFont
+  )
+```
+
+- **`FileResult`** is returned when you call the **file-to-file overload**:
+
+```
+OfficeHelper.convert(
+    File inputFile,
+    File outputFile,
+    String format,
+    OpenCC converter,
+    boolean punctuation,
+    boolean keepFont
+)
+
+```
+
+- You may still use `Result` (the abstract base class) as the return type in legacy code.  
+  it remains **fully valid** since both `MemoryResult` and `FileResult` extend it.
+
+### ✔ Where this API design shines
+
+#### Ideal for in-memory workflows (`MemoryResult`)
+
+Perfect for platforms where file system access is limited or optional:
+
+- **Blazor WebAssembly** (browser sandbox → byte[] only)
+- **Android / iOS** (ContentResolver/InputStream → byte[])
+- **REST APIs** (receive byte[], return byte[])
+- **CLI pipes** (stdin → stdout)
+- **Unit tests** (no temp files, fast in-memory testing)
+
+#### Ideal for desktop/server workflows (`FileResult`)
+
+Perfect for traditional file system environments:
+
+- Desktop apps (JavaFX, Swing, AWT)
+- Servers and microservices
+- Batch `.docx` / `.xlsx` / `.pptx` conversions
+- Large-scale scheduled jobs
 
 ---
 
