@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.laisuk"
-version = "1.1.1"
+version = "1.1.1.1"
 
 repositories {
     mavenCentral()
@@ -20,6 +20,8 @@ dependencies {
     implementation("info.picocli:picocli:4.7.7")
     // Generate GraalVM reflection config for picocli automatically
     annotationProcessor("info.picocli:picocli-codegen:4.7.7")
+    //PDFBox
+    implementation("org.apache.pdfbox:pdfbox:3.0.6")
 }
 
 // Application entrypoint (used by `run`, Jar manifest, etc.)

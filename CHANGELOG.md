@@ -6,6 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.1.1] - 2025-12-23
+
+### Added
+- Added PDF file type supported as input in `openccjavacli` subcommand `pdf`
+
+---
+
 ## [1.1.1] - 2025-11-25
 
 ### Changed
