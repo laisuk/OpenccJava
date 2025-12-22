@@ -141,6 +141,9 @@ if (currentJava != null && currentJava.isJava11Compatible) {
     graalvmNative {
         toolchainDetection.set(true)
 
+        metadataRepository {
+            enabled.set(true)
+        }
         binaries {
             named("main") {
                 imageName.set("openccjavacli")
@@ -168,7 +171,7 @@ if (currentJava != null && currentJava.isJava11Compatible) {
                 else -> "x86_64"
             }
         }
-        val exeName = if (os.isWindows) "openccjavacli.exe" else "openccjavacli"
+//        val exeName = if (os.isWindows) "openccjavacli.exe" else "openccjavacli"
 
         archiveBaseName.set("OpenccJavaCli")
         archiveClassifier.set(
@@ -181,8 +184,9 @@ if (currentJava != null && currentJava.isJava11Compatible) {
             }-$arch"
         )
 
-        from(layout.buildDirectory.file("native/nativeCompile/$exeName")) {
+        from(layout.buildDirectory.dir("native/nativeCompile")) {
             into("bin")
+            exclude("native-image-*.args")
             if (!os.isWindows) {
                 filePermissions { unix("755") }
                 dirPermissions { unix("755") }

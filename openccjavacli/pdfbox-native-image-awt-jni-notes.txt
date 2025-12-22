@@ -1,0 +1,167 @@
+PDFBox + GraalVM Native Image (AWT / JNI) Notes
+==============================================
+
+Context
+-------
+This project uses Apache PDFBox inside a GraalVM Native Image CLI.
+Even for *text-only PDF extraction*, PDFBox internally touches
+`java.desktop` (AWT) classes such as ColorModel, Raster, BufferedImage,
+and font infrastructure.
+
+Because GraalVM Native Image is a closed-world compiler, AWT + JNI
+requires **explicit metadata** and **correct packaging**.
+
+
+Key Problems Encountered
+------------------------
+1) Runtime error:
+   UnsatisfiedLinkError: No awt in java.library.path
+
+2) Runtime error:
+   java.lang.NoSuchFieldError: java.awt.image.ColorModel.nBits
+   at ColorModel.initIDs (Native Method)
+
+
+Root Causes
+-----------
+1) AWT native libraries (DLL/.so/.dylib) were NOT shipped with the exe.
+2) JNI metadata for 'java.desktop' classes was missing in native image.
+
+
+Critical Facts (must remember)
+------------------------------
+• PDFBox triggers AWT even in headless CLI usage.
+• GraalVM Native Image requires:
+  - JNI field access to be declared ahead of time
+  - Reflection access to be declared ahead of time
+• JNI-accessed fields (e.g. ColorModel.nBits) will be pruned unless declared.
+• Native Image may emit *multiple runtime files*, not a single exe.
+
+
+Correct Solution (Canonical)
+----------------------------
+
+STEP 1 — Build & Run with Native Image Tracing Agent
+----------------------------------------------------
+Use the *same GraalVM JDK* intended for native-image.
+
+Ensure PATH priority:
+  <graalvm>/bin must come before any other Java.
+
+Run application on JVM with agent enabled:
+
+PowerShell:
+  gradlew -Pagent :openccjavacli:run --args="pdf -i input.pdf -c s2t -p -r"
+
+IMPORTANT:
+• Exercise real PDFBox paths (fonts, text extraction)
+• Run on more than one PDF if possible (different fonts/layouts)
+
+
+STEP 2 — Locate Agent Output
+----------------------------
+Agent output is generated under:
+
+  openccjavacli/build/native/agent-output/run/session-<timestamp>/
+
+Expected files:
+  jni-config.json
+  reflect-config.json
+  resource-config.json
+  proxy-config.json
+  serialization-config.json
+  predefined-classes-config.json
+
+The **most critical file** for AWT/JNI is:
+  jni-config.json
+
+
+STEP 3 — Copy Metadata into Resources
+-------------------------------------
+Copy all *.json files into:
+
+  openccjavacli/src/main/resources/META-INF/native-image/
+
+Example (PowerShell):
+
+  Copy-Item build/native/agent-output/run/session-*/ *.json `
+    src/main/resources/META-INF/native-image/ -Force
+
+
+STEP 4 — Rebuild Native Image
+-----------------------------
+Rebuild using GraalVM native-image:
+
+  gradlew :openccjavacli:clean :openccjavacli:nativeCompile
+
+
+STEP 5 — Package Correctly (VERY IMPORTANT)
+-------------------------------------------
+Do NOT ship only the exe.
+
+Package the *entire* native output directory:
+
+  build/native/nativeCompile/
+
+This directory contains:
+  openccjavacli(.exe)
+  awt.dll / libawt.so / libawt.dylib
+  fontmanager
+  freetype
+  javajpeg
+  lcms
+  jvm
+  jawt
+  etc.
+
+Exclude only:
+  native-image-*.args   (build-time only)
+
+
+Why This Works
+--------------
+• The tracing agent observes REAL runtime behavior.
+• It records:
+  - JNI field lookups
+  - Reflection access
+  - Resource access
+• These declarations prevent GraalVM from pruning required fields.
+
+Example fixed crash:
+  ColorModel.initIDs → native JNI lookup of "nBits"
+  → field preserved via jni-config.json
+  → no NoSuchFieldError
+
+
+Important Notes
+---------------
+• Do NOT rely on -H:IncludeResources flags unless absolutely needed.
+• Prefer agent-generated resource-config.json (non-experimental).
+• Do NOT initialize AWT classes at build time.
+• native-image may produce a bundle, not a single-file exe.
+• PATH mismatch between JVM run and nativeCompile WILL cause subtle failures.
+
+
+When to Re-run the Agent
+-----------------------
+Re-run the agent if:
+• PDFBox version changes
+• New PDF features are used (images, forms, OCR)
+• New fonts or rendering paths are added
+• JNI/NoSuchField errors appear again
+
+
+Summary (One-Line Rule)
+----------------------
+If PDFBox + GraalVM native crashes inside java.desktop:
+→ Run tracing agent
+→ Copy JSONs to META-INF/native-image
+→ Rebuild
+→ Ship all native output files
+
+
+Status
+------
+✔ Verified working on Windows (AWT + PDFBox + Native Image)
+✔ nativeDistZip packaging confirmed correct
+✔ JNI + reflection issues resolved

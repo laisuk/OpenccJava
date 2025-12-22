@@ -5,9 +5,6 @@ import java.util.regex.Pattern;
 
 /**
  * CJK-aware paragraph reflow helper for PDF-extracted text.
- *
- * <p>Ported from the C# PdfHelper.ReflowCjkParagraphs implementation
- * used in ZhoConverterGui, adapted to Java 8. All logic preserved exactly.</p>
  */
 public final class PdfReflowHelper {
 
