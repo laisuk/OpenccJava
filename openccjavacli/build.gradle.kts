@@ -3,7 +3,7 @@ plugins {
     application
     // --- GraalVM Native Build Tools (AOT compile to a single exe) ---
     // Must use Oracle GraalVM JDK to build
-//    id("org.graalvm.buildtools.native") version "0.10.2"
+    id("org.graalvm.buildtools.native") version "0.10.2"
 }
 
 group = "io.github.laisuk"
