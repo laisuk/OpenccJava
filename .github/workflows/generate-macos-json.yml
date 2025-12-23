@@ -25,7 +25,7 @@ jobs:
       - name: Collect json
         run: |
           mkdir -p out
-          cp openccjavacli/build/native/agent-output/run/session-*/ *.json out/
+          cp openccjavacli/build/native/agent-output/run/ *.json out/
 
       - uses: actions/upload-artifact@v4
         with:
