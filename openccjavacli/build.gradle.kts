@@ -144,6 +144,23 @@ tasks.named<Copy>("processResources") {
     from(layout.buildDirectory.dir("generated/native-image"))
 }
 
+val verifyNativeImageJson by tasks.registering {
+    dependsOn(copyNativeImageJson)
+    doLast {
+        val dir = layout.buildDirectory
+            .dir("generated/native-image/META-INF/native-image")
+            .get().asFile
+        val count = dir.listFiles { f -> f.extension == "json" }?.size ?: 0
+        require(count > 0) {
+            "No native-image JSON found for OS='$osKey'. Expected *.json in: ${dir.absolutePath}"
+        }
+    }
+}
+
+tasks.named("nativeCompile") {
+    dependsOn(verifyNativeImageJson)
+}
+
 // Picocli annotation processor flags → generate META-INF/native-image config
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-Aproject=${project.group}/${project.name}")
