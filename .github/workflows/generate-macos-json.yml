@@ -1,0 +1,26 @@
+jobs:
+  gen-macos-json:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm-community
+          java-version: "21"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: gradle
+
+      - run: chmod +x ./gradlew
+
+      - name: Run agent (macOS)
+        run: ./gradlew -Pagent :openccjavacli:run --args="pdf -i sample.pdf -c s2t -p -r"
+
+      - name: Collect json
+        run: |
+          mkdir -p out
+          cp openccjavacli/build/native/agent-output/run/session-*/ *.json out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-image-json-macos
+          path: out/*.json
