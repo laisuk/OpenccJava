@@ -1,4 +1,11 @@
+name: Generate macOS Native JSON
+
+on:
+  workflow_dispatch:
+
 jobs:
+
+
   gen-macos-json:
     runs-on: macos-latest
     steps:
