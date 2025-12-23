@@ -1,0 +1,44 @@
+{
+    "resources": {
+        "includes": [
+            {
+                "pattern": "\\QMETA-INF/services/java.lang.System$LoggerFinder\\E"
+            },
+            {
+                "pattern": "\\QMETA-INF/services/org.apache.commons.logging.LogFactory\\E"
+            },
+            {
+                "pattern": "\\Qcommons-logging.properties\\E"
+            },
+            {
+                "pattern": "\\Qdicts/dictionary_maxlength.json\\E"
+            },
+            {
+                "pattern": "\\Qorg/apache/fontbox/cmap/Identity-H\\E"
+            },
+            {
+                "pattern": "\\Qorg/apache/pdfbox/resources/glyphlist/additional.txt\\E"
+            },
+            {
+                "pattern": "\\Qorg/apache/pdfbox/resources/glyphlist/glyphlist.txt\\E"
+            },
+            {
+                "pattern": "\\Qorg/apache/pdfbox/resources/glyphlist/zapfdingbats.txt\\E"
+            },
+            {
+                "pattern": "\\Qorg/apache/pdfbox/resources/text/BidiMirroring.txt\\E"
+            },
+            {
+                "pattern": "java.base:\\Qjdk/internal/icu/impl/data/icudt72b/ubidi.icu\\E"
+            }
+        ]
+    },
+    "bundles": [
+        {
+            "name": "sun.awt.resources.awt",
+            "classNames": [
+                "sun.awt.resources.awt"
+            ]
+        }
+    ]
+}
