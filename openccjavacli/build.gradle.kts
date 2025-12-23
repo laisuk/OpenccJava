@@ -125,7 +125,24 @@ tasks.register<Exec>("verifyFatJarSig") {
 
 // --- Uncomment these if using GraalVM native image ---
 // Must use Oracle GraalVM JDK to build
-/*
+
+val osKey = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem().run {
+    when {
+        isWindows -> "windows"
+        isLinux -> "linux"
+        else -> "macos"
+    }
+}
+
+val copyNativeImageJson by tasks.registering(Copy::class) {
+    from("src/main/resources/native-image-json/$osKey")
+    into(layout.buildDirectory.dir("generated/native-image/META-INF/native-image"))
+}
+
+tasks.named<Copy>("processResources") {
+    dependsOn(copyNativeImageJson)
+    from(layout.buildDirectory.dir("generated/native-image"))
+}
 
 // Picocli annotation processor flags → generate META-INF/native-image config
 tasks.withType<JavaCompile>().configureEach {
@@ -197,4 +214,3 @@ if (currentJava != null && currentJava.isJava11Compatible) {
         from("../dicts") { into("dicts") }
     }
 }
-*/

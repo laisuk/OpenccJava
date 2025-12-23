@@ -45,3 +45,6 @@ bin/
 
 # Ignore user-specific Gradle config
 gradle.properties
+
+openccjavacli/src/main/resources/META-INF/native-image/*
+
