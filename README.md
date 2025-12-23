@@ -465,7 +465,7 @@ Convert plain text using OpenccJava
   -V, --version              Print version information and exit.
 ```
 
-#### Office document conversion:
+### Office document conversion:
 
 ```bash
 bin/OpenccJavaCli.bat office -c s2t -i book.docx -o book_converted.docx
@@ -497,6 +497,70 @@ Convert Office documents using OpenccJava
 - `--in-enc` / `--out-enc`: Specify encoding (e.g. `GBK`, `BIG5`, `UTF-8`).
 - `--format`: Force document format (e.g., `docx`, `epub`).
 - `--list-configs`: Show supported OpenCC configs.
+
+---
+
+### PDF document conversion:
+
+```bash
+bin/OpenccJavaCli.bat pdf -c s2t -p -i sample.pdf -o converted.txt --reflow
+```
+
+```
+Usage: openccjavacli pdf [-hHprV] [--compact] -c=<conversion> -i=<file>
+                         [-o=<file>]
+Extract PDF text, optionally reflow CJK paragraphs, then convert with
+OpenccJava
+  -c, --config=<conversion>
+                        OpenCC conversion configuration (e.g. s2t, t2s, s2tw,
+                          t2hk, t2jp, ...)
+      --compact         Compact / tighten paragraph gaps after reflow (default:
+                          false)
+  -h, --help            Show this help message and exit.
+  -H, --header          Insert per-page header markers into extracted text
+  -i, --input=<file>    Input PDF file
+  -o, --output=<file>   Output text file (UTF-8). If omitted, '<name>_converted.
+                          txt' is used next to input.
+  -p, --punct           Enable punctuation conversion (default: false)
+  -r, --reflow          Reflow CJK paragraphs after extraction (default: false)
+  -V, --version         Print version information and exit.
+```
+
+### Usage Notes — `openccjavacli pdf`
+
+#### PDF extraction engine
+
+`openccjavacli pdf` uses a **text-based PDF extraction engine** (PdfBox) and is intended for **digitally generated PDFs
+** (
+e-books, research papers, reports).
+
+- ✅ Works best with selectable text
+- ❌ Does **not** perform OCR on scanned/image-only PDFs
+- ❌ Visual layout (columns, tables, figures) is not preserved
+
+---
+
+#### CJK paragraph reflow
+
+The `--reflow` option applies a **CJK-aware paragraph reconstruction pipeline**, designed for Chinese novels, essays,
+and academic text.
+
+Reflow attempts to:
+
+- Join artificially wrapped lines
+- Repair cross-line splits (e.g. `面` + `容` → `面容`)
+- Preserve headings, short titles, dialog markers, and metadata-like lines
+
+⚠️ **Important limitations**
+
+- Reflow is **heuristic-based**
+- It is **not suitable** for:
+    - Poetry
+    - Comics / scripts
+    - Highly informal or experimental layouts
+- Web novels often use inconsistent formatting and may require tuning
+
+---
 
 #### OpenccJava Dictionary Generator
 
@@ -611,7 +675,8 @@ This project supports parallel processing for high-performance batch conversion.
 
 ## Projects That Use `openccjava`
 
-[OpenccJavaFX](https://github.com/laisuk/OpenccJavaFX) - A Chinese text conversion application built with JavaFX, leverages the `OpenccJava` library to provide simplified and traditional Chinese conversion.
+[OpenccJavaFX](https://github.com/laisuk/OpenccJavaFX) - A Chinese text conversion application built with JavaFX,
+leverages the `OpenccJava` library to provide simplified and traditional Chinese conversion.
 
 ![OpenccJavaFX Screenshot](https://raw.githubusercontent.com/laisuk/OpenccJavaFX/master/assets/image01.png)
 
