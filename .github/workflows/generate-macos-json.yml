@@ -25,7 +25,18 @@ jobs:
       - name: Collect json
         run: |
           mkdir -p out
-          cp openccjavacli/build/native/agent-output/run/ *.json out/
+
+          # New layout (no session dir)
+          cp -v openccjavacli/build/native/agent-output/run/*.json out/ 2>/dev/null || true
+          
+          # Old layout (session dir)
+          cp -v openccjavacli/build/native/agent-output/run/session-*/*.json out/ 2>/dev/null || true
+          
+          echo "Collected JSON files:"
+          ls -l out
+          
+          # Fail if nothing collected (helps catch real agent failures)
+          test "$(ls -1 out/*.json 2>/dev/null | wc -l)" -gt 0
 
       - uses: actions/upload-artifact@v4
         with:
