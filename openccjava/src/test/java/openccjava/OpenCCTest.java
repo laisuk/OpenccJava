@@ -63,7 +63,7 @@ class OpenCCTest {
 
     @Test
     void testConfigEnum() {
-        OpenCC.Config configEnum = OpenCC.Config.fromStr("s2twp");
+        OpenccConfig configEnum = OpenccConfig.fromStr("s2twp");
         String ConfigStr = configEnum.asStr();
         assertEquals("s2twp", ConfigStr);
     }
@@ -71,12 +71,12 @@ class OpenCCTest {
     @Test
     void testConfigEnumRoundTrip() {
         // ✅ Case-insensitive matching
-        assertEquals(OpenCC.Config.S2Twp, OpenCC.Config.fromStr("s2twp"));
-        assertEquals(OpenCC.Config.S2Twp, OpenCC.Config.fromStr("S2Twp"));
-        assertEquals(OpenCC.Config.S2Twp, OpenCC.Config.fromStr("S2TWP"));
+        assertEquals(OpenccConfig.S2Twp, OpenccConfig.fromStr("s2twp"));
+        assertEquals(OpenccConfig.S2Twp, OpenccConfig.fromStr("S2Twp"));
+        assertEquals(OpenccConfig.S2Twp, OpenccConfig.fromStr("S2TWP"));
         // ✅ Round-trip consistency
-        for (OpenCC.Config cfg : OpenCC.Config.values()) {
-            assertEquals(cfg, OpenCC.Config.fromStr(cfg.asStr()));
+        for (OpenccConfig cfg : OpenccConfig.values()) {
+            assertEquals(cfg, OpenccConfig.fromStr(cfg.asStr()));
             assertEquals(cfg.asStr(), cfg.asStr().toLowerCase()); // ensure lowercase form
         }
     }
@@ -84,10 +84,10 @@ class OpenCCTest {
     @Test
     void testInvalidConfigThrows() {
         // ✅ Null input
-        assertThrows(IllegalArgumentException.class, () -> OpenCC.Config.fromStr(null));
+        assertThrows(IllegalArgumentException.class, () -> OpenccConfig.fromStr(null));
         // ✅ Unknown config
-        assertThrows(IllegalArgumentException.class, () -> OpenCC.Config.fromStr("invalid"));
-        assertThrows(IllegalArgumentException.class, () -> OpenCC.Config.fromStr("t2xyz"));
+        assertThrows(IllegalArgumentException.class, () -> OpenccConfig.fromStr("invalid"));
+        assertThrows(IllegalArgumentException.class, () -> OpenccConfig.fromStr("t2xyz"));
     }
 
     @Test

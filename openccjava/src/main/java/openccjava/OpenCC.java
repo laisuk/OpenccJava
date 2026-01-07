@@ -72,143 +72,6 @@ public class OpenCC {
     private final DictionaryMaxlength dictionary;
 
     /**
-     * Supported conversion configurations.
-     *
-     * <p>Each constant corresponds to an OpenCC conversion mode,
-     * covering Simplified ↔ Traditional Chinese and region-specific variants
-     * (Taiwan, Hong Kong, Japan). The {@code p} suffix indicates that
-     * phrase-level mappings are also applied.</p>
-     */
-    public enum Config {
-
-        /**
-         * Simplified → Traditional.
-         */
-        S2T,
-
-        /**
-         * Traditional → Simplified.
-         */
-        T2S,
-
-        /**
-         * Simplified → Traditional (Taiwan).
-         */
-        S2Tw,
-
-        /**
-         * Traditional (Taiwan) → Simplified.
-         */
-        Tw2S,
-
-        /**
-         * Simplified → Traditional (Taiwan, with phrases).
-         */
-        S2Twp,
-
-        /**
-         * Traditional (Taiwan, with phrases) → Simplified.
-         */
-        Tw2Sp,
-
-        /**
-         * Simplified → Traditional (Hong Kong).
-         */
-        S2Hk,
-
-        /**
-         * Traditional (Hong Kong) → Simplified.
-         */
-        Hk2S,
-
-        /**
-         * Traditional → Traditional (Taiwan).
-         */
-        T2Tw,
-
-        /**
-         * Traditional → Traditional (Taiwan, with phrases).
-         */
-        T2Twp,
-
-        /**
-         * Traditional (Taiwan) → Traditional.
-         */
-        Tw2T,
-
-        /**
-         * Traditional (Taiwan, with phrases) → Traditional.
-         */
-        Tw2Tp,
-
-        /**
-         * Traditional → Traditional (Hong Kong).
-         */
-        T2Hk,
-
-        /**
-         * Traditional (Hong Kong) → Traditional.
-         */
-        Hk2T,
-
-        /**
-         * Traditional → Japanese Shinjitai.
-         */
-        T2Jp,
-
-        /**
-         * Japanese Shinjitai → Traditional.
-         */
-        Jp2T;
-
-        /**
-         * Returns the lowercase string form of this config.
-         * <p>
-         * Example: {@code S2T.asStr()} → {@code "s2t"}.
-         * </p>
-         *
-         * @return the lowercase string representation
-         */
-        public String asStr() {
-            return name().toLowerCase();
-        }
-
-        /**
-         * Parses a string into a corresponding {@code Config} constant, ignoring case.
-         *
-         * <p>This method performs a case-insensitive lookup of the provided value
-         * against all available configuration constants. It supports both upper-
-         * and lower-case forms, including mixed-case variants such as
-         * {@code "s2twp"} or {@code "T2Twp"}.</p>
-         *
-         * <p>Example usage:</p>
-         * <pre>{@code
-         * Config c1 = Config.fromStr("s2t");    // returns Config.S2T
-         * Config c2 = Config.fromStr("T2Twp");  // returns Config.T2Twp
-         * Config c3 = Config.fromStr("tw2tp");  // returns Config.Tw2Tp
-         * }</pre>
-         *
-         * @param value the configuration key string (e.g., {@code "s2t"}, {@code "t2s"},
-         *              {@code "t2twp"}, {@code "tw2tp"})
-         * @return the matching {@code Config} constant
-         * @throws IllegalArgumentException if {@code value} is {@code null} or does not
-         *                                  correspond to any known configuration constant
-         */
-        public static Config fromStr(String value) {
-            if (value == null) {
-                throw new IllegalArgumentException("Config string cannot be null");
-            }
-            String trimmed = value.trim();
-            for (Config c : Config.values()) {
-                if (c.name().equalsIgnoreCase(trimmed)) {
-                    return c;
-                }
-            }
-            throw new IllegalArgumentException("Unknown config: " + value);
-        }
-    }
-
-    /**
      * Cached DictRefs to avoid redundant config resolution.
      */
     private final Map<String, DictRefs> configCache = new HashMap<>();
@@ -363,7 +226,7 @@ public class OpenCC {
      * with the underlying cause recorded in {@link #lastError}.</p>
      *
      * @param config the conversion configuration key (e.g. {@code "s2t"}, {@code "tw2sp"});
-     *               see {@link Config} for supported values
+     *               see {@link OpenccConfig} for supported values
      * @throws RuntimeException if no dictionary source can be loaded or parsed
      */
     public OpenCC(String config) {
@@ -403,7 +266,7 @@ public class OpenCC {
      * @param punctuation whether punctuation conversion is enabled
      * @return the prepared {@link DictRefs} for this configuration
      */
-    private DictRefs getDictRefsUnionForConfig(Config cfg, boolean punctuation) {
+    private DictRefs getDictRefsUnionForConfig(OpenccConfig cfg, boolean punctuation) {
         return dictionary.getPlan(cfg, punctuation);
     }
 
@@ -1116,7 +979,7 @@ public class OpenCC {
      * @return the converted text in Traditional Chinese
      */
     public String s2t(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.S2T, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.S2T, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1128,7 +991,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String t2s(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.T2S, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.T2S, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1140,7 +1003,7 @@ public class OpenCC {
      * @return the converted text in Traditional Chinese (Taiwan)
      */
     public String s2tw(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.S2Tw, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.S2Tw, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1152,7 +1015,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String tw2s(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.Tw2S, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.Tw2S, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1164,7 +1027,7 @@ public class OpenCC {
      * @return the converted text in full Taiwan-style Traditional Chinese
      */
     public String s2twp(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.S2Twp, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.S2Twp, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1176,7 +1039,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String tw2sp(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.Tw2Sp, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.Tw2Sp, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1188,7 +1051,7 @@ public class OpenCC {
      * @return the converted text in Hong Kong-style Traditional Chinese
      */
     public String s2hk(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.S2Hk, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.S2Hk, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1200,7 +1063,7 @@ public class OpenCC {
      * @return the converted text in Simplified Chinese
      */
     public String hk2s(String input, boolean punctuation) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.Hk2S, punctuation);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.Hk2S, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1211,7 +1074,7 @@ public class OpenCC {
      * @return the text converted to Taiwan-style Traditional Chinese
      */
     public String t2tw(String input) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.T2Tw, false);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.T2Tw, false);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1222,7 +1085,7 @@ public class OpenCC {
      * @return the converted Taiwan Traditional Chinese with phrases and variants
      */
     public String t2twp(String input) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.T2Twp, false);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.T2Twp, false);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1233,7 +1096,7 @@ public class OpenCC {
      * @return the converted base Traditional Chinese text
      */
     public String tw2t(String input) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.Tw2T, false);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.Tw2T, false);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1244,7 +1107,7 @@ public class OpenCC {
      * @return the fully reverted Traditional Chinese text
      */
     public String tw2tp(String input) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.Tw2Tp, false);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.Tw2Tp, false);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1255,7 +1118,7 @@ public class OpenCC {
      * @return the converted text using HK Traditional variants
      */
     public String t2hk(String input) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.T2Hk, false);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.T2Hk, false);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1266,7 +1129,7 @@ public class OpenCC {
      * @return the converted base Traditional Chinese text
      */
     public String hk2t(String input) {
-        DictRefs refs = getDictRefsUnionForConfig(Config.Hk2T, false);
+        DictRefs refs = getDictRefsUnionForConfig(OpenccConfig.Hk2T, false);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
