@@ -4,7 +4,7 @@ permissions:
   contents: write    # <— allow creating releases
 
 on:
-  # Auto-release when you push a tag (e.g. v1.1.1 or 1.1.1)
+  # Auto-release when you push a tag (e.g. v1.1.1.1 or 1.1.1.1)
   push:
     tags:
       - 'v*'
@@ -14,9 +14,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag name for this release (e.g. v1.1.1)'
+        description: 'Tag name for this release (e.g. v1.1.1.1)'
         required: true
-        default: 'v1.1.1'
+        default: 'v1.1.1.1'
       prerelease:
         description: 'Mark this release as a prerelease?'
         required: true
@@ -46,7 +46,7 @@ jobs:
             PRERELEASE="false"
           fi
 
-          # Strip leading "v" if present: v1.1.1 -> 1.1.1
+          # Strip leading "v" if present: v1.1.1.1 -> 1.1.1.1
           VERSION="${TAG#v}"
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
