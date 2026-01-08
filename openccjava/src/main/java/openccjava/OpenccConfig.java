@@ -142,4 +142,90 @@ public enum OpenccConfig {
 
         throw new IllegalArgumentException("Unknown config: " + value);
     }
+
+    /**
+     * Attempts to parse a configuration string into a corresponding
+     * {@link OpenccConfig} value.
+     *
+     * <p>The parsing is case-insensitive and accepts both canonical
+     * lowercase names (for example {@code "s2t"}, {@code "t2twp"}) and
+     * enum-style names (for example {@code "S2T"}, {@code "T2TWP"}).</p>
+     *
+     * <p>This method performs no allocation beyond parsing and never throws.
+     * It is intended for tolerant input handling such as CLI arguments,
+     * UI bindings, or configuration files.</p>
+     *
+     * @param value the configuration string to parse; may be {@code null}
+     * @return the corresponding {@link OpenccConfig}, or {@code null} if
+     * the input is {@code null}, empty, or does not match any
+     * supported configuration
+     */
+    public static OpenccConfig tryParse(String value) {
+        if (value == null) return null;
+
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) return null;
+
+        for (OpenccConfig c : OpenccConfig.values()) {
+            if (c.name().equalsIgnoreCase(trimmed)
+                    || c.asStr().equalsIgnoreCase(trimmed)) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the canonical lowercase name of this configuration.
+     *
+     * <p>The canonical name is the standard, lowercase identifier used by
+     * OpenCC for configuration keys (for example {@code "s2t"},
+     * {@code "s2twp"}, {@code "tw2sp"}).</p>
+     *
+     * <p>This method is functionally equivalent to {@link #asStr()}, but is
+     * named explicitly for clarity when used in public APIs, CLI tools, and
+     * configuration serialization.</p>
+     *
+     * @return the canonical lowercase configuration name
+     */
+    public String toCanonicalName() {
+        return asStr();
+    }
+
+    /**
+     * Converts a configuration string to its canonical lowercase name.
+     *
+     * <p>The input string is parsed in a case-insensitive manner. Both
+     * canonical names and enum-style names are accepted.</p>
+     *
+     * <p>This method is strict: if the input does not correspond to any
+     * supported configuration, an {@link IllegalArgumentException} is thrown.
+     * For tolerant parsing, use {@link #toCanonicalNameOrNull(String)}.</p>
+     *
+     * @param value the configuration string to canonicalize
+     * @return the canonical lowercase configuration name
+     * @throws IllegalArgumentException if {@code value} is {@code null},
+     *                                  empty, or does not correspond to any
+     *                                  supported configuration
+     */
+    public static String toCanonicalName(String value) {
+        return fromStr(value).toCanonicalName();
+    }
+
+    /**
+     * Converts a configuration string to its canonical lowercase name,
+     * or returns {@code null} if the input is invalid.
+     *
+     * <p>The input is parsed in a case-insensitive manner. This method never
+     * throws and is suitable for tolerant input handling.</p>
+     *
+     * @param value the configuration string to canonicalize; may be {@code null}
+     * @return the canonical lowercase configuration name, or {@code null} if
+     * the input is {@code null}, empty, or invalid
+     */
+    public static String toCanonicalNameOrNull(String value) {
+        OpenccConfig c = tryParse(value);
+        return c == null ? null : c.asStr();
+    }
+
 }
