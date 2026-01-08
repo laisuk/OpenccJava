@@ -97,7 +97,7 @@ public class PdfCommand implements Runnable {
     public void run() {
         if (!extract) {
             if (config == null ||
-                    !OpenCC.getSupportedConfigs().contains(config.toLowerCase())) {
+                    !OpenCC.isSupportedConfig(config)) {
                 System.err.println("❌ Missing or invalid config: " + config);
                 return;
             }
