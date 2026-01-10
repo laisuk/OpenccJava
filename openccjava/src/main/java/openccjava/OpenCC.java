@@ -327,18 +327,6 @@ public class OpenCC {
     }
 
     /**
-     * Retrieves the {@link DictRefs} for the given configuration and punctuation mode,
-     * including attached {@link StarterUnion}s.
-     *
-     * @param cfg         the conversion configuration
-     * @param punctuation whether punctuation conversion is enabled
-     * @return the prepared {@link DictRefs} for this configuration
-     */
-    private DictRefs getDictRefsUnionForConfigId(OpenccConfig cfg, boolean punctuation) {
-        return dictionary.getPlan(cfg, punctuation);
-    }
-
-    /**
      * Sets the current conversion configuration using a configuration string.
      *
      * <p>The provided {@code config} is parsed in a case-insensitive manner.
@@ -788,6 +776,18 @@ public class OpenCC {
         OpenccConfig cfg = OpenccConfig.tryParse(key);
         if (cfg == null) return null;
         return getDictRefs(cfg);
+    }
+
+    /**
+     * Retrieves the {@link DictRefs} for the given configuration and punctuation mode,
+     * including attached {@link StarterUnion}s.
+     *
+     * @param cfg         the conversion configuration
+     * @param punctuation whether punctuation conversion is enabled
+     * @return the prepared {@link DictRefs} for this configuration
+     */
+    private DictRefs getDictRefsUnionForConfigId(OpenccConfig cfg, boolean punctuation) {
+        return dictionary.getPlan(cfg, punctuation);
     }
 
     /**
