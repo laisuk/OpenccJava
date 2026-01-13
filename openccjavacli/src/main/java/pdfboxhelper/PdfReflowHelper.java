@@ -71,8 +71,20 @@ public final class PdfReflowHelper {
      */
     private static final String DIALOG_OPENERS = "“‘「『﹁﹃";
 
+    /**
+     * Dialog closing characters
+     * <p>
+     * IMPORTANT:
+     * Order and pairing MUST stay consistent with DIALOG_OPENERS.
+     */
+    private static final String DIALOG_CLOSERS = "”’」』﹂﹄";
+
     private static boolean isDialogOpener(char ch) {
         return DIALOG_OPENERS.indexOf(ch) >= 0;
+    }
+
+    private static boolean isDialogCloser(char ch) {
+        return DIALOG_CLOSERS.indexOf(ch) >= 0;
     }
 
     // ---------------------------------------------------------------------
@@ -261,20 +273,24 @@ public final class PdfReflowHelper {
 
             // --- Empty line ---
             if (stripped.isEmpty()) {
-
                 if (!addPdfPageHeader && buffer.length() > 0) {
-                    char lastChar = buffer.charAt(buffer.length() - 1);
-                    // Page-break-like empty line
-                    if (!isCjkPunctEnd(lastChar)) {
+                    // Light rule: only flush on blank line if buffer ends with STRONG sentence end.
+                    // Otherwise, treat as a soft cross-page blank line and keep accumulating.
+                    int idx = findLastNonWhitespaceIndex(buffer);
+                    if (idx >= 0 && !isStrongSentenceEnd(buffer.charAt(idx))) {
                         continue;
                     }
                 }
 
+                // End of paragraph → flush buffer (do NOT emit "")
                 if (buffer.length() > 0) {
                     segments.add(buffer.toString());
                     buffer.setLength(0);
                     dialogState.reset();
                 }
+
+                // IMPORTANT: Emitting empty segments would introduce hard paragraph boundaries
+                // and break cross-line reflow
                 continue;
             }
 
@@ -362,6 +378,20 @@ public final class PdfReflowHelper {
                 // else: fall through -> normal merge logic below
             }
 
+            // Finalizer: strong sentence end → flush immediately. Do not remove.
+            // If the current line completes a strong sentence, append it and flush immediately.
+            if (buffer.length() > 0) {
+                int idx = findLastNonWhitespaceIndex(stripped); // stripped is a String
+                if (idx >= 0 && isStrongSentenceEnd(stripped.charAt(idx))) {
+                    buffer.append(stripped);               // buffer now has new value
+                    segments.add(buffer.toString());       // emit UPDATED buffer
+                    buffer.setLength(0);                   // clear buffer
+                    dialogState.reset();
+                    dialogState.update(stripped);
+                    continue;
+                }
+            }
+
             // Check dialog start
             boolean currentIsDialogStart = isDialogStarter(stripped);
 
@@ -411,6 +441,16 @@ public final class PdfReflowHelper {
                     dialogState.update(stripped);
                     continue;
                 }
+            }
+
+            // 8a) Strong sentence boundary (handles 。！？, OCR . / :, “.”)
+            if (!dialogState.isUnclosed() && endsWithSentenceBoundary(bufferText)) {
+                segments.add(bufferText);         // push old buffer as a segment
+                buffer.setLength(0);                  // take() semantics
+                buffer.append(stripped);              // start new buffer with current line
+                dialogState.reset();
+                dialogState.update(stripped);
+                continue;
             }
 
             // --- CJK punctuation → paragraph end ---
@@ -1089,6 +1129,151 @@ public final class PdfReflowHelper {
 
         // FULLWIDTH digits '０'–'９'
         return ch >= '０' && ch <= '９';
+    }
+
+    private static int findLastNonWhitespaceIndex(CharSequence s) {
+        for (int i = s.length() - 1; i >= 0; i--) {
+            if (!Character.isWhitespace(s.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isStrongSentenceEnd(char ch) {
+        return ch == '。' || ch == '！' || ch == '？' || ch == '!' || ch == '?';
+    }
+
+    // ------ Sentence Boundary start ------ //
+
+    private static boolean endsWithSentenceBoundary(String s) {
+        if (s == null) return false;
+
+        // s.trim().isEmpty()
+        if (s.trim().isEmpty()) {
+            return false;
+        }
+
+        int lastNonWs = findLastNonWhitespaceCharIndex(s);
+        if (lastNonWs < 0) {
+            return false;
+        }
+
+        char last = s.charAt(lastNonWs);
+
+        // 1) Strong sentence end-ers.
+        if (isStrongSentenceEnd(last)) {
+            return true;
+        }
+
+        // 2) Level-2 accepts OCR '.' / ':' at line end (mostly-CJK).
+        if ((last == '.' || last == ':') && isOcrCjkAsciiPunctAtLineEnd(s, lastNonWs)) {
+            return true;
+        }
+
+        // 3) Quote closers after strong end, plus OCR artifact `.“”` / `.」` / `.）`.
+        if (isQuoteCloser(last)) {
+            int prevNonWs = findPrevNonWhitespaceCharIndex(s, lastNonWs);
+            if (prevNonWs >= 0) {
+                char prev = s.charAt(prevNonWs);
+
+                // Strong end immediately before quote closer.
+                if (isStrongSentenceEnd(prev)) {
+                    return true;
+                }
+
+                // OCR artifact: ASCII '.' before closers.
+                if (prev == '.' && isOcrCjkAsciiPunctBeforeClosers(s, prevNonWs)) {
+                    return true;
+                }
+
+                // Optional: enable if you want ':' before closers too.
+                // if (prev == ':' && isOcrCjkAsciiPunctBeforeClosers(s, prevNonWs)) return true;
+            }
+        }
+
+        // 4) Bracket closers with mostly CJK.
+        if (isBracketCloser(last) && lastNonWs > 0 && isMostlyCjk(s)) {
+            return true;
+        }
+
+        // 5) Ellipsis as weak boundary.
+        return endsWithEllipsis(s);
+    }
+
+    private static boolean isQuoteCloser(char ch) {
+        // Rust: is_dialog_closer(ch)
+        return isDialogCloser(ch);
+    }
+
+    /**
+     * Last non-whitespace char index (char index).
+     */
+    private static int findLastNonWhitespaceCharIndex(String s) {
+        for (int i = s.length() - 1; i >= 0; i--) {
+            if (!Character.isWhitespace(s.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Previous non-whitespace char index strictly before endExclusive (char index).
+     */
+    private static int findPrevNonWhitespaceCharIndex(String s, int endExclusive) {
+        for (int i = endExclusive - 1; i >= 0; i--) {
+            if (!Character.isWhitespace(s.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Strict OCR: punct itself is at end-of-line (only whitespace after it),
+     * and preceded by CJK in a mostly-CJK line.
+     */
+    private static boolean isOcrCjkAsciiPunctAtLineEnd(String s, int punctIndex) {
+        if (punctIndex <= 0) return false;
+        if (!isAtLineEndIgnoringWhitespace(s, punctIndex)) return false;
+        char prev = s.charAt(punctIndex - 1);
+        return isCjk(prev) && isMostlyCjk(s);
+    }
+
+    /**
+     * Relaxed OCR: after punct, allow only whitespace and closers (quote/bracket).
+     * Enables `.“”` / `.」` / `.）` to count as sentence boundary.
+     */
+    private static boolean isOcrCjkAsciiPunctBeforeClosers(String s, int punctIndex) {
+        if (punctIndex <= 0) return false;
+        if (!isAtEndAllowingClosers(s, punctIndex)) return false;
+        char prev = s.charAt(punctIndex - 1);
+        return isCjk(prev) && isMostlyCjk(s);
+    }
+
+    private static boolean isAtLineEndIgnoringWhitespace(String s, int index) {
+        for (int i = index + 1; i < s.length(); i++) {
+            if (!Character.isWhitespace(s.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isAtEndAllowingClosers(String s, int index) {
+        for (int i = index + 1; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (Character.isWhitespace(ch)) continue;
+            if (isQuoteCloser(ch) || isBracketCloser(ch)) continue;
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean endsWithEllipsis(String s) {
+        String t = trimEnd(s);
+        return t.endsWith("…") || t.endsWith("……") || t.endsWith("...") || t.endsWith("..");
     }
 
 }
