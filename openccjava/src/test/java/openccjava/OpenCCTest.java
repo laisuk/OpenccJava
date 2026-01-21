@@ -96,12 +96,29 @@ class OpenCCTest {
     }
 
     @Test
-    void testInvalidConfigStrictCanonicalizeThrows() {
-        // ✅ Null / invalid input → strict: throws
-        assertThrows(IllegalArgumentException.class, () -> OpenccConfig.toCanonicalName(null));
-        assertThrows(IllegalArgumentException.class, () -> OpenccConfig.toCanonicalName(""));
-        assertThrows(IllegalArgumentException.class, () -> OpenccConfig.toCanonicalName("invalid"));
-        assertThrows(IllegalArgumentException.class, () -> OpenccConfig.toCanonicalName("t2xyz"));
+    void testInvalidConfigIsRejected() {
+        // ✅ Null / empty / whitespace
+        assertFalse(OpenccConfig.isValidConfig(null));
+        assertFalse(OpenccConfig.isValidConfig(""));
+        assertFalse(OpenccConfig.isValidConfig("   "));
+
+        // ✅ Unknown config
+        assertFalse(OpenccConfig.isValidConfig("invalid"));
+        assertFalse(OpenccConfig.isValidConfig("t2xyz"));
+
+        // ✅ tryParse returns null for invalid inputs
+        assertNull(OpenccConfig.tryParse(null));
+        assertNull(OpenccConfig.tryParse(""));
+        assertNull(OpenccConfig.tryParse("invalid"));
+        assertNull(OpenccConfig.tryParse("t2xyz"));
+    }
+
+    @Test
+    void testTryParseRoundTrip() {
+        for (OpenccConfig c : OpenccConfig.values()) {
+            assertEquals(c, OpenccConfig.tryParse(c.toCanonicalName()));
+            assertEquals(c, OpenccConfig.tryParse(c.name())); // enum-style
+        }
     }
 
     @Test
