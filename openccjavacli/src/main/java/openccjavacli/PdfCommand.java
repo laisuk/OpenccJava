@@ -1,6 +1,7 @@
 package openccjavacli;
 
 import openccjava.OpenCC;
+import openccjava.OpenccConfig;
 import pdfboxhelper.PdfBoxHelper;
 import pdfboxhelper.PdfReflowHelper;
 import picocli.CommandLine.Command;
@@ -97,7 +98,7 @@ public class PdfCommand implements Runnable {
     public void run() {
         if (!extract) {
             if (config == null ||
-                    !OpenCC.isSupportedConfig(config)) {
+                    !OpenccConfig.isValidConfig(config)) {
                 System.err.println("❌ Missing or invalid config: " + config);
                 return;
             }

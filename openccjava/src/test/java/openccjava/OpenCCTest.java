@@ -12,7 +12,8 @@ class OpenCCTest {
     static OpenCC opencc;
 
     @BeforeAll
-    static void init() {
+    static void init()
+    {
         opencc = new OpenCC("s2t");
     }
 
@@ -65,6 +66,7 @@ class OpenCCTest {
     void testConfigEnum() {
         OpenccConfig configEnum = OpenccConfig.tryParse("s2twp");
         String ConfigStr = configEnum.toCanonicalName();
+        assertTrue(OpenCC.isSupportedConfig(ConfigStr));
         assertEquals("s2twp", ConfigStr);
     }
 
