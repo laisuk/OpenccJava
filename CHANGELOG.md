@@ -6,18 +6,26 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.1.1] - 2026-01-08
+## [1.2.0] - 2026-01-23
 
 ### Added
-- Added PDF file type supported as input in `openccjavacli` subcommand `pdf`
+
+- Added support PDF file type as input in `openccjavacli` subcommand `pdf`
+
+### Changed
+
+- OpenccConfig as single source of truth for conversion configuration while compatible with legacy config.
+- Update dictionary to v1.2.0
 
 ---
 
 ## [1.1.1] - 2025-11-25
 
 ### Changed
+
 - Refactored `OfficeHelper` to include a core `byte[]`-based `convert()` API for in-memory document processing.
-- Updated conversion result handling: introduced unified abstract `Result` base class with concrete `FileResult` and `MemoryResult` subtypes.
+- Updated conversion result handling: introduced unified abstract `Result` base class with concrete `FileResult` and
+  `MemoryResult` subtypes.
 - Ensured backward compatibility: legacy `Result` return type remains valid and unchanged for existing users.
 
 ---
