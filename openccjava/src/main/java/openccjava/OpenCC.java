@@ -1589,6 +1589,7 @@ public class OpenCC {
      * enabled (see {@link DictionaryMaxlength} and the conversion methods that
      * accept a punctuation option).
      */
+    @SuppressWarnings("unused")
     @Deprecated
     private String translatePunctuation(String input, Map<Character, Character> map) {
         StringBuilder sb = new StringBuilder(input.length());
