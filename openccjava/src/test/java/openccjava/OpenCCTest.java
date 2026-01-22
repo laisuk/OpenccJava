@@ -12,8 +12,7 @@ class OpenCCTest {
     static OpenCC opencc;
 
     @BeforeAll
-    static void init()
-    {
+    static void init() {
         opencc = new OpenCC("s2t");
     }
 
@@ -59,7 +58,10 @@ class OpenCCTest {
     void testConfigFallback() {
         OpenCC bad = OpenCC.fromConfig("invalid_config");
         assertEquals("s2t", bad.getConfig());
+        assertTrue(bad.hasLastError());
         assertNotNull(bad.getLastError());
+        bad.clearLastError();
+        assertNull(bad.getLastError());
     }
 
     @Test
@@ -175,13 +177,15 @@ class OpenCCTest {
         }
         String input = inputBuilder.toString();
         // Create OpenCC instance (your optimized one)
-        OpenCC opencc = new OpenCC("s2t"); // assuming your constructor loads config
+        OpenCC opencc = OpenCC.fromConfig(OpenccConfig.S2T); // assuming your constructor loads config
         // Time the conversion
         long start = System.nanoTime();
         String output = opencc.s2t(input, false); // simplified to traditional
         long durationMs = (System.nanoTime() - start) / 1_000_000;
 
         // Assertions
+        assertEquals(16, OpenCC.getSupportedConfigIds().size());
+        assertEquals(OpenccConfig.S2T, opencc.getConfigId());
         assertNotNull(output);
         assertEquals(input.length(), output.length()); // rough check, assuming 1:1 mapping
         System.out.println("s2t() conversion of 100K chars completed in " + durationMs + " ms");

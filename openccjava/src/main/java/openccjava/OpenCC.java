@@ -426,7 +426,7 @@ public class OpenCC {
      * @return an unmodifiable list of supported configuration keys
      */
     public static List<String> getSupportedConfigs() {
-        ArrayList<String> out = new ArrayList<String>();
+        ArrayList<String> out = new ArrayList<>();
         for (OpenccConfig c : OpenccConfig.values()) out.add(c.toCanonicalName());
         return Collections.unmodifiableList(out);
     }

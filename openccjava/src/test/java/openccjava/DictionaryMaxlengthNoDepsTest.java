@@ -169,7 +169,10 @@ public class DictionaryMaxlengthNoDepsTest {
 
         Map<String, String> jpsChars = new LinkedHashMap<>();
         jpsChars.put("芸", "藝");
-        expected.jps_characters = new DictionaryMaxlength.DictEntry(jpsChars, 1, 1);
+        expected.jps_characters = new DictionaryMaxlength.DictEntry();
+        expected.jps_characters.dict = jpsChars;
+        expected.jps_characters.maxLength = 1;
+        expected.jps_characters.minLength = 1;
 
         // All other fields remain null in both expected and actual.
         assertDictionariesEqual(expected, actual);
