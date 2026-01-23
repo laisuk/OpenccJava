@@ -52,12 +52,12 @@ public class DictgenCommand implements Runnable {
                 // Neither exists — prompt to download into current directory
                 System.out.print(BLUE +
                         "Local 'dicts/' not found (also not in '../dicts'). " +
-                        "Download from GitHub? (Y/n): " + RESET);
+                        "Download from GitHub? (y/N): " + RESET);
 
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
                     String input = reader.readLine();
                     input = (input == null ? "" : input.trim().toLowerCase());
-                    if (input.isEmpty() || input.equals("y") || input.equals("yes")) {
+                    if (input.equals("y") || input.equals("yes")) {
                         Files.createDirectories(localDicts);
                         downloadDictsFromGithub(localDicts);
                         System.out.println(GREEN + "Dictionaries downloaded to: " + localDicts + RESET);
