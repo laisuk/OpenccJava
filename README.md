@@ -61,7 +61,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.1.1")
+    implementation("io.github.laisuk:openccjava:1.2.0")
 }
 ```
 
@@ -69,7 +69,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.1.1'
+    implementation 'io.github.laisuk:openccjava:1.2.0'
 }
 ```
 
@@ -80,7 +80,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
@@ -96,7 +96,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.1.1' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.2.0' // replace with latest tag
 }
 ```
 
@@ -114,7 +114,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.1.1</version>
+<version>v1.2.0</version>
 </dependency>
 ```
 
@@ -507,15 +507,15 @@ bin/OpenccJavaCli.bat pdf -c s2t -p -i sample.pdf -o converted.txt --reflow
 ```
 
 ```
-Usage: openccjavacli pdf [-hHprV] [--compact] -c=<conversion> -i=<file>
+Usage: openccjavacli pdf [-ehHprV] [--compact] [-c=<conversion>] -i=<file>
                          [-o=<file>]
-Extract PDF text, optionally reflow CJK paragraphs, then convert with
-OpenccJava
+Extract PDF text, optionally reflow CJK paragraphs, then convert with OpenccJava
   -c, --config=<conversion>
                         OpenCC conversion configuration (e.g. s2t, t2s, s2tw,
                           t2hk, t2jp, ...)
       --compact         Compact / tighten paragraph gaps after reflow (default:
                           false)
+  -e, --extract         Extract text from PDF document only (default: false)
   -h, --help            Show this help message and exit.
   -H, --header          Insert per-page header markers into extracted text
   -i, --input=<file>    Input PDF file
