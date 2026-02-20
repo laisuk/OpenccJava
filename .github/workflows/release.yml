@@ -15,36 +15,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ------------------------------------------------------------
-      # Checkout
-      # ------------------------------------------------------------
       - name: Checkout sources
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ------------------------------------------------------------
-      # Resolve tag + version
-      # ------------------------------------------------------------
       - name: Compute tag + version
         id: meta
+        shell: bash
         run: |
           set -euo pipefail
-
           TAG="${GITHUB_REF##*/}"
           VERSION="${TAG#v}"
-
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Show resolved tag + version
+        shell: bash
         run: |
           echo "Tag:     ${{ steps.meta.outputs.tag }}"
           echo "Version: ${{ steps.meta.outputs.version }}"
 
-      # ------------------------------------------------------------
-      # Build Java artifacts (openccjava + openccjavacli)
-      # ------------------------------------------------------------
       - name: Set up Java 8
         uses: actions/setup-java@v4
         with:
@@ -52,40 +43,33 @@ jobs:
           java-version: "8"
 
       - name: Make Gradle wrapper executable
-        if: runner.os != 'Windows'
+        shell: bash
         run: chmod +x ./gradlew
 
       - name: Build JARs + JVM distributions
+        shell: bash
         run: |
           set -euo pipefail
-
-          ./gradlew clean test jar fatjar distTar distZip sourcesJar javadocJar \
-            --no-daemon --stacktrace
-
+          ./gradlew clean test jar fatjar distTar distZip sourcesJar javadocJar --no-daemon --stacktrace
           echo "== Build outputs =="
           ls -la openccjava/build/libs || true
           ls -la openccjavacli/build/libs || true
           ls -la openccjavacli/build/distributions || true
 
-      # ------------------------------------------------------------
-      # Stage Java artifacts
-      # ------------------------------------------------------------
       - name: Collect Java artifacts
+        shell: bash
         run: |
           set -euo pipefail
-
           VERSION="${{ steps.meta.outputs.version }}"
 
           mkdir -p release_artifacts/java/openccjava
           mkdir -p release_artifacts/java/openccjavacli
 
           # Library jars
-          cp openccjava/build/libs/*"$VERSION"*.jar \
-            release_artifacts/java/openccjava/
+          cp openccjava/build/libs/*"$VERSION"*.jar release_artifacts/java/openccjava/
 
           # CLI jars (including fat jar)
-          cp openccjavacli/build/libs/*"$VERSION"*.jar \
-            release_artifacts/java/openccjavacli/
+          cp openccjavacli/build/libs/*"$VERSION"*.jar release_artifacts/java/openccjavacli/
 
           # JVM distributions → rename to *.jvm.*
           for f in openccjavacli/build/distributions/*"$VERSION"*; do
@@ -103,44 +87,41 @@ jobs:
           echo "== Java staged files =="
           find release_artifacts/java -type f
 
-      # ------------------------------------------------------------
-      # Collect GraalVM natives from ./install ONLY
-      # ------------------------------------------------------------
       - name: Verify install/ directory exists
+        shell: bash
         run: |
+          set -euo pipefail
           if [ ! -d install ]; then
             echo "::error::install/ directory not found."
             exit 1
           fi
+          echo "Files currently in ./install:"
+          ls -la install || true
 
       - name: Collect GraalVM native artifacts
+        shell: bash
         run: |
-               set -euo pipefail
-               
-               VERSION="${{ steps.meta.outputs.version }}"
-          
-          # STRICT MATCH: *-VERSION-*
-               shopt -s nullglob
-               files=(install/*-"$VERSION"-*)
-               
-               if [ ${#files[@]} -eq 0 ]; then
-               echo "::error::No GraalVM natives in ./install match version '$VERSION'."
-               exit 1
-               fi
-               
-               mkdir -p release_artifacts/native
-               
-               for f in "${files[@]}"; do
-               echo "  + $f"
-               cp "$f" release_artifacts/native/
-               done
-               
-               echo "== Native staged files =="
-               find release_artifacts/native -type f
+          set -euo pipefail
+          VERSION="${{ steps.meta.outputs.version }}"
 
-      # ------------------------------------------------------------
-      # Create GitHub Release
-      # ------------------------------------------------------------
+          # STRICT MATCH: *-VERSION-*
+          shopt -s nullglob
+          files=(install/*-"$VERSION"-*)
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No GraalVM natives in ./install match version '$VERSION'."
+            exit 1
+          fi
+
+          mkdir -p release_artifacts/native
+          for f in "${files[@]}"; do
+            echo "  + $f"
+            cp "$f" release_artifacts/native/
+          done
+
+          echo "== Native staged files =="
+          find release_artifacts/native -type f
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
