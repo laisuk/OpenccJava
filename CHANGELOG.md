@@ -14,7 +14,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- OpenccConfig as single source of truth for conversion configuration while compatible with legacy config.
+- `OpenccConfig` as single source of truth for conversion configuration while compatible with legacy config.
 - Update dictionary to v1.2.0
 
 ---
