@@ -348,6 +348,8 @@ public class CjkText {
         return t.endsWith("…") || t.endsWith("……") || t.endsWith("...") || t.endsWith("..");
     }
 
+    // ------ Sentence Boundary end ------
+
     // ------ Bracket Boundary start ------
 
     public static boolean endsWithCjkBracketBoundary(String s) {
@@ -394,8 +396,6 @@ public class CjkText {
         // Allocate only for inner segment (typically short).
         return isMostlyCjk(s.substring(start, end));
     }
-
-// ------ Bracket Boundary end ------
 
     /**
      * C# IsBracketTypeBalanced(ReadOnlySpan<char> s, char open)
@@ -461,4 +461,5 @@ public class CjkText {
         return i;
     }
 
+    // ------ Bracket Boundary end ------
 }

@@ -3,6 +3,10 @@ name: Build GraalVM native images
 on:
   workflow_dispatch:
 
+env:
+  # Hardcoded manual version (update when releasing)
+  VERSION: 1.2.0
+
 jobs:
   native-image:
     name: GraalVM Native Image (${{ matrix.os }})
@@ -10,7 +14,15 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+          - os: windows-latest
+            platform: windows-x86_64
+          - os: macos-latest
+            platform: macos-arm64
+          - os: macos-15-intel
+            platform: macos-x86_64
 
     timeout-minutes: 60
 
@@ -34,12 +46,31 @@ jobs:
       - name: Build native distribution ZIP
         run: ./gradlew :openccjavacli:nativeDistZip --no-daemon --stacktrace
 
+      - name: Rename native ZIP with version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ZIP_FILE=$(find . -type f -path "*/build/distributions/*-native-*.zip" | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Native ZIP not found"
+            exit 1
+          fi
+
+          echo "Found: $ZIP_FILE"
+
+          NEW_NAME="OpenccJavaCli-${VERSION}-${{ matrix.platform }}-native.zip"
+
+          mkdir -p release
+          cp "$ZIP_FILE" "release/$NEW_NAME"
+
+          echo "Renamed to: release/$NEW_NAME"
+
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OpenccJavaCli-${{ matrix.os }}-native
-          path: '**/build/distributions/OpenccJavaCli-*-native-*.zip'
+          name: OpenccJavaCli-${{ env.VERSION }}-${{ matrix.platform }}-native
+          path: release/*.zip
           if-no-files-found: error
           compression-level: 6
-          overwrite: false
-          include-hidden-files: false

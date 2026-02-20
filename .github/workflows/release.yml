@@ -1,128 +1,153 @@
-name: Publish prebuilt release (from ./install)
+name: Publish Release (Java build + GraalVM natives from ./install)
 
 permissions:
-  contents: write    # <— allow creating releases
+  contents: write
 
 on:
-  # Auto-release when you push a tag (e.g. v1.1.1.1 or 1.1.1.1)
   push:
     tags:
       - 'v*'
       - '[0-9]+.[0-9]+.[0-9]+'
 
-  # Optional: manual trigger to create a release from current commit
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Tag name for this release (e.g. v1.1.1.1)'
-        required: true
-        default: 'v1.1.1.1'
-      prerelease:
-        description: 'Mark this release as a prerelease?'
-        required: true
-        type: boolean
-        default: false
-
 jobs:
   release:
-    name: Create GitHub Release from ./install
+    name: Build Java + Publish GitHub Release
     runs-on: ubuntu-latest
 
     steps:
+      # ------------------------------------------------------------
+      # Checkout
+      # ------------------------------------------------------------
       - name: Checkout sources
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Decide which tag to use and derive a plain version (strip leading "v")
+      # ------------------------------------------------------------
+      # Resolve tag + version
+      # ------------------------------------------------------------
       - name: Compute tag + version
         id: meta
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ github.event.inputs.tag_name }}"
-            PRERELEASE="${{ github.event.inputs.prerelease }}"
-          else
-            TAG="${GITHUB_REF##*/}"
-            PRERELEASE="false"
-          fi
+          set -euo pipefail
 
-          # Strip leading "v" if present: v1.1.1.1 -> 1.1.1.1
+          TAG="${GITHUB_REF##*/}"
           VERSION="${TAG#v}"
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Show resolved tag + version
         run: |
-          echo "Tag:      ${{ steps.meta.outputs.tag }}"
-          echo "Version:  ${{ steps.meta.outputs.version }}"
-          echo "Pre-rel?: ${{ steps.meta.outputs.prerelease }}"
+          echo "Tag:     ${{ steps.meta.outputs.tag }}"
+          echo "Version: ${{ steps.meta.outputs.version }}"
 
+      # ------------------------------------------------------------
+      # Build Java artifacts (openccjava + openccjavacli)
+      # ------------------------------------------------------------
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Build JARs + JVM distributions
+        run: |
+          set -euo pipefail
+
+          ./gradlew clean test jar fatjar distTar distZip sourcesJar javadocJar \
+            --no-daemon --stacktrace
+
+          echo "== Build outputs =="
+          ls -la openccjava/build/libs || true
+          ls -la openccjavacli/build/libs || true
+          ls -la openccjavacli/build/distributions || true
+
+      # ------------------------------------------------------------
+      # Stage Java artifacts
+      # ------------------------------------------------------------
+      - name: Collect Java artifacts
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.meta.outputs.version }}"
+
+          mkdir -p release_artifacts/java/openccjava
+          mkdir -p release_artifacts/java/openccjavacli
+
+          # Library jars
+          cp openccjava/build/libs/*"$VERSION"*.jar \
+            release_artifacts/java/openccjava/
+
+          # CLI jars (including fat jar)
+          cp openccjavacli/build/libs/*"$VERSION"*.jar \
+            release_artifacts/java/openccjavacli/
+
+          # JVM distributions → rename to *.jvm.*
+          for f in openccjavacli/build/distributions/*"$VERSION"*; do
+            base="$(basename "$f")"
+            case "$base" in
+              *.zip)    new="${base%.zip}.jvm.zip" ;;
+              *.tar)    new="${base%.tar}.jvm.tar" ;;
+              *.tar.gz) new="${base%.tar.gz}.jvm.tar.gz" ;;
+              *.tgz)    new="${base%.tgz}.jvm.tgz" ;;
+              *)        new="$base" ;;
+            esac
+            cp "$f" "release_artifacts/java/openccjavacli/$new"
+          done
+
+          echo "== Java staged files =="
+          find release_artifacts/java -type f
+
+      # ------------------------------------------------------------
+      # Collect GraalVM natives from ./install ONLY
+      # ------------------------------------------------------------
       - name: Verify install/ directory exists
         run: |
           if [ ! -d install ]; then
-            echo "::error::install/ directory not found. Please build and copy artifacts into ./install before running this workflow."
+            echo "::error::install/ directory not found."
             exit 1
           fi
 
-          echo "All files currently in ./install:"
-          ls -R install || true
-
-      # Stage ONLY artifacts for the current version into a temp folder
-      - name: Collect artifacts for current version
-        id: collect
+      - name: Collect GraalVM native artifacts
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
-          mkdir -p release_artifacts
+               set -euo pipefail
+               
+               VERSION="${{ steps.meta.outputs.version }}"
+          
+          # STRICT MATCH: *-VERSION-*
+               shopt -s nullglob
+               files=(install/*-"$VERSION"-*)
+               
+               if [ ${#files[@]} -eq 0 ]; then
+               echo "::error::No GraalVM natives in ./install match version '$VERSION'."
+               exit 1
+               fi
+               
+               mkdir -p release_artifacts/native
+               
+               for f in "${files[@]}"; do
+               echo "  + $f"
+               cp "$f" release_artifacts/native/
+               done
+               
+               echo "== Native staged files =="
+               find release_artifacts/native -type f
 
-          echo "Collecting artifacts matching version: $VERSION"
-          shopt -s nullglob
-
-          # Copy only files that contain the version string
-          files=(install/*"$VERSION"*)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "::error::No artifacts in ./install match version '$VERSION'."
-            echo "Expected something like: OpenccJavaCli-${VERSION}-native-windows-x86_64.zip"
-            exit 1
-          fi
-
-          for f in "${files[@]}"; do
-            echo "  + $f"
-            cp "$f" release_artifacts/
-          done
-
-          # Optional: warn about "foreign" files for other versions
-          echo "Checking for leftover files from other versions..."
-          others=$(ls install | grep -v "$VERSION" || true)
-          if [ -n "$others" ]; then
-            echo "::warning::install/ contains files that do NOT match version '$VERSION':"
-            echo "$others"
-          else
-            echo "No leftover files from other versions detected."
-          fi
-
-          echo "Final staged artifacts:"
-          ls -R release_artifacts
-
+      # ------------------------------------------------------------
+      # Create GitHub Release
+      # ------------------------------------------------------------
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
           name: OpenccJava ${{ steps.meta.outputs.tag }}
-          body: |
-            Prebuilt JVM + GraalVM native binaries for openccjavacli.
-            
-            Artifacts included (matching version **${{ steps.meta.outputs.version }}** only):
-            - JVM fat JAR (Java 8 target)
-            - JVM ZIP distribution (*-jvm.zip)
-            - Native Windows ZIP
-            - Native Linux ZIP
-            - Native macOS ZIP
-            
-            All files are sourced from the `install/` directory and filtered by version.
           draft: false
-          prerelease: ${{ steps.meta.outputs.prerelease }}
+          prerelease: ${{ contains(steps.meta.outputs.tag, '-') }}
           files: |
             release_artifacts/**
         env:
