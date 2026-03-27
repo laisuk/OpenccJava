@@ -21,7 +21,7 @@ dependencies {
     // Generate GraalVM reflection config for picocli automatically
     annotationProcessor("info.picocli:picocli-codegen:4.7.7")
     //PDFBox
-    implementation("org.apache.pdfbox:pdfbox:3.0.6")
+    implementation("org.apache.pdfbox:pdfbox:3.0.7")
 }
 
 // Application entrypoint (used by `run`, Jar manifest, etc.)

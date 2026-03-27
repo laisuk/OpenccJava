@@ -166,17 +166,30 @@ public class DictionaryMaxlength {
      */
     @Override
     public String toString() {
-        long count = Arrays.stream(this.getClass().getFields())
-                .filter(f -> {
-                    try {
-                        DictEntry entry = (DictEntry) f.get(this);
-                        return entry != null && entry.dict != null && !entry.dict.isEmpty();
-                    } catch (IllegalAccessException e) {
-                        return false;
-                    }
-                })
-                .count();
+        int count = 0;
+        if (hasEntries(st_characters)) count++;
+        if (hasEntries(st_phrases)) count++;
+        if (hasEntries(st_punctuations)) count++;
+        if (hasEntries(ts_characters)) count++;
+        if (hasEntries(ts_phrases)) count++;
+        if (hasEntries(ts_punctuations)) count++;
+        if (hasEntries(tw_phrases)) count++;
+        if (hasEntries(tw_phrases_rev)) count++;
+        if (hasEntries(tw_variants)) count++;
+        if (hasEntries(tw_variants_rev)) count++;
+        if (hasEntries(tw_variants_rev_phrases)) count++;
+        if (hasEntries(hk_variants)) count++;
+        if (hasEntries(hk_variants_rev)) count++;
+        if (hasEntries(hk_variants_rev_phrases)) count++;
+        if (hasEntries(jps_characters)) count++;
+        if (hasEntries(jps_phrases)) count++;
+        if (hasEntries(jp_variants)) count++;
+        if (hasEntries(jp_variants_rev)) count++;
         return "<DictionaryMaxlength with " + count + " loaded dicts>";
+    }
+
+    private static boolean hasEntries(DictEntry entry) {
+        return entry != null && entry.dict != null && !entry.dict.isEmpty();
     }
 
     /**
@@ -196,45 +209,34 @@ public class DictionaryMaxlength {
      */
     public static DictionaryMaxlength fromDicts(String basePath) {
         final DictionaryMaxlength r = new DictionaryMaxlength();
-
-        // ----- filenames (ordered, then wrapped unmodifiable) -----
         final Map<String, String> files = getFiles();
-
-        // ----- assignment table (ordered, then wrapped unmodifiable) -----
         final Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> assign = getAssign();
-
-        files.keySet().forEach(name -> {
-            if (!assign.containsKey(name)) {
-                throw new IllegalStateException(
-                        "Missing assignment mapping for dictionary '" + name +
-                                "' (filename=" + files.get(name) + ")");
-            }
-        });
 
         for (Map.Entry<String, String> kv : files.entrySet()) {
             final String dictName = kv.getKey();
             final String filename = kv.getValue();
+            final BiConsumer<DictionaryMaxlength, DictEntry> setter = assign.get(dictName);
+            if (setter == null) {
+                throw new IllegalStateException(
+                        "Missing assignment mapping for dictionary '" + dictName +
+                                "' (filename=" + filename + ")");
+            }
 
             final Path fsPath = Paths.get(basePath, filename);
             try {
                 final DictEntry entry;
                 if (Files.exists(fsPath)) {
-                    entry = loadDictionaryMaxlength(fsPath);  // UTF-8 BufferReader wrapper in function
+                    entry = loadDictionaryMaxlength(fsPath);
                 } else {
                     final String resPath = "/" + basePath + "/" + filename;
                     try (InputStream in = DictionaryMaxlength.class.getResourceAsStream(resPath)) {
                         if (in == null) throw new FileNotFoundException("Missing resource: " + resPath +
                                 " (also checked FS: " + fsPath.toAbsolutePath() + ")");
-                        entry = loadDictionaryMaxlength(in); // UTF-8 BufferReader wrapper in function
+                        entry = loadDictionaryMaxlength(in);
                     }
                 }
 
-                final BiConsumer<DictionaryMaxlength, DictEntry> setter = assign.get(dictName);
-                if (setter == null) {
-                    throw new IllegalStateException("No assign mapping for dict: " + dictName);
-                }
                 setter.accept(r, entry);
-
             } catch (IOException ex) {
                 throw new RuntimeException("Error loading dict: " + dictName + " (" + filename + ")", ex);
             }
@@ -262,6 +264,7 @@ public class DictionaryMaxlength {
 
     // --- No-reflection field assignment table (Java 8 compatible) ---
     private static final Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> ASSIGN;
+    private static final Map<String, String> FILES;
 
     static {
         Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> m = new LinkedHashMap<>();
@@ -286,6 +289,27 @@ public class DictionaryMaxlength {
         m.put("jp_variants_rev", (o, e) -> o.jp_variants_rev = e);
 
         ASSIGN = Collections.unmodifiableMap(m);
+
+        Map<String, String> f = new LinkedHashMap<>();
+        f.put("st_characters", "STCharacters.txt");
+        f.put("st_phrases", "STPhrases.txt");
+        f.put("st_punctuations", "STPunctuations.txt");
+        f.put("ts_characters", "TSCharacters.txt");
+        f.put("ts_phrases", "TSPhrases.txt");
+        f.put("ts_punctuations", "TSPunctuations.txt");
+        f.put("tw_phrases", "TWPhrases.txt");
+        f.put("tw_phrases_rev", "TWPhrasesRev.txt");
+        f.put("tw_variants", "TWVariants.txt");
+        f.put("tw_variants_rev", "TWVariantsRev.txt");
+        f.put("tw_variants_rev_phrases", "TWVariantsRevPhrases.txt");
+        f.put("hk_variants", "HKVariants.txt");
+        f.put("hk_variants_rev", "HKVariantsRev.txt");
+        f.put("hk_variants_rev_phrases", "HKVariantsRevPhrases.txt");
+        f.put("jps_characters", "JPShinjitaiCharacters.txt");
+        f.put("jps_phrases", "JPShinjitaiPhrases.txt");
+        f.put("jp_variants", "JPVariants.txt");
+        f.put("jp_variants_rev", "JPVariantsRev.txt");
+        FILES = Collections.unmodifiableMap(f);
     }
 
     /**
@@ -304,30 +328,7 @@ public class DictionaryMaxlength {
      * @return an unmodifiable map of dictionary identifiers to file names
      */
     private static Map<String, String> getFiles() {
-        final Map<String, String> files;
-        {
-            Map<String, String> m = new LinkedHashMap<>();
-            m.put("st_characters", "STCharacters.txt");
-            m.put("st_phrases", "STPhrases.txt");
-            m.put("st_punctuations", "STPunctuations.txt");
-            m.put("ts_characters", "TSCharacters.txt");
-            m.put("ts_phrases", "TSPhrases.txt");
-            m.put("ts_punctuations", "TSPunctuations.txt");
-            m.put("tw_phrases", "TWPhrases.txt");
-            m.put("tw_phrases_rev", "TWPhrasesRev.txt");
-            m.put("tw_variants", "TWVariants.txt");
-            m.put("tw_variants_rev", "TWVariantsRev.txt");
-            m.put("tw_variants_rev_phrases", "TWVariantsRevPhrases.txt");
-            m.put("hk_variants", "HKVariants.txt");
-            m.put("hk_variants_rev", "HKVariantsRev.txt");
-            m.put("hk_variants_rev_phrases", "HKVariantsRevPhrases.txt");
-            m.put("jps_characters", "JPShinjitaiCharacters.txt");
-            m.put("jps_phrases", "JPShinjitaiPhrases.txt");
-            m.put("jp_variants", "JPVariants.txt");
-            m.put("jp_variants_rev", "JPVariantsRev.txt");
-            files = Collections.unmodifiableMap(m);
-        }
-        return files;
+        return FILES;
     }
 
     /**
@@ -356,61 +357,72 @@ public class DictionaryMaxlength {
 
         for (String raw; (raw = br.readLine()) != null; ) {
             lineNo++;
-//            String line = raw.strip();
-            String line = raw.trim();
-            if (line.isEmpty() || line.startsWith("#") || line.startsWith("//")) continue;
 
-            int tab = line.indexOf('\t');
+            int start = 0;
+            int end = raw.length();
+            while (start < end && Character.isWhitespace(raw.charAt(start))) start++;
+            while (end > start && Character.isWhitespace(raw.charAt(end - 1))) end--;
+            if (start >= end) continue;
+
+            char first = raw.charAt(start);
+            if (first == '#') continue;
+            if (first == '/' && start + 1 < end && raw.charAt(start + 1) == '/') continue;
+
+            int tab = -1;
+            for (int i = start; i < end; i++) {
+                if (raw.charAt(i) == '	') {
+                    tab = i;
+                    break;
+                }
+            }
             if (tab < 0) {
                 System.err.println("Warning: malformed (no TAB) at line " + lineNo + ": " + raw);
                 continue;
             }
 
-            String key = line.substring(0, tab);
-            if (lineNo == 1 && !key.isEmpty() && key.charAt(0) == '\uFEFF') key = key.substring(1);
+            int keyStart = start;
 
-            // first token after TAB (space OR tab ends it)
-            String val = getRestString(line, tab);
+            if (lineNo == 1 && keyStart < tab && raw.charAt(keyStart) == '\uFEFF') keyStart++;
+            if (keyStart >= tab) {
+                System.err.println("Warning: empty key/value at line " + lineNo + ": " + raw);
+                continue;
+            }
+            String key = raw.substring(keyStart, tab);
 
-            if (key.isEmpty() || val.isEmpty()) {
+            int valueStart = tab + 1;
+            while (valueStart < end) {
+                char c = raw.charAt(valueStart);
+                if (c != ' ' && c != '	') break;
+                valueStart++;
+            }
+            if (valueStart >= end) {
                 System.err.println("Warning: empty key/value at line " + lineNo + ": " + raw);
                 continue;
             }
 
+            int valueEnd = valueStart;
+            while (valueEnd < end) {
+                char c = raw.charAt(valueEnd);
+                if (c == ' ' || c == '	') break;
+                valueEnd++;
+            }
+            if (valueEnd <= valueStart) {
+                System.err.println("Warning: empty key/value at line " + lineNo + ": " + raw);
+                continue;
+            }
+            String val = raw.substring(valueStart, valueEnd);
+
             dict.put(key, val);
-            // Use UTF-16 length (consistent with your existing maxLength logic).
-            // Non-BMP code points count as 2 (same as before).
             int len = key.length();
             if (len > maxLength) maxLength = len;
             if (len < minLength) minLength = len;
         }
         if (dict.isEmpty()) {
-            // No entries: keep old behavior; maxLength=1, minLength=1 (or 0 if you prefer).
             return new DictEntry(dict, 1, 1);
         } else {
-            if (minLength == Integer.MAX_VALUE) minLength = 1; // defensive, shouldn't happen
+            if (minLength == Integer.MAX_VALUE) minLength = 1;
             return new DictEntry(dict, maxLength, minLength);
         }
-    }
-
-    private static String getRestString(String line, int tab) {
-        String rest = line.substring(tab + 1);
-        // Java 8 replacement for stripLeading()
-        int idx = 0;
-        while (idx < rest.length() && (rest.charAt(idx) == ' ' || rest.charAt(idx) == '\t')) {
-            idx++;
-        }
-        rest = rest.substring(idx);
-
-        int end = -1;
-        for (int i = 0; i < rest.length(); i++) {
-            char c = rest.charAt(i);
-            if (c == ' ' || c == '\t') {
-                end = i;
-                break;
-            }
-        }
-        return (end >= 0) ? rest.substring(0, end) : rest;
     }
 
     /**
@@ -641,35 +653,28 @@ public class DictionaryMaxlength {
         final String nl = pretty ? "\n" : "";
         final String ind1 = pretty ? "  " : "";
         final String ind2 = pretty ? "    " : "";
-        boolean firstField = true;
-
-        Object[][] fields = {
-                {"st_characters", st_characters},
-                {"st_phrases", st_phrases},
-                {"st_punctuations", st_punctuations},   // NEW
-                {"ts_characters", ts_characters},
-                {"ts_phrases", ts_phrases},
-                {"ts_punctuations", ts_punctuations},   // NEW
-                {"tw_phrases", tw_phrases},
-                {"tw_phrases_rev", tw_phrases_rev},
-                {"tw_variants", tw_variants},
-                {"tw_variants_rev", tw_variants_rev},
-                {"tw_variants_rev_phrases", tw_variants_rev_phrases},
-                {"hk_variants", hk_variants},
-                {"hk_variants_rev", hk_variants_rev},
-                {"hk_variants_rev_phrases", hk_variants_rev_phrases},
-                {"jps_characters", jps_characters},
-                {"jps_phrases", jps_phrases},
-                {"jp_variants", jp_variants},
-                {"jp_variants_rev", jp_variants_rev}
-        };
+        boolean firstField;
 
         w.write("{");
         w.write(nl);
-        for (Object[] f : fields) {
-            firstField = writeField(w, (String) f[0], (DictEntry) f[1],
-                    firstField, ind1, ind2, nl, sortKeys);
-        }
+        firstField = writeField(w, "st_characters", st_characters, true, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "st_phrases", st_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "st_punctuations", st_punctuations, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "ts_characters", ts_characters, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "ts_phrases", ts_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "ts_punctuations", ts_punctuations, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "tw_phrases", tw_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "tw_phrases_rev", tw_phrases_rev, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "tw_variants", tw_variants, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "tw_variants_rev", tw_variants_rev, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "tw_variants_rev_phrases", tw_variants_rev_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "hk_variants", hk_variants, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "hk_variants_rev", hk_variants_rev, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "hk_variants_rev_phrases", hk_variants_rev_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "jps_characters", jps_characters, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "jps_phrases", jps_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "jp_variants", jp_variants, firstField, ind1, ind2, nl, sortKeys);
+        writeField(w, "jp_variants_rev", jp_variants_rev, firstField, ind1, ind2, nl, sortKeys);
         w.write(nl);
         w.write("}");
         w.write(nl);
@@ -817,54 +822,5 @@ public class DictionaryMaxlength {
                     }
             }
         }
-    }
-    /**
-     * Derived caches for this dictionary instance.
-     * <p>
-     * These caches store runtime-only data structures that accelerate
-     * conversion without affecting serialization or persisted state.
-     * </p>
-     * <ul>
-     *   <li>{@link ConversionPlanCache} – caches prepared {@link DictRefs}
-     *       for each {@link OpenccConfig} and punctuation mode.</li>
-     * </ul>
-     * <p>
-     * The cache is marked {@code transient} to exclude it from
-     * serialization. It is automatically reinitialized when the
-     * dictionary is deserialized or reconstructed.
-     * </p>
-     */
-    private transient final ConversionPlanCache planCache = new ConversionPlanCache(() -> this);
-
-    /**
-     * Retrieves (or lazily builds) the {@link DictRefs} for the specified
-     * configuration and punctuation mode.
-     * <p>
-     * If a cached plan already exists, it is returned immediately;
-     * otherwise a new one is constructed, cached, and reused for future calls.
-     * </p>
-     *
-     * @param cfg         the conversion configuration
-     * @param punctuation whether punctuation conversion is enabled
-     * @return the cached or newly built {@link DictRefs} instance
-     */
-    public DictRefs getPlan(OpenccConfig cfg, boolean punctuation) {
-        return planCache.getPlan(cfg, punctuation);
-    }
-
-    /**
-     * Clears all runtime caches associated with this dictionary.
-     * <p>
-     * This removes any cached {@link DictRefs} from the internal
-     * {@link ConversionPlanCache}, including its shared {@link UnionCache}.
-     * Subsequent conversions will rebuild these structures lazily as needed.
-     * </p>
-     * <p>
-     * This method does <strong>not</strong> modify or unload the core
-     * dictionary data itself.
-     * </p>
-     */
-    public void clearCaches() {
-        planCache.clear();
     }
 }

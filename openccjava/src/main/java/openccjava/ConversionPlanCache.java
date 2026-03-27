@@ -22,6 +22,32 @@ import java.util.concurrent.ConcurrentMap;
  */
 public final class ConversionPlanCache {
     /**
+     * Shared cache registry keyed by dictionary instance.
+     * Weak keys allow custom dictionaries to be reclaimed when no longer referenced.
+     */
+    private static final Map<DictionaryMaxlength, ConversionPlanCache> SHARED_CACHES =
+            Collections.synchronizedMap(new WeakHashMap<>());
+
+    /**
+     * Returns the shared cache instance for the given dictionary.
+     *
+     * @param dictionary dictionary backing the conversion plans
+     * @return shared conversion-plan cache for that dictionary
+     */
+    public static ConversionPlanCache forDictionary(DictionaryMaxlength dictionary) {
+        Objects.requireNonNull(dictionary, "dictionary");
+        synchronized (SHARED_CACHES) {
+            ConversionPlanCache cache = SHARED_CACHES.get(dictionary);
+            if (cache == null) {
+                final DictionaryMaxlength dict = dictionary;
+                cache = new ConversionPlanCache(() -> dict);
+                SHARED_CACHES.put(dict, cache);
+            }
+            return cache;
+        }
+    }
+
+    /**
      * Provider for a {@link DictionaryMaxlength} instance.
      * <p>
      * Implementations can supply a dictionary either lazily
@@ -324,3 +350,7 @@ public final class ConversionPlanCache {
         }
     }
 }
+
+
+
+
