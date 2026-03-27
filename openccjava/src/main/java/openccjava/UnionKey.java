@@ -9,9 +9,9 @@ package openccjava;
  * </p>
  *
  * <p>
- * Each key corresponds to a union of dictionary slots inside
- * {@link DictionaryMaxlength}, used to speed up phrase lookups and
- * provide consistent conversions across different configurations.
+ * Each key corresponds to a union slot owned by {@link UnionCache} and
+ * shared by {@link ConversionPlanCache} while building prepared
+ * {@link DictRefs} plans.
  * </p>
  */
 public enum UnionKey {
