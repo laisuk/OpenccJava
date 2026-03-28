@@ -72,12 +72,6 @@ public class OpenCC {
     private final DictionaryMaxlength dictionary;
 
     /**
-     * Cached DictRefs to avoid redundant config resolution.
-     */
-    private final EnumMap<OpenccConfig, DictRefs> configCacheById =
-            new EnumMap<>(OpenccConfig.class);
-
-    /**
      * Stores the last error message encountered, if any.
      */
     private String lastError;
@@ -626,159 +620,6 @@ public class OpenCC {
     }
 
     /**
-     * Retrieves the {@link DictRefs} for a given conversion configuration ID.
-     *
-     * <p>This method checks the internal cache first. If no entry is found,
-     * it creates a new {@code DictRefs} object using the relevant dictionary entries
-     * from {@link DictionaryMaxlength}, supporting up to 3 rounds of replacements.
-     *
-     * <p>The result is cached for future lookups to avoid recomputation.
-     *
-     * @param cfg the configuration ID
-     * @return a {@code DictRefs} instance representing the translation rules,
-     * or {@code null} if {@code cfg} is unsupported (should be rare)
-     */
-    private DictRefs getDictRefs(OpenccConfig cfg) {
-        if (cfg == null) return null;
-
-        DictRefs cached = configCacheById.get(cfg);
-        if (cached != null) return cached;
-
-        final DictionaryMaxlength d = dictionary; // Java 8
-        DictRefs refs;
-
-        switch (cfg) {
-            // -----------------------------
-            // Simplified <-> Traditional
-            // -----------------------------
-            case S2T:
-                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters));
-                break;
-
-            case T2S:
-                refs = new DictRefs(Arrays.asList(d.ts_phrases, d.ts_characters));
-                break;
-
-            // -----------------------------
-            // Simplified <-> Taiwan
-            // -----------------------------
-            case S2TW:
-                // S -> T, then apply TW variants
-                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters))
-                        .withRound2(Collections.singletonList(d.tw_variants));
-                break;
-
-            case TW2S:
-                // TW -> T (reverse variants), then T -> S
-                refs = new DictRefs(Arrays.asList(d.tw_variants_rev_phrases, d.tw_variants_rev))
-                        .withRound2(Arrays.asList(d.ts_phrases, d.ts_characters));
-                break;
-
-            case S2TWP:
-                // S -> T, then TW phrases, then TW variants
-                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters))
-                        .withRound2(Collections.singletonList(d.tw_phrases))
-                        .withRound3(Collections.singletonList(d.tw_variants));
-                break;
-
-            case TW2SP:
-                // TW phrases reverse + TW variants reverse, then T -> S
-                refs = new DictRefs(Arrays.asList(d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev))
-                        .withRound2(Arrays.asList(d.ts_phrases, d.ts_characters));
-                break;
-
-            // -----------------------------
-            // Simplified <-> Hong Kong
-            // -----------------------------
-            case S2HK:
-                // S -> T, then HK variants
-                refs = new DictRefs(Arrays.asList(d.st_phrases, d.st_characters))
-                        .withRound2(Collections.singletonList(d.hk_variants));
-                break;
-
-            case HK2S:
-                // HK -> T (reverse variants), then T -> S
-                refs = new DictRefs(Arrays.asList(d.hk_variants_rev_phrases, d.hk_variants_rev))
-                        .withRound2(Arrays.asList(d.ts_phrases, d.ts_characters));
-                break;
-
-            // -----------------------------
-            // Traditional <-> Taiwan (Traditional region transform)
-            // -----------------------------
-            case T2TW:
-                // T -> TW (variants only)
-                refs = new DictRefs(Collections.singletonList(d.tw_variants));
-                break;
-
-            case T2TWP:
-                // T -> TW (phrases + variants)
-                refs = new DictRefs(Collections.singletonList(d.tw_phrases))
-                        .withRound2(Collections.singletonList(d.tw_variants));
-                break;
-
-            case TW2T:
-                // TW -> T (reverse variants)
-                refs = new DictRefs(Arrays.asList(d.tw_variants_rev_phrases, d.tw_variants_rev));
-                break;
-
-            case TW2TP:
-                // TW (variants-rev pair) -> T, then apply TW phrases/idioms reverse last
-                refs = new DictRefs(Arrays.asList(d.tw_variants_rev_phrases, d.tw_variants_rev))
-                        .withRound2(Collections.singletonList(d.tw_phrases_rev));
-                break;
-
-            // -----------------------------
-            // Traditional <-> Hong Kong (Traditional region transform)
-            // -----------------------------
-            case T2HK:
-                // T -> HK (variants only)
-                refs = new DictRefs(Collections.singletonList(d.hk_variants));
-                break;
-
-            case HK2T:
-                // HK -> T (reverse variants)
-                refs = new DictRefs(Arrays.asList(d.hk_variants_rev_phrases, d.hk_variants_rev));
-                break;
-
-            // -----------------------------
-            // Japanese Shinjitai
-            // -----------------------------
-            case T2JP:
-                // T -> JP variants
-                refs = new DictRefs(Collections.singletonList(d.jp_variants));
-                break;
-
-            case JP2T:
-                // JP -> T (jps phrases/chars + reverse variants)
-                refs = new DictRefs(Arrays.asList(d.jps_phrases, d.jps_characters, d.jp_variants_rev));
-                break;
-
-            default:
-                // Should never happen if switch is complete for the enum
-                refs = null;
-                break;
-        }
-
-        if (refs != null) configCacheById.put(cfg, refs);
-        return refs;
-    }
-
-    /**
-     * Wrapper for legacy string keys (e.g., "s2t", "tw2sp").
-     *
-     * <p>This method canonicalizes and delegates to {@link #getDictRefs(OpenccConfig)}.
-     *
-     * @param key the configuration key (case-insensitive)
-     * @return a {@code DictRefs} instance or {@code null} if unsupported
-     */
-    private DictRefs getDictRefs(String key) {
-        if (key == null) return null;
-        OpenccConfig cfg = OpenccConfig.tryParse(key);
-        if (cfg == null) return null;
-        return getDictRefs(cfg);
-    }
-
-    /**
      * Retrieves the {@link DictRefs} for the given configuration and punctuation mode,
      * including attached {@link StarterUnion}s.
      *
@@ -945,125 +786,13 @@ public class OpenCC {
         return result;
     }
 
-    // --- helper struct -----------------------------------------------------------
-
-    /**
-     * Groups dictionary entries into phrase dictionaries and single-character dictionaries,
-     * with cached phrase-length bounds.
-     * <p>
-     * This partitioning is used internally to optimize lookup:
-     * <ul>
-     *   <li><b>phraseDicts</b> – dictionaries where {@code maxLength &ge; 3},
-     *       searched longest-first during phrase matching</li>
-     *   <li><b>singleDicts</b> – dictionaries where {@code maxLength &lt; 3},
-     *       typically single-character or punctuation mappings</li>
-     *   <li><b>phraseMaxLen</b> – the maximum key length across all phrase dictionaries</li>
-     *   <li><b>phraseMinLen</b> – the minimum key length across all phrase dictionaries
-     *       (0 if none)</li>
-     * </ul>
-     * </p>
-     */
-    private static final class DictPartition {
-        /**
-         * Dictionaries containing multi-character phrases (length ≥ 3).
-         */
-        final List<DictEntry> phraseDicts;
-
-        /**
-         * Dictionaries containing single-character or punctuation entries (length < 3).
-         */
-        final List<DictEntry> singleDicts;
-
-        /**
-         * Maximum phrase length across {@link #phraseDicts}.
-         */
-        final int phraseMaxLen;
-
-        /**
-         * Minimum phrase length across {@link #phraseDicts} (0 if no phrase dicts).
-         */
-        final int phraseMinLen;
-
-        /**
-         * Creates a new {@code DictPartition} with the given phrase and single-character
-         * dictionaries, and cached phrase length bounds.
-         *
-         * @param phraseDicts  dictionaries containing multi-character phrase entries
-         *                     (where {@code maxLength ≥ 3}); must already be wrapped
-         *                     as unmodifiable if immutability is desired
-         * @param singleDicts  dictionaries containing single-character or punctuation
-         *                     entries (where {@code maxLength < 3}); must already be
-         *                     wrapped as unmodifiable if immutability is desired
-         * @param phraseMaxLen maximum key length across all {@code phraseDicts}, or
-         *                     {@code 0} if no phrase dictionaries exist
-         * @param phraseMinLen minimum key length across all {@code phraseDicts}, or
-         *                     {@code 0} if no phrase dictionaries exist
-         */
-        DictPartition(List<DictEntry> phraseDicts,
-                      List<DictEntry> singleDicts,
-                      int phraseMaxLen,
-                      int phraseMinLen) {
-            this.phraseDicts = phraseDicts;
-            this.singleDicts = singleDicts;
-            this.phraseMaxLen = phraseMaxLen;
-            this.phraseMinLen = phraseMinLen;
-        }
-    }
-
-    /**
-     * Partitions a list of dictionary entries into phrase dictionaries and single-character dictionaries.
-     *
-     * <p>Entries with {@code maxLength ≥ 3} are placed in {@code phraseDicts}, and both the maximum
-     * and minimum key lengths across those phrase dictionaries are tracked. Entries with
-     * {@code maxLength < 3} are placed in {@code singleDicts}. Returned lists are wrapped as
-     * unmodifiable to prevent accidental modification.</p>
-     *
-     * <p>If no phrase dictionaries are present, {@code phraseMaxLen} and {@code phraseMinLen}
-     * are both normalized to {@code 0}.</p>
-     *
-     * @param dicts the dictionaries to partition
-     * @return a {@link DictPartition} containing grouped entries and cached phrase length bounds
-     */
-    private static DictPartition partitionDicts(List<DictEntry> dicts) {
-        List<DictEntry> phrase = new ArrayList<>(dicts.size());
-        List<DictEntry> single = new ArrayList<>(2);
-
-        int phraseMax = 0;
-        int phraseMin = Integer.MAX_VALUE;
-
-        for (DictEntry e : dicts) {
-            if (e.maxLength >= 3) {
-                phrase.add(e);
-                if (e.maxLength > phraseMax) phraseMax = e.maxLength;
-                if (e.minLength < phraseMin) phraseMin = e.minLength;
-            } else {
-                single.add(e);
-            }
-        }
-
-        if (phrase.isEmpty()) {
-            // No phrase dicts: normalize bounds to 0
-            phraseMax = 0;
-            phraseMin = 0;
-        }
-
-        return new DictPartition(
-                Collections.unmodifiableList(phrase),
-                Collections.unmodifiableList(single),
-                phraseMax,
-                phraseMin
-        );
-    }
-
     /**
      * Performs dictionary-based segment replacement using a starter union and
-     * phrase/single partitioning.
+     * cached phrase/single partitioning.
      *
      * <p>This method accelerates conversion by:</p>
      * <ul>
-     *   <li>Partitioning the provided dictionaries into phrase dictionaries
-     *       (length ≥ 3) and single-character dictionaries (length &lt; 3)
-     *       via {@link #partitionDicts(List)}.</li>
+     *   <li>Reusing the per-round partition cached in {@link DictRefs.DictPartition}</li>
      *   <li>Splitting the input text into independent ranges using
      *       {@link #getSplitRanges(String, boolean)}.</li>
      *   <li>Passing each segment to {@code convertSegmentWithUnion}, which uses
@@ -1072,37 +801,31 @@ public class OpenCC {
      *
      * <p>Execution mode:</p>
      * <ul>
-     *   <li><b>Parallel</b> – if the input text exceeds 10,000 characters or
-     *       there are more than 100 split segments, segments are processed
+     *   <li><b>Parallel</b> - if the input text exceeds 100,000 characters or
+     *       there are more than 1,000 split segments, segments are processed
      *       in parallel using {@link IntStream#parallel()}.</li>
-     *   <li><b>Sequential</b> – otherwise, segments are processed in order
+     *   <li><b>Sequential</b> - otherwise, segments are processed in order
      *       in a single thread.</li>
      * </ul>
      *
      * <p>If the text is {@code null} or empty, it is returned unchanged.</p>
      *
-     * @param text      the input text
-     * @param dicts     the dictionaries to use for conversion
-     * @param maxLength the maximum phrase length
-     * @param union     the starter union for fast starter checks
+     * @param text the input text
+     * @param part the cached partition metadata for the round
      * @return the converted text
      */
-    public String segmentReplaceWithUnion(String text,
-                                          List<DictEntry> dicts,
-                                          int maxLength,
-                                          StarterUnion union) {
+    public String segmentReplaceWithUnion(String text, DictRefs.DictPartition part) {
         if (text == null || text.isEmpty()) return text;
+        if (part.phraseDicts.isEmpty() && part.singleDicts.isEmpty()) return text;
 
-        DictPartition part = partitionDicts(dicts);
         int textLen = text.length();
-
         List<int[]> ranges = getSplitRanges(text, true);
         int numSegments = ranges.size();
 
         if (numSegments == 1 &&
                 ranges.get(0)[0] == 0 &&
                 ranges.get(0)[1] == textLen) {
-            return convertSegmentWithUnion(text, part, maxLength, union);
+            return convertSegmentWithUnion(text, part);
         }
 
         boolean useParallel = textLen > 100_000 || numSegments > 1_000;
@@ -1115,14 +838,14 @@ public class OpenCC {
             IntStream.range(0, numSegments).parallel().forEach(i -> {
                 int[] range = ranges.get(i);
                 String seg = text.substring(range[0], range[1]);
-                segments[i] = convertSegmentWithUnion(seg, part, maxLength, union);
+                segments[i] = convertSegmentWithUnion(seg, part);
             });
 
             for (String seg : segments) sb.append(seg);
         } else {
             for (int[] range : ranges) {
                 String segment = text.substring(range[0], range[1]);
-                sb.append(convertSegmentWithUnion(segment, part, maxLength, union));
+                sb.append(convertSegmentWithUnion(segment, part));
             }
         }
         return sb.toString();
@@ -1146,7 +869,7 @@ public class OpenCC {
      *   <li><b>Phrase-first search (greedy):</b>
      *       <ul>
      *         <li>Candidate lengths are bounded by both {@code phraseMaxLen}/{@code phraseMinLen}
-     *             from {@link DictPartition} and the per-starter {@code lenMask} from {@code StarterUnion}.</li>
+     *             from {@link DictRefs.DictPartition} and the per-starter {@code lenMask} from {@code StarterUnion}.</li>
      *         <li>Lengths are tried longest-to-shortest to ensure deterministic greedy matching.</li>
      *         <li>Each dictionary entry is filtered by its {@code minLength}/{@code maxLength} to skip
      *             impossible candidates early.</li>
@@ -1162,55 +885,27 @@ public class OpenCC {
      *       the cursor advances by one code point.</li>
      * </ol>
      *
-     * <h3>Performance notes</h3>
-     * <ul>
-     *   <li><b>Union pre-check:</b> avoids creating substrings and hash lookups when no dictionary key can
-     *       start with the current code point.</li>
-     *   <li><b>Length mask:</b> skips impossible substring lengths for the current starter in O(1) time
-     *       via a 64-bit bitmask lookup.</li>
-     *   <li><b>Greedy longest-match:</b> ensures results are consistent with OpenCC reference behavior.</li>
-     *   <li>All bounds are in UTF-16 units. Surrogate pairs therefore count as length 2 and advance by
-     *       two code units.</li>
-     * </ul>
-     *
-     * <h3>Unicode notes</h3>
-     * <ul>
-     *   <li>Iteration is performed by Unicode code point.</li>
-     *   <li>{@link Character#charCount(int)} determines how many UTF-16 units a code point consumes.</li>
-     *   <li>Substring slicing uses UTF-16 indices; keys must exactly match the input code point sequence.</li>
-     *   <li>No normalization or case-folding is performed.</li>
-     * </ul>
-     *
-     * @param input       the text segment to convert (non-null; empty string is returned immediately)
-     * @param part        partitioned dictionaries ({@code phraseDicts}, {@code singleDicts})
-     *                    with cached {@code phraseMaxLen} and {@code phraseMinLen}
-     * @param roundMaxLen per-round maximum phrase length limit (upper-bounds the search window)
-     * @param union       optional {@link StarterUnion} for fast starter rejection and length filtering;
-     *                    may be {@code null}
+     * @param input the text segment to convert (non-null; empty string is returned immediately)
+     * @param part  partitioned dictionaries and cached round metadata
      * @return the converted string segment
      */
     private static String convertSegmentWithUnion(
             String input,
-            DictPartition part,
-            int roundMaxLen,
-            StarterUnion union
+            DictRefs.DictPartition part
     ) {
         final int n = input.length();
         if (n == 0) return input;
 
         final StringBuilder out = new StringBuilder(n + (n >> 4));
-
-        // Hoist these to avoid repeated virtual calls
+        final StarterUnion union = part.union;
         final boolean hasPhrases = !part.phraseDicts.isEmpty();
         final boolean hasSingles = !part.singleDicts.isEmpty();
 
         int i = 0;
         while (i < n) {
-            // --- Starter code point (safe: we're inside a single String segment) ---
             final int cp = input.codePointAt(i);
             final int starterLen = Character.charCount(cp);
 
-            // 1) Starter union pre-check
             if (union != null && !union.hasStarter(cp)) {
                 out.appendCodePoint(cp);
                 i += starterLen;
@@ -1220,22 +915,19 @@ public class OpenCC {
             String hit = null;
             int hitLen = 0;
 
-            // 2) Phrase search (respects phraseMinLen, per-entry min/max, and union lenMask)
             if (hasPhrases) {
                 final int remaining = n - i;
-                final int tryMax = Math.min(Math.min(part.phraseMaxLen, roundMaxLen), remaining);
-                if (tryMax >= 1) {
-                    final int tryMin = Math.max(1, Math.min(part.phraseMinLen, remaining));
+                if (remaining >= part.phraseMinLen) {
+                    final int tryMax = Math.min(Math.min(part.phraseMaxLen, part.roundMaxLen), remaining);
+                    final int tryMin = part.phraseMinLen;
                     if (tryMax >= tryMin) {
-                        final long lMask = (union != null) ? union.lenMask(cp) : ~0L; // no union ⇒ allow all
+                        final long lMask = (union != null) ? union.lenMask(cp) : ~0L;
                         if (lMask != 0L) {
                             outer:
                             for (int len = tryMax; len >= tryMin; len--) {
-                                // Skip impossible lengths per union mask (mask covers lengths 0..63)
                                 if (len < 64 && ((lMask >>> len) & 1L) == 0L) continue;
 
                                 final int j = i + len;
-                                // Guard (should be redundant due to tryMax/remaining, but cheap & safe)
                                 if (j > n) continue;
 
                                 final String sub = input.substring(i, j);
@@ -1254,10 +946,7 @@ public class OpenCC {
                 }
             }
 
-            // 3) Single-char (or surrogate pair) fallback
             if (hit == null && hasSingles) {
-                // i + starterLen <= n is guaranteed by how starterLen is formed,
-                // but keep a minimal guard for clarity.
                 final int j = i + starterLen;
                 if (j <= n) {
                     final String sub = input.substring(i, j);
@@ -1272,7 +961,6 @@ public class OpenCC {
                 }
             }
 
-            // 4) Emit
             if (hit != null) {
                 out.append(hit);
                 i += hitLen;
@@ -1454,8 +1142,8 @@ public class OpenCC {
      * @return the text converted to Japanese-style Kanji variants
      */
     public String t2jp(String input) {
-        DictRefs refs = getDictRefs("t2jp");
-        return refs.applySegmentReplace(input, this::segmentReplace);
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2JP, false);
+        return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
     /**
@@ -1465,8 +1153,8 @@ public class OpenCC {
      * @return the converted Traditional Chinese text
      */
     public String jp2t(String input) {
-        DictRefs refs = getDictRefs("jp2t");
-        return refs.applySegmentReplace(input, this::segmentReplace);
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.JP2T, false);
+        return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
     /**

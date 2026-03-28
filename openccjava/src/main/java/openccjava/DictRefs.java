@@ -10,16 +10,15 @@ import java.util.regex.Pattern;
  * via a user-defined segment replacement function.
  *
  * <p>This class supports up to 3 transformation rounds, each using one or more dictionaries.
- * The {@link #applySegmentReplace(String, SegmentReplaceFn)} method applies these rounds in sequence.</p>
+ * The current apply methods execute these rounds in sequence using either raw round dictionaries or cached partitions.
  *
  * <p>Utility constants such as punctuation maps, delimiter sets, and strip regex are also defined
  * for use in Chinese variant normalization and segmentation logic.</p>
  */
 public class DictRefs {
-    private final List<DictEntry> round1;
-    private List<DictEntry> round2;
-    private List<DictEntry> round3;
-    private List<Integer> maxLengths;
+    private final DictPartition partition1;
+    private DictPartition partition2;
+    private DictPartition partition3;
 
     // --- NEW: unions per round (nullable when not used) ---
 
@@ -53,42 +52,6 @@ public class DictRefs {
      */
     public StarterUnion u3;
 
-    /**
-     * Constructs a {@code DictRefs} instance with round 1 dictionary(s).
-     *
-     * @param round1 list of dictionary entries to apply in the first round
-     */
-    public DictRefs(List<DictEntry> round1) {
-        this.round1 = round1;
-        this.round2 = null;
-        this.round3 = null;
-        this.maxLengths = null;
-    }
-
-    /**
-     * Sets round 2 dictionaries and clears cached maxLengths.
-     *
-     * @param round2 list of dictionary entries for round 2
-     * @return {@code this}, for method chaining
-     */
-    public DictRefs withRound2(List<DictEntry> round2) {
-        this.round2 = round2;
-        this.maxLengths = null;
-        return this;
-    }
-
-    /**
-     * Sets round 3 dictionaries and clears cached maxLengths.
-     *
-     * @param round3 list of dictionary entries for round 3
-     * @return {@code this}, for method chaining
-     */
-    public DictRefs withRound3(List<DictEntry> round3) {
-        this.round3 = round3;
-        this.maxLengths = null;
-        return this;
-    }
-
     // --- NEW: fluent round setters that also attach unions ---
 
     /**
@@ -98,8 +61,9 @@ public class DictRefs {
      * @param union1 the starter union for round&nbsp;1
      */
     public DictRefs(List<DictEntry> r1, StarterUnion union1) {
-        this.round1 = Collections.unmodifiableList(new ArrayList<>(r1));
+        List<DictEntry> round1 = Collections.unmodifiableList(new ArrayList<>(r1));
         this.u1 = union1;
+        this.partition1 = partitionDicts(round1, union1);
     }
 
     /**
@@ -114,8 +78,9 @@ public class DictRefs {
      * @return this {@code DictRefs} instance, for fluent chaining
      */
     public DictRefs withRound2(List<DictEntry> r2, StarterUnion union2) {
-        this.round2 = Collections.unmodifiableList(new ArrayList<>(r2));
+        List<DictEntry> round2 = Collections.unmodifiableList(new ArrayList<>(r2));
         this.u2 = union2;
+        this.partition2 = partitionDicts(round2, union2);
         return this;
     }
 
@@ -131,32 +96,86 @@ public class DictRefs {
      * @return this {@code DictRefs} instance, for fluent chaining
      */
     public DictRefs withRound3(List<DictEntry> r3, StarterUnion union3) {
-        this.round3 = Collections.unmodifiableList(new ArrayList<>(r3));
+        List<DictEntry> round3 = Collections.unmodifiableList(new ArrayList<>(r3));
         this.u3 = union3;
+        this.partition3 = partitionDicts(round3, union3);
         return this;
     }
 
     /**
-     * Computes the maximum phrase length from each round's dictionaries.
+     * Groups dictionary entries into phrase dictionaries and single-character dictionaries,
+     * with cached phrase-length bounds and round-level metadata.
      *
-     * <p>The result is cached until {@code withRound2()} or {@code withRound3()} is called again.</p>
-     *
-     * @return a list of max lengths for each round
+     * <p>This structure is built once per round inside {@link DictRefs}, so repeated
+     * conversions do not need to repartition the same dictionaries.</p>
      */
-    private List<Integer> getMaxLengths() {
-        if (maxLengths == null) {
-            maxLengths = new ArrayList<>();
-            for (List<DictEntry> round : Arrays.asList(round1, round2, round3)) {
-                int max = 0;
-                if (round != null) {
-                    for (DictEntry entry : round) {
-                        max = Math.max(max, entry.maxLength);
-                    }
+    public static final class DictPartition {
+        final List<DictEntry> phraseDicts;
+        final List<DictEntry> singleDicts;
+        final int phraseMaxLen;
+        final int phraseMinLen;
+        final int roundMaxLen;
+        final StarterUnion union;
+
+        DictPartition(List<DictEntry> phraseDicts,
+                      List<DictEntry> singleDicts,
+                      int phraseMaxLen,
+                      int phraseMinLen,
+                      int roundMaxLen,
+                      StarterUnion union) {
+            this.phraseDicts = phraseDicts;
+            this.singleDicts = singleDicts;
+            this.phraseMaxLen = phraseMaxLen;
+            this.phraseMinLen = phraseMinLen;
+            this.roundMaxLen = roundMaxLen;
+            this.union = union;
+        }
+    }
+
+    /**
+     * Partitions a round of dictionary entries once and caches the derived lookup metadata.
+     *
+     * @param dicts the dictionaries to partition
+     * @param union the starter union associated with the round
+     * @return cached partition metadata for the round
+     */
+    private static DictPartition partitionDicts(List<DictEntry> dicts, StarterUnion union) {
+        List<DictEntry> phrase = new ArrayList<>(dicts.size());
+        List<DictEntry> single = new ArrayList<>(Math.min(dicts.size(), 2));
+
+        int phraseMax = 0;
+        int phraseMin = Integer.MAX_VALUE;
+        int roundMax = 0;
+
+        for (DictEntry e : dicts) {
+            if (e.maxLength > roundMax) {
+                roundMax = e.maxLength;
+            }
+            if (e.maxLength >= 3) {
+                phrase.add(e);
+                if (e.maxLength > phraseMax) {
+                    phraseMax = e.maxLength;
                 }
-                maxLengths.add(max); // Always adds a value per round
+                if (e.minLength < phraseMin) {
+                    phraseMin = e.minLength;
+                }
+            } else {
+                single.add(e);
             }
         }
-        return maxLengths;
+
+        if (phrase.isEmpty()) {
+            phraseMin = 0;
+        }
+
+        return new DictPartition(
+                Collections.unmodifiableList(phrase),
+                Collections.unmodifiableList(single),
+                phraseMax,
+                phraseMin,
+                roundMax,
+                union
+        );
     }
 
     /**
@@ -173,64 +192,24 @@ public class DictRefs {
      * The provided {@link SegmentReplaceFnWithUnion} receives:</p>
      * <ul>
      *   <li>the current input text,</li>
-     *   <li>the list of dictionaries for the round,</li>
-     *   <li>the maximum phrase length for that round,</li>
+     *   <li>the cached partition for the round, including phrase/single splits,</li>
+     *   <li>the cached round metadata, including the round maximum phrase length,</li>
      *   <li>and the corresponding {@link StarterUnion}.</li>
      * </ul>
      *
      * @param input     the text to process
-     * @param segmentFn the function that performs replacement using dictionaries and union
+     * @param segmentFn the function that performs replacement using cached round metadata
      * @return the fully converted string after all rounds
      */
     public String applySegmentReplace(String input, SegmentReplaceFnWithUnion segmentFn) {
-        List<Integer> maxLengths = getMaxLengths();
-
-        String result = segmentFn.apply(input, round1, maxLengths.get(0), u1);
-        if (round2 != null) {
-            result = segmentFn.apply(result, round2, maxLengths.get(1), u2);
+        String result = segmentFn.apply(input, partition1);
+        if (partition2 != null) {
+            result = segmentFn.apply(result, partition2);
         }
-        if (round3 != null) {
-            result = segmentFn.apply(result, round3, maxLengths.get(2), u3);
+        if (partition3 != null) {
+            result = segmentFn.apply(result, partition3);
         }
         return result;
-    }
-
-    // --- Back-compat overload (optional). Calls with null unions. ---
-
-    /**
-     * Backward-compatible overload of {@link #applySegmentReplace(String, SegmentReplaceFnWithUnion)}.
-     * <p>
-     * This version accepts a {@link SegmentReplaceFn} that does not handle
-     * {@link StarterUnion}. The unions are passed as {@code null}.
-     * </p>
-     *
-     * @param input     the text to process
-     * @param segmentFn the function that performs replacement using dictionaries only
-     * @return the fully converted string after all rounds
-     */
-    public String applySegmentReplace(String input, SegmentReplaceFn segmentFn) {
-        return applySegmentReplace(input, (txt, dicts, maxLen, union) -> segmentFn.apply(txt, dicts, maxLen));
-    }
-
-    /**
-     * A functional interface for segment-based dictionary replacement.
-     * <p>
-     * This variant is unaware of starter unions. It is suitable for
-     * simple replacements where only the dictionaries and maximum
-     * phrase length are required.
-     * </p>
-     */
-    @FunctionalInterface
-    public interface SegmentReplaceFn {
-        /**
-         * Applies dictionary-based transformation to the given input text.
-         *
-         * @param input     the text to convert
-         * @param dicts     the dictionaries to use for conversion
-         * @param maxLength the maximum phrase length allowed
-         * @return the transformed result
-         */
-        String apply(String input, List<DictEntry> dicts, int maxLength);
     }
 
     /**
@@ -245,16 +224,14 @@ public class DictRefs {
     @FunctionalInterface
     public interface SegmentReplaceFnWithUnion {
         /**
-         * Applies dictionary-based transformation to the given input text,
-         * using both dictionaries and the provided starter union.
+         * Applies dictionary-based transformation to the given input text
+         * using the cached round partition and starter union metadata.
          *
          * @param input     the text to convert
-         * @param dicts     the dictionaries to use for conversion
-         * @param maxLength the maximum phrase length allowed
-         * @param union     the starter union for this round
+         * @param partition the cached partition metadata for this round
          * @return the transformed result
          */
-        String apply(String input, List<DictEntry> dicts, int maxLength, StarterUnion union);
+        String apply(String input, DictPartition partition);
     }
 
     /**
