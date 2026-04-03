@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Update dictionary data.
+- Optimized `UnionCache`.
+- Optimized core conversion.
+- Optimized OfficeHelper.
+- Corrected sample codes for `MemoryResult` in README.
+- Removed legacy deprecated `getDictRefs()`.
 - Optimized `openccjavacli` Reflow to handle unclosed dialog text.
 
 ---

@@ -5,7 +5,7 @@ on:
 
 env:
   # Hardcoded manual version (update when releasing)
-  VERSION: 1.2.0
+  VERSION: 1.2.1
 
 jobs:
   native-image:

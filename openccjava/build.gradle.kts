@@ -225,5 +225,11 @@ tasks.register("uploadToPortal") {
 
 // Only wire the ingestion step for non-SNAPSHOT publishes
 if (!version.toString().endsWith("SNAPSHOT")) {
+    tasks.named("uploadToPortal") {
+        onlyIf {
+            val publishTask = tasks.named("publish").get()
+            publishTask.state.failure == null
+        }
+    }
     tasks.named("publish") { finalizedBy("uploadToPortal") }
 }
