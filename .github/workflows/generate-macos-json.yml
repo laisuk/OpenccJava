@@ -1,44 +1,60 @@
-name: Generate macOS Native JSON
+name: Generate GraalVM tracing metadata (macOS)
 
 on:
   workflow_dispatch:
 
 jobs:
-
-
   gen-macos-json:
     runs-on: macos-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: graalvm/setup-graalvm@v1
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
         with:
           distribution: graalvm-community
           java-version: "21"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: gradle
 
-      - run: chmod +x ./gradlew
+      - name: Make Gradle wrapper executable
+        shell: bash
+        run: chmod +x ./gradlew
 
-      - name: Run agent (macOS)
-        run: ./gradlew -Pagent :openccjavacli:run --args="pdf -i sample.pdf -c s2t -p -r"
+      - name: Check sample PDF
+        shell: bash
+        run: test -f sample.pdf
 
-      - name: Collect json
+      - name: Run agent
+        shell: bash
         run: |
+          set -euo pipefail
+          ./gradlew -Pagent :openccjavacli:run --args="pdf -i sample.pdf -c s2t -p -r"
+
+      - name: Collect JSON
+        shell: bash
+        run: |
+          set -euo pipefail
           mkdir -p out
 
-          # New layout (no session dir)
+          # New layout
           cp -v openccjavacli/build/native/agent-output/run/*.json out/ 2>/dev/null || true
-          
-          # Old layout (session dir)
-          cp -v openccjavacli/build/native/agent-output/run/session-*/*.json out/ 2>/dev/null || true
-          
-          echo "Collected JSON files:"
-          ls -l out
-          
-          # Fail if nothing collected (helps catch real agent failures)
-          test "$(ls -1 out/*.json 2>/dev/null | wc -l)" -gt 0
 
-      - uses: actions/upload-artifact@v4
+          # Older/session-based layout
+          cp -v openccjavacli/build/native/agent-output/run/session-*/*.json out/ 2>/dev/null || true
+
+          COUNT="$(find out -maxdepth 1 -name '*.json' | wc -l | tr -d ' ')"
+          echo "Collected JSON count: $COUNT"
+          test "$COUNT" -gt 0
+
+          echo "Collected JSON files:"
+          find out -maxdepth 1 -name '*.json' -print
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: native-image-json-macos
           path: out/*.json
+          if-no-files-found: error
