@@ -4,24 +4,30 @@ on:
   workflow_dispatch:
 
 env:
-  # Hardcoded manual version (update when releasing)
   VERSION: 1.2.1
 
 jobs:
   native-image:
-    name: GraalVM Native Image (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: GraalVM Native Image (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
 
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - runner: ubuntu-latest
             platform: linux-x86_64
-          - os: windows-latest
+
+          - runner: ubuntu-24.04-arm
+            platform: linux-arm64
+
+          - runner: windows-latest
             platform: windows-x86_64
-          - os: macos-latest
+
+          - runner: macos-latest
             platform: macos-arm64
-          - os: macos-15-intel
+
+          - runner: macos-15-intel
             platform: macos-x86_64
 
     timeout-minutes: 60
@@ -39,38 +45,48 @@ jobs:
           cache: gradle
           native-image-job-reports: 'true'
 
-      - name: Make Gradle wrapper executable (non-Windows)
+      - name: Make Gradle wrapper executable
         if: runner.os != 'Windows'
         run: chmod +x ./gradlew
 
       - name: Build native distribution ZIP
-        run: ./gradlew :openccjavacli:nativeDistZip --no-daemon --stacktrace
-
-      - name: Rename native ZIP with version
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE=$(find . -type f -path "*/build/distributions/*-native-*.zip" | head -n 1)
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            ./gradlew.bat :openccjavacli:nativeDistZip --no-daemon --stacktrace
+          else
+            ./gradlew :openccjavacli:nativeDistZip --no-daemon --stacktrace
+          fi
+
+      - name: Package release ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ZIP_FILE="$(find . -type f -path "*/build/distributions/*-native-*.zip" | head -n 1)"
 
           if [ -z "$ZIP_FILE" ]; then
             echo "Native ZIP not found"
             exit 1
           fi
 
-          echo "Found: $ZIP_FILE"
-
-          NEW_NAME="OpenccJavaCli-${VERSION}-${{ matrix.platform }}-native.zip"
+          ARTIFACT_NAME="OpenccJavaCli-${VERSION}-${{ matrix.platform }}-native.zip"
 
           mkdir -p release
-          cp "$ZIP_FILE" "release/$NEW_NAME"
+          cp "$ZIP_FILE" "release/$ARTIFACT_NAME"
 
-          echo "Renamed to: release/$NEW_NAME"
+          echo "ZIP_FILE=$ZIP_FILE" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+
+          echo "Found: $ZIP_FILE"
+          echo "Packaged: release/$ARTIFACT_NAME"
 
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenccJavaCli-${{ env.VERSION }}-${{ matrix.platform }}-native
-          path: release/*.zip
+          path: release/${{ env.ARTIFACT_NAME }}
           if-no-files-found: error
           compression-level: 6
