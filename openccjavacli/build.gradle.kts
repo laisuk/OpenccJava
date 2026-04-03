@@ -3,7 +3,7 @@ plugins {
     application
     // --- GraalVM Native Build Tools (AOT compile to a single exe) ---
     // Must use Oracle GraalVM JDK to build
-    id("org.graalvm.buildtools.native") version "0.10.2"
+//    id("org.graalvm.buildtools.native") version "0.10.2"
 }
 
 group = "io.github.laisuk"
@@ -125,6 +125,7 @@ tasks.register<Exec>("verifyFatJarSig") {
 
 // --- Uncomment these if using GraalVM native image ---
 // Must use Oracle GraalVM JDK to build
+/*
 
 val osKey = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem().run {
     when {
@@ -231,3 +232,4 @@ if (currentJava != null && currentJava.isJava11Compatible) {
         from("../dicts") { into("dicts") }
     }
 }
+*/
