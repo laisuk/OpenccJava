@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
+## [1.2.2-bata1] - 2026-04-17
+
+### Changed
+
+- Update dictionary data.
+- optimized `OfficeHelper` for handling `XLSX`.
+- Optimized `Reflow`.
+
+---
 
 ## [1.2.1] - 2026-04-03
 
