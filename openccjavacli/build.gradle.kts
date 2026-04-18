@@ -22,6 +22,10 @@ dependencies {
     annotationProcessor("info.picocli:picocli-codegen:4.7.7")
     //PDFBox
     implementation("org.apache.pdfbox:pdfbox:3.0.7")
+
+    testImplementation(platform("org.junit:junit-bom:5.10.5"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 // Application entrypoint (used by `run`, Jar manifest, etc.)

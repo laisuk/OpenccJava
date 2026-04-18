@@ -2,19 +2,22 @@ package openccjavacli;
 
 import openccjava.OpenCC;
 import picocli.CommandLine.*;
+import picocli.CommandLine.Model.CommandSpec;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.concurrent.Callable;
 import java.util.logging.*;
 
-/**
- * Subcommand for converting plain text using OpenCC.
- */
-@Command(name = "convert", description = "\033[1;34mConvert plain text using OpenccJava\033[0m", mixinStandardHelpOptions = true)
-public class ConvertCommand implements Runnable {
-    @Option(names = "--list-configs", description = "List all supported OpenccJava conversion configurations")
-    private boolean listConfigs;
+@Command(
+        name = "convert",
+        description = "\033[1;34mConvert plain text using OpenccJava\033[0m",
+        mixinStandardHelpOptions = true
+)
+public class ConvertCommand implements Callable<Integer> {
+    @Spec
+    private CommandSpec spec;
 
     @Option(names = {"-i", "--input"}, paramLabel = "<file>", description = "Input file")
     private File input;
@@ -22,7 +25,13 @@ public class ConvertCommand implements Runnable {
     @Option(names = {"-o", "--output"}, paramLabel = "<file>", description = "Output file")
     private File output;
 
-    @Option(names = {"-c", "--config"}, paramLabel = "<conversion>", description = "Conversion configuration", required = true)
+    @Option(
+            names = {"-c", "--config"},
+            paramLabel = "<conversion>",
+            required = true,
+            completionCandidates = ConfigCandidates.class,
+            description = "Conversion configuration. Supported: ${COMPLETION-CANDIDATES}"
+    )
     private String config;
 
     @Option(names = {"-p", "--punct"}, description = "Punctuation conversion (default: false)")
@@ -46,26 +55,32 @@ public class ConvertCommand implements Runnable {
     private static final String BLUE = "\033[1;34m";
     private static final String RESET = "\033[0m";
 
-
-    @Override
-    public void run() {
-        if (listConfigs) {
-            System.out.println("Available OpenccJava configurations:");
-            OpenCC.getSupportedConfigs().forEach(cfg -> System.out.println("  " + cfg));
-            return;
+    @SuppressWarnings("NullableProblems")
+    static final class ConfigCandidates implements Iterable<String> {
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return OpenCC.getSupportedConfigs().iterator();
         }
-
-        handleTextConversion();
     }
 
-    private void handleTextConversion() {
+    @Override
+    public Integer call() {
+        config = normalizeConfig(config);
+
+        if (!OpenCC.isSupportedConfig(config)) {
+            printInvalidConfigError(config);
+            return ExitCode.USAGE;
+        }
+
+        return handleTextConversion();
+    }
+
+    private int handleTextConversion() {
         try {
             OpenCC opencc = new OpenCC(config);
             String inputText;
 
             if (input != null) {
-                // inputText = Files.readString(input.toPath(), Charset.forName(inEncoding));
-                // Java 8: no Files.readString, use readAllBytes
                 byte[] bytes = Files.readAllBytes(input.toPath());
                 inputText = new String(bytes, Charset.forName(inEncoding));
             } else {
@@ -80,16 +95,12 @@ public class ConvertCommand implements Runnable {
                     System.err.println("Input (Charset: " + inputCharset.name() + ")");
                     System.err.println(BLUE + "Input text to convert, <Ctrl+D> (Unix) <Ctrl-Z> (Windows) to submit:" + RESET);
                 }
-                // inputText = new String(System.in.readAllBytes(), inputCharset);
-                // Java 8: no InputStream.readAllBytes, use a helper
                 inputText = new String(inputStreamReadAllBytes(), inputCharset);
             }
 
             String outputText = opencc.convert(inputText, punct);
 
             if (output != null) {
-                // Files.writeString(output.toPath(), outputText, Charset.forName(outEncoding));
-                // Java 8: no Files.writeString, use Files.write
                 Files.write(output.toPath(), outputText.getBytes(Charset.forName(outEncoding)));
             } else {
                 Charset outputCharset = Charset.forName(normEnc(consoleEncoding));
@@ -102,12 +113,24 @@ public class ConvertCommand implements Runnable {
             if (System.console() != null) {
                 System.err.println(BLUE + "Conversion completed (" + config + "): " + inFrom + " → " + outTo + RESET);
             }
+            return ExitCode.OK;
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error during text conversion", e);
             System.err.println("❌ Exception occurred: " + e.getMessage());
-            System.exit(1);
+            return ExitCode.SOFTWARE;
         }
+    }
+
+    private void printInvalidConfigError(String configValue) {
+        PrintWriter err = spec.commandLine().getErr();
+        err.println("❌ Invalid config: " + configValue);
+        err.println("Supported configs: " + String.join(", ", OpenCC.getSupportedConfigs()));
+        spec.commandLine().usage(err);
+    }
+
+    private static String normalizeConfig(String value) {
+        return value == null ? null : value.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private static String normEnc(String name) {

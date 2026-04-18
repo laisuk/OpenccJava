@@ -4,8 +4,11 @@ import openccjava.OpenCC;
 import openccjava.OpenccConfig;
 import pdfboxhelper.PdfBoxHelper;
 import pdfboxhelper.PdfReflowHelper;
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Spec;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +42,8 @@ import java.util.logging.Logger;
         mixinStandardHelpOptions = true
 )
 public class PdfCommand implements Runnable {
+    @Spec
+    private CommandSpec spec;
 
     @Option(
             names = {"-i", "--input"},
@@ -97,10 +102,12 @@ public class PdfCommand implements Runnable {
     @Override
     public void run() {
         if (!extract) {
-            if (config == null ||
-                    !OpenccConfig.isValidConfig(config)) {
-                System.err.println("❌ Missing or invalid config: " + config);
-                return;
+            if (config == null || !OpenccConfig.isValidConfig(config)) {
+                throw new CommandLine.ParameterException(
+                        spec.commandLine(),
+                        "Missing or invalid config: " + config + System.lineSeparator()
+                                + "Supported configs: " + String.join(", ", OpenCC.getSupportedConfigs())
+                );
             }
         }
 
@@ -108,9 +115,9 @@ public class PdfCommand implements Runnable {
             System.err.println("ℹ️  Note: --punct has no effect in extract-only mode.");
         }
 
-        try {
-            validateInputPdf();
+        validateInputPdf();
 
+        try {
             if (output == null) {
                 String inputName = removeExtension(input.getName());
                 String defaultName;
@@ -124,7 +131,6 @@ public class PdfCommand implements Runnable {
                 System.err.println("ℹ️ Output file not specified. Using: " + outPath);
             }
 
-            // --- NEW: progress bar setup ---
             ConsoleProgressBar progressBar = new ConsoleProgressBar(20);
             System.err.println("📄 Extracting PDF text...");
             String raw = PdfBoxHelper.extractText(
@@ -137,7 +143,6 @@ public class PdfCommand implements Runnable {
                 raw = "";
             }
 
-            // Optional reflow
             String processed = raw;
             if (reflow) {
                 System.err.println("🧹 Reflowing CJK paragraphs...");
@@ -149,10 +154,8 @@ public class PdfCommand implements Runnable {
                 Files.write(output.toPath(), processed.getBytes(StandardCharsets.UTF_8));
             } else {
                 OpenCC opencc = new OpenCC(config);
-                // OpenCC conversion
                 System.err.println("🔁 Converting with OpenccJava...");
                 String converted = opencc.convert(processed, punct);
-                // Save UTF-8
                 Files.write(output.toPath(), converted.getBytes(StandardCharsets.UTF_8));
             }
 
@@ -160,7 +163,7 @@ public class PdfCommand implements Runnable {
             System.err.println("📄 Input : " + input.toPath().toAbsolutePath().normalize());
             System.err.println("📁 Output: " + output.toPath().toAbsolutePath().normalize());
             System.err.println("⚙️  Config: " + (extract ? "Extract only" : config +
-                    (punct ? " (punct on)" : " (punct off)")) +
+                                                                            (punct ? " (punct on)" : " (punct off)")) +
                     (addHeader ? ", header" : "") +
                     (reflow ? ", reflow" : "") +
                     (compact ? ", compact" : ""));
@@ -171,23 +174,26 @@ public class PdfCommand implements Runnable {
         }
     }
 
-
-    // ---- helpers ---------------------------------------------------------
-
     private void validateInputPdf() {
         if (!input.exists()) {
-            System.err.println("❌ Input file does not exist: " + input.getAbsolutePath());
-            System.exit(1);
+            throw new CommandLine.ParameterException(
+                    spec.commandLine(),
+                    "Input file does not exist: " + input.getAbsolutePath()
+            );
         }
         if (!input.isFile()) {
-            System.err.println("❌ Input path is not a file: " + input.getAbsolutePath());
-            System.exit(1);
+            throw new CommandLine.ParameterException(
+                    spec.commandLine(),
+                    "Input path is not a file: " + input.getAbsolutePath()
+            );
         }
 
         String ext = getExtension(input.getName()).toLowerCase();
         if (!".pdf".equals(ext)) {
-            System.err.println("❌ Input file is not a PDF: " + input.getName());
-            System.exit(1);
+            throw new CommandLine.ParameterException(
+                    spec.commandLine(),
+                    "Input file is not a PDF: " + input.getName()
+            );
         }
     }
 
