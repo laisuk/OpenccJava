@@ -18,11 +18,16 @@ import java.util.*;
  * }
  * }</pre>
  *
- * <p>Each value is an array of exactly two elements:</p>
+ * <p>Each value is typically an array of three elements:</p>
  * <ol>
  *   <li>a JSON object {@code {string -> string}} for the mapping</li>
  *   <li>a non-negative integer {@code maxLength}</li>
+ *   <li>a non-negative integer {@code minLength}</li>
  * </ol>
+ *
+ * <p>For backward compatibility, older two-element arrays
+ * ({@code [ map, maxLength ]}) are also accepted. In that case, {@code minLength}
+ * defaults to {@code 1} for non-empty dictionaries and {@code 0} for empty ones.</p>
  *
  * <p><strong>Parser capabilities & limits</strong>:</p>
  * <ul>
@@ -72,7 +77,6 @@ final class MiniDictJson {
      * @throws IllegalArgumentException if the JSON is malformed or violates the expected schema
      */
     static Map<String, DictionaryMaxlength.DictEntry> parseToMap(Path path) throws IOException {
-        // return parseToMap(Files.readString(path, StandardCharsets.UTF_8));
         String jsonString = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
         return parseToMap(jsonString);
     }
@@ -126,7 +130,7 @@ final class MiniDictJson {
             p.expect(':');
             p.skipWs();
 
-            // Expect: [ { ... }, int ]
+            // Expect: [ { ... }, int ] or [ { ... }, int, int ]
             DictionaryMaxlength.DictEntry entry = p.readDictEntryArray();
             out.put(key, entry);
 
@@ -149,7 +153,8 @@ final class MiniDictJson {
     // ---- Core readers -------------------------------------------------------
 
     /**
-     * Reads an array of the form: {@code [ {string->string}, int ]}.
+     * Reads an array of the form {@code [ {string->string}, maxLength ]} or
+     * {@code [ {string->string}, maxLength, minLength ]}.
      *
      * @return a {@link DictionaryMaxlength.DictEntry} constructed from the array contents
      * @throws IllegalArgumentException if the array does not match the expected shape
@@ -158,21 +163,25 @@ final class MiniDictJson {
         expect('[');
         skipWs();
 
-        Map<String, String> map = readStringMap();  // first element: object
+        Map<String, String> map = readStringMap();
         skipWs();
         expect(',');
         skipWs();
 
-        int maxLen = readInt();                     // second element: int
-        skipWs();
-        expect(',');
+        int maxLen = readInt();
         skipWs();
 
-        int minLen = readInt();                     // 3rd: int (mandatory now)
+        final int minLen;
+        if (peek(']')) {
+            minLen = map.isEmpty() ? 0 : 1;
+        } else {
+            expect(',');
+            skipWs();
+            minLen = readInt();
+        }
         skipWs();
         expect(']');
 
-        // Validation (tighten as you prefer)
         if (maxLen < 0) throw err("maxLength must be >= 0");
         if (minLen < 0) throw err("minLength must be >= 0");
         if (maxLen > 0 && minLen > maxLen) throw err("minLength cannot exceed maxLength");

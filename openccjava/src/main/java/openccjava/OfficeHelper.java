@@ -353,7 +353,7 @@ public class OfficeHelper {
      * file-in / file-out processing is sufficient and more memory efficient.</p>
      *
      * @param inputFile   the input Office or EPUB file
-     * @param outputFile  the destination file to write the converted result
+     * @param outputFile  the destination file to write the converted result; must not be {@code null}
      * @param format      the file format (e.g., {@code docx}, {@code odt}, {@code epub})
      * @param converter   the {@link OpenCC} instance to use for conversion
      * @param punctuation whether to convert punctuation characters
@@ -382,15 +382,16 @@ public class OfficeHelper {
                 return new FileResult(false, "❌ Core conversion returned no data.");
             }
 
-            if (outputFile != null) {
-                Path outPath = outputFile.toPath();
-                Path parent = outPath.getParent();
-                if (parent != null) {
-                    Files.createDirectories(parent);
-                }
-                Files.write(outPath, core.data);
+            if (outputFile == null) {
+                return new FileResult(false, "❌ Output file must not be null.");
             }
 
+            Path outPath = outputFile.toPath();
+            Path parent = outPath.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            Files.write(outPath, core.data);
             return new FileResult(true, core.message);
         } catch (IOException ex) {
             return new FileResult(false, "❌ I/O error during conversion: " + ex.getMessage());

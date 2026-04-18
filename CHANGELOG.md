@@ -5,13 +5,22 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
-## [1.2.2-bata1] - 2026-04-17
+
+## [1.2.2] - 2026-04-18
 
 ### Changed
 
-- Update dictionary data.
-- optimized `OfficeHelper` for handling `XLSX`.
-- Optimized `Reflow`.
+- Update conversion dictionary data.
+- optimized `OfficeHelper` for handling `XLSX` `inline-string`.
+- CLI: Optimized `Reflow`.
+- `OfficeHelper.convert(File, File, ...)` now rejects `null` output targets instead of returning a misleading success
+  result.
+- Keep `UnionCache` internal/package-private so it is not exposed as part of the supported public API surface.
+- `MiniDictJson` now accepts legacy two-element dictionary snapshot arrays (`[map, maxLength]`) while continuing to
+  support the current three-element form with `minLength`.
+- Refined JavaDoc across `OpenCC`, `DictionaryMaxlength`, and `MiniDictJson` to match current runtime behavior and JSON
+  schema.
+- Refactored `DictionaryMaxlength.toString()` to remove repetitive counting logic while preserving output.
 
 ---
 

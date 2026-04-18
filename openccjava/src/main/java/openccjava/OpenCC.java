@@ -264,10 +264,8 @@ public class OpenCC {
      * <p><b>Important:</b> Because the dictionary is a shared singleton,
      * any modification to its contents (for example, adding or removing entries)
      * will affect <em>all</em> {@code OpenCC} instances within the same JVM.</p>
-     *
-     * <p>If all dictionary loading attempts fail, a {@link RuntimeException}
-     * is thrown. The underlying failure reason is recorded in
-     * {@link #getLastError()}.</p>
+     * <p>
+     * is thrown before the instance can be created.
      *
      * @param config the configuration key (for example {@code "s2t"},
      *               {@code "S2TWP"}, {@code "tw2sp"}); may be {@code null}
@@ -420,9 +418,7 @@ public class OpenCC {
      * @return an unmodifiable list of supported configuration keys
      */
     public static List<String> getSupportedConfigs() {
-        ArrayList<String> out = new ArrayList<>();
-        for (OpenccConfig c : OpenccConfig.values()) out.add(c.toCanonicalName());
-        return Collections.unmodifiableList(out);
+        return OpenccConfig.supportedCanonicalNames();
     }
 
     /**
@@ -1186,9 +1182,9 @@ public class OpenCC {
     /**
      * Attempts to detect whether the input text is written in Traditional or Simplified Chinese.
      *
-     * <p>This method removes non-Chinese characters, then analyzes the first ~200 UTF-8 bytes
-     * (about 60–70 characters) for mismatches between the input and its conversion to
-     * Simplified and Traditional Chinese.
+     * <p>This method removes non-Chinese characters from at most the first 500 UTF-16 code units
+     * of the input, then analyzes up to the first 100 Unicode code points for mismatches between
+     * the input and its conversion to Simplified and Traditional Chinese.
      *
      * <p>Return codes:
      * <ul>
@@ -1230,8 +1226,8 @@ public class OpenCC {
      * <p>Detection process:</p>
      * <ul>
      *   <li>Non-Chinese characters are stripped from the first portion of the text.</li>
-     *   <li>Analysis is limited to the first ~200 UTF-8 bytes (≈60–70 characters),
-     *       or 100 Unicode code points.</li>
+     *   <li>Analysis is limited to text drawn from at most the first 500 UTF-16 code units,
+     *       capped at 100 Unicode code points after stripping.</li>
      *   <li>The substring is compared against its conversions to Simplified and
      *       Traditional Chinese.</li>
      * </ul>
@@ -1245,11 +1241,9 @@ public class OpenCC {
      *
      * @param input the input text to check (maybe {@code null} or empty)
      * @return an integer code representing the detected Chinese variant
-     * (@link #zhoCheckInstance(String)) for instance-based
-     * compatibility.
      * @see #zhoCheck(String)
-     * @deprecated since 1.1.0 – {@code zhoCheck} is now a static method.
-     * Use {@link #zhoCheck(String)} instead, or this method
+     * @deprecated since 1.1.0 - {@code zhoCheck} is now a static method.
+     * Use {@link #zhoCheck(String)} instead.
      */
     @Deprecated
     public final int zhoCheckInstance(String input) {

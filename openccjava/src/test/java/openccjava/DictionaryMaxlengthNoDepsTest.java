@@ -188,13 +188,16 @@ public class DictionaryMaxlengthNoDepsTest {
     }
 
     @Test
-    void rejectsV1SchemaWithoutMinLength() {
+    void acceptsV1SchemaWithoutMinLength() {
         String v1 = "{ \"st_characters\": [ { \"汉\": \"漢\" }, 1 ] }";
-        assertThrows(IllegalArgumentException.class,
-                () -> DictionaryMaxlength.fromJsonStringNoDeps(v1));
-    }
 
-    // ---- helpers ----
+        DictionaryMaxlength d = DictionaryMaxlength.fromJsonStringNoDeps(v1);
+
+        assertNotNull(d.st_characters);
+        assertEquals(1, d.st_characters.maxLength);
+        assertEquals(1, d.st_characters.minLength);
+        assertEquals("漢", d.st_characters.dict.get("汉"));
+    }
 
     private static void assertDictionariesEqual(DictionaryMaxlength a, DictionaryMaxlength b) {
         // compare each DictEntry field (no reflection in production code; tests are fine being explicit)

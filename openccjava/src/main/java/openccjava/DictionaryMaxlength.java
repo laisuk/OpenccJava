@@ -22,7 +22,7 @@ import java.util.function.BiConsumer;
  *     <li>{@code maxLength}: the longest phrase/key length</li>
  *     <li>{@code minLength}: the shortest phrase/key length</li>
  * </ul>
- * Holds multiple dictionary entries, each with a defined maximum key length.
+ * Holds multiple dictionary entries, each with defined minimum and maximum key lengths.
  * Used for efficient longest-match text conversion.
  */
 public class DictionaryMaxlength {
@@ -166,25 +166,19 @@ public class DictionaryMaxlength {
      */
     @Override
     public String toString() {
+        DictEntry[] entries = {
+                st_characters, st_phrases, st_punctuations,
+                ts_characters, ts_phrases, ts_punctuations,
+                tw_phrases, tw_phrases_rev, tw_variants,
+                tw_variants_rev, tw_variants_rev_phrases,
+                hk_variants, hk_variants_rev, hk_variants_rev_phrases,
+                jps_characters, jps_phrases, jp_variants, jp_variants_rev
+        };
+
         int count = 0;
-        if (hasEntries(st_characters)) count++;
-        if (hasEntries(st_phrases)) count++;
-        if (hasEntries(st_punctuations)) count++;
-        if (hasEntries(ts_characters)) count++;
-        if (hasEntries(ts_phrases)) count++;
-        if (hasEntries(ts_punctuations)) count++;
-        if (hasEntries(tw_phrases)) count++;
-        if (hasEntries(tw_phrases_rev)) count++;
-        if (hasEntries(tw_variants)) count++;
-        if (hasEntries(tw_variants_rev)) count++;
-        if (hasEntries(tw_variants_rev_phrases)) count++;
-        if (hasEntries(hk_variants)) count++;
-        if (hasEntries(hk_variants_rev)) count++;
-        if (hasEntries(hk_variants_rev_phrases)) count++;
-        if (hasEntries(jps_characters)) count++;
-        if (hasEntries(jps_phrases)) count++;
-        if (hasEntries(jp_variants)) count++;
-        if (hasEntries(jp_variants_rev)) count++;
+        for (DictEntry entry : entries) {
+            if (hasEntries(entry)) count++;
+        }
         return "<DictionaryMaxlength with " + count + " loaded dicts>";
     }
 
@@ -463,8 +457,12 @@ public class DictionaryMaxlength {
      * Loads a {@code DictionaryMaxlength} from a JSON file without using external libraries.
      * <p>
      * This method expects the JSON to follow the {@code dictionary_maxlength.json} schema:
-     * each top-level field maps to an array {@code [ { "phrase": "translation", ... }, maxLength ]}.
-     * </p>
+     * each top-level field maps to an array
+     * {@code [ { "phrase": "translation", ... }, maxLength, minLength ]}.
+     *
+     * <p>For backward compatibility, older two-element snapshots
+     * ({@code [ map, maxLength ]}) are also accepted and interpreted with
+     * {@code minLength = 1} for non-empty dictionaries and {@code 0} for empty ones.</p>
      *
      * @param path the path to the JSON file (UTF-8 encoded)
      * @return a populated {@code DictionaryMaxlength} instance
@@ -480,8 +478,12 @@ public class DictionaryMaxlength {
      * Loads a {@code DictionaryMaxlength} from a JSON input stream without using external libraries.
      * <p>
      * This method expects the JSON to follow the {@code dictionary_maxlength.json} schema:
-     * each top-level field maps to an array {@code [ { "phrase": "translation", ... }, maxLength ]}.
-     * </p>
+     * each top-level field maps to an array
+     * {@code [ { "phrase": "translation", ... }, maxLength, minLength ]}.
+     *
+     * <p>For backward compatibility, older two-element snapshots
+     * ({@code [ map, maxLength ]}) are also accepted and interpreted with
+     * {@code minLength = 1} for non-empty dictionaries and {@code 0} for empty ones.</p>
      *
      * @param in an input stream containing the JSON (UTF-8 encoded)
      * @return a populated {@code DictionaryMaxlength} instance
@@ -550,7 +552,7 @@ public class DictionaryMaxlength {
 
     /**
      * Serializes this {@code DictionaryMaxlength} to JSON without external libraries.
-     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength ]}</p>
+     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
      *
      * @param outputPath path to write (UTF-8)
      * @throws IOException if writing fails
@@ -564,7 +566,7 @@ public class DictionaryMaxlength {
 
     /**
      * Serializes this {@code DictionaryMaxlength} to JSON without external libraries.
-     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength ]}</p>
+     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
      *
      * @param outputPath the target file path where the JSON will be written (UTF-8)
      * @throws java.io.IOException if writing fails
@@ -576,10 +578,10 @@ public class DictionaryMaxlength {
     }
 
     /**
-     * Serializes this {@code DictionaryMaxlength} to a JSON string without external libraries.
-     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength ]}</p>
+     * Serializes this {@code DictionaryMaxlength} to a compact JSON string without external libraries.
+     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
      *
-     * @return pretty-printed JSON (UTF-16 in-memory; write with UTF-8 when saving to disk)
+     * @return compact JSON (UTF-16 in-memory; write with UTF-8 when saving to disk)
      * @throws IOException if an I/O error occurs while generating the JSON
      */
     public String serializeToJsonStringNoDeps() throws IOException {
@@ -638,7 +640,7 @@ public class DictionaryMaxlength {
      * any external libraries.
      *
      * <p>The output format is schema-specific to OpenCC dictionaries:
-     * each field is written as {@code "name": [ { "key": "value", ... }, maxLength ]}
+     * each field is written as {@code "name": [ { "key": "value", ... }, maxLength, minLength ]}
      * with optional pretty-printing and deterministic key ordering.</p>
      *
      * @param w        the {@link Writer} to receive the JSON output (UTF-8 recommended)
@@ -685,7 +687,7 @@ public class DictionaryMaxlength {
      *
      * <p>Output format per field:</p>
      * <pre>{@code
-     *   "name": [ { "k": "v", ... }, maxLength ]
+     *   "name": [ { "k": "v", ... }, maxLength, minLength ]
      * }</pre>
      *
      * @param w          the {@link Writer} to write JSON to

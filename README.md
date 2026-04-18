@@ -61,7 +61,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.2.1")
+    implementation("io.github.laisuk:openccjava:1.2.2")
 }
 ```
 
@@ -69,7 +69,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.2.1'
+    implementation 'io.github.laisuk:openccjava:1.2.2'
 }
 ```
 
@@ -80,7 +80,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
 </dependency>
 ```
 
@@ -96,7 +96,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.2.1' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.2.2' // replace with latest tag
 }
 ```
 
@@ -114,7 +114,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.2.1</version>
+<version>v1.2.2</version>
 </dependency>
 ```
 
@@ -168,11 +168,13 @@ your classpath.
 ### 🔧 Constructor Overloads
 
 ```java
-OpenCC cc = OpenCC.fromConfig("s2t");             // Uses static helper from config, autoload dicts
-OpenCC cc = new OpenCC();                         // Uses default config "s2t", autoload dicts
-OpenCC cc = new OpenCC("tw2sp");                  // Specify config
+OpenCC cc = OpenCC.fromConfig("s2t");              // Static helper, autoloads shared dictionaries
+OpenCC cc = OpenCC.fromConfig(OpenccConfig.TW2SP);  // Typed config helper
+OpenCC cc = new OpenCC();                           // Default config "s2t"
+OpenCC cc = new OpenCC("tw2sp");                  // String config
+OpenCC cc = new OpenCC(OpenccConfig.S2HK);         // Typed config
 // @deprecated
-OpenCC cc = new OpenCC("s2t", Path.of("dicts"));  // Load custom plain-text dicts from folder (@deprecated)
+OpenCC cc = new OpenCC("s2t", java.nio.file.Paths.get("dicts")); // Custom plain-text dicts (@deprecated)
 ```
 
 ### 🔤 Basic Conversion
@@ -184,45 +186,49 @@ public class Example {
     static void main(String[] args) {
         OpenCC converter = new OpenCC("s2t");
         String result = converter.convert("汉字转换");
-        System.out.println(result); // → 漢字轉換 
+        System.out.println(result); // → 漢字轉換
+
+        String withPunctuation = converter.convert("“春眠不觉晓”", true);
+        System.out.println(withPunctuation); // → 「春眠不覺曉」
     }
 }
-```
-
-With punctuation conversion:
-
-```java
-String result = converter.convert("“春眠不觉晓”", true);
-// → 「春眠不覺曉」
 ```
 
 ### ⚙️ Configuration & Error Handling
 
 ```java
 import openccjava.OpenCC;
+import openccjava.OpenccConfig;
 
 public class Example {
     static void main(String[] args) {
         OpenCC cc = new OpenCC();
+
         cc.setConfig("t2s");
         String cfg = cc.getConfig();           // → "t2s"
-        String err = cc.getLastError();        // → null or last failure reason
+        OpenccConfig cfgId = cc.getConfigId(); // → OpenccConfig.T2S
+
+        cc.setConfig("invalid_config");
+        String fallback = cc.getConfig();      // → "s2t" (default fallback)
+        String err = cc.getLastError();        // → explains the fallback
+        boolean hasErr = cc.hasLastError();    // → true
+        cc.clearLastError();
     }
 }
 ```
 
 ### 🧠 Auto Variant Detection
 
-> **Migration Notes**: `zhoCheck()` will be refactored into a static method in the next major release (planned for
-> v1.1.0).  
-> At that time, it should be invoked as `Opencc.zhoCheck()`.
-
 ```java
 import openccjava.OpenCC;
 
 public class Example {
     static void main(String[] args) {
-        int code = OpenCC.zhoCheck("漢字");  // returns 1 → 1 = Traditional, 2 = Simplified, 0 = Unknown/Mixed
+        int code = OpenCC.zhoCheck("漢字");  // 1 = Traditional, 2 = Simplified, 0 = Unknown/Mixed
+
+        // Deprecated compatibility instance method still exists:
+        OpenCC cc = new OpenCC("s2t");
+        int legacyCode = cc.zhoCheckInstance("汉字");
     }
 }
 ```
@@ -235,16 +241,18 @@ import openccjava.OpenCC;
 public class Example {
     static void main(String[] args) {
         OpenCC cc = new OpenCC();
-        cc.s2t("汉字");            // 漢字 - Simplified → Traditional
-        cc.t2s("漢字");            // 汉字 - Traditional → Simplified
-        cc.s2tw("汉字");           // 漢字 - Simplified → Taiwan Traditional
-        cc.tw2sp("臺灣計程車");          // 台湾出租车 - Taiwan Traditional → Simplified with idioms
-        cc.t2jp("傳統");           // 伝統 - Traditional → Japanese Kanji
+        cc.s2t("汉字", false);       // 漢字 - Simplified → Traditional
+        cc.t2s("漢字", false);       // 汉字 - Traditional → Simplified
+        cc.s2tw("汉字", false);      // 漢字 - Simplified → Taiwan Traditional
+        cc.tw2sp("臺灣計程車", false); // 台湾出租车 - Taiwan Traditional → Simplified with idioms
+        cc.t2jp("傳統");             // 伝統 - Traditional → Japanese Kanji
     }
 }
 ```
 
-Most methods support boolean punctuation as a second parameter.
+Most directional conversion methods support a boolean punctuation flag as a second parameter.
+Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `jp2t` are single-argument methods.
+
 
 ### 📚 Supported Config Keys
 
@@ -311,7 +319,7 @@ public class Example {
         // Create an OpenCC converter (Simplified → Traditional)
         OpenCC converter = new OpenCC("s2t");
 
-        // Convert the document
+        // Convert the document (output must not be null)
         FileResult result = OfficeHelper.convert(
                 input,
                 output,
@@ -340,13 +348,13 @@ import openccjava.OfficeHelper;
 import openccjava.OfficeHelper.MemoryResult;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ExampleBytes {
     static void main(String[] args) throws Exception {
 
         // Load the document entirely into memory
-        byte[] inputBytes = Files.readAllBytes(Path.of("example_simplified.docx"));
+        byte[] inputBytes = Files.readAllBytes(Paths.get("example_simplified.docx"));
 
         // Create an OpenCC converter
         OpenCC converter = new OpenCC("s2t");   // Simplified → Traditional
@@ -362,7 +370,7 @@ public class ExampleBytes {
 
         if (result.success) {
             // Save the converted bytes (optional)
-            Files.write(Path.of("example_traditional.docx"), result.data);
+            Files.write(Paths.get("example_traditional.docx"), result.data);
             System.out.println("✅ In-memory conversion successful.");
         } else {
             System.err.println("❌ Conversion failed: " + result.message);
@@ -688,3 +696,4 @@ leverages the `OpenccJava` library to provide simplified and traditional Chinese
 - © Laisuk.
 - See [LICENSE](./LICENSE) for details.
 - See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for bundled OpenCC lexicons (Apache License 2.0).
+

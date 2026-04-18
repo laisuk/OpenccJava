@@ -9,24 +9,23 @@ import java.util.concurrent.atomic.AtomicReference;
  * Cache of lazily built {@link StarterUnion} instances for a single
  * {@link DictionaryMaxlength} provider.
  *
- * <p>
- * Each {@link UnionKey} maps to a fixed slot. Slots are initialized on first
- * access and reused across conversion plans built from the same dictionary.
- * </p>
+ * <p>Package-private: this is an internal implementation detail shared by
+ * {@link ConversionPlanCache} and should not be exposed as part of the
+ * supported library API.</p>
  */
-public final class UnionCache {
+final class UnionCache {
     private final ConversionPlanCache.Provider provider;
     private volatile Unions unions = new Unions();
 
-    public UnionCache(ConversionPlanCache.Provider provider) {
+    UnionCache(ConversionPlanCache.Provider provider) {
         this.provider = provider;
     }
 
-    public void clear() {
+    void clear() {
         this.unions = new Unions();
     }
 
-    public StarterUnion unionFor(UnionKey key) {
+    StarterUnion unionFor(UnionKey key) {
         final DictionaryMaxlength d = provider.get();
         final Unions slots = unions;
         switch (key) {
