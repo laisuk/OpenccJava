@@ -666,29 +666,31 @@ Each case: **20 runs (1 conversion per run)**
 
 | Input size (chars)    | Runs | Total chars processed | Time min (ms) | Time avg (ms) | Time max (ms) | Throughput min (M chars/sec) | Throughput avg (M chars/sec) | Throughput max (M chars/sec) |
 |-----------------------|-----:|----------------------:|--------------:|--------------:|--------------:|-----------------------------:|-----------------------------:|-----------------------------:|
-| 100                   |   20 |                 2,000 |        0.1166 |        0.2762 |        0.3920 |                       0.2551 |                       0.4237 |                       0.8576 |
-| 1,000                 |   20 |                20,000 |        0.2471 |        1.0014 |        1.8572 |                       0.5384 |                       1.4699 |                       4.0469 |
-| 10,000                |   20 |               200,000 |        0.4343 |        0.6577 |        0.9239 |                      10.8237 |                      16.1503 |                      23.0256 |
-| 100,000               |   20 |             2,000,000 |        2.5115 |        3.8375 |        5.0935 |                      19.6329 |                      27.4124 |                      39.8168 |
-| 1,000,000             |   20 |            20,000,000 |       27.3959 |       34.7668 |       39.9854 |                      25.0091 |                      28.9931 |                      36.5018 |
-| 1,000,000 (cache-hot) |   20 |            20,000,000 |       25.8339 |       33.7213 |       42.3098 |                      23.6352 |                      30.2722 |                      38.7088 |
+| 100                   |   20 |                 2,000 |        0.0617 |        0.1122 |        0.1725 |                       0.5797 |                       1.0036 |                       1.6208 |
+| 1,000                 |   20 |                20,000 |        0.2705 |        0.3075 |        0.3670 |                       2.7248 |                       3.2770 |                       3.6969 |
+| 10,000                |   20 |               200,000 |        0.4375 |        0.5349 |        0.8297 |                      12.0525 |                      19.0114 |                      22.8571 |
+| 100,000               |   20 |             2,000,000 |        2.6012 |        3.1671 |        3.8943 |                      25.6786 |                      31.9459 |                      38.4438 |
+| 1,000,000             |   20 |            20,000,000 |       24.8108 |       27.4818 |       30.7363 |                      32.5348 |                      36.5008 |                      40.3050 |
+| 1,000,000 (cache-hot) |   20 |            20,000,000 |       23.7439 |       27.6537 |       37.2454 |                      26.8490 |                      36.4443 |                      42.1161 |
 
 ### Benchmark summary (`s2t`)
 
 | Input size            | Avg time (ms) | Avg throughput (M chars/sec) |
 |-----------------------|--------------:|-----------------------------:|
-| 100                   |         0.276 |                        0.424 |
-| 1,000                 |         1.001 |                        1.470 |
-| 10,000                |         0.658 |                       16.150 |
-| 100,000               |         3.837 |                       27.412 |
-| 1,000,000             |        34.767 |                       28.993 |
-| 1,000,000 (cache-hot) |        33.721 |                       30.272 |
+| 100                   |         0.112 |                        1.004 |
+| 1,000                 |         0.308 |                        3.277 |
+| 10,000                |         0.535 |                       19.011 |
+| 100,000               |         3.167 |                       31.946 |
+| 1,000,000             |        27.482 |                       36.501 |
+| 1,000,000 (cache-hot) |        27.654 |                       36.444 |
 
-> The benchmark measures single-pass conversion latency across different input sizes using 20 runs per case.  
-> Small inputs (≤1k chars) are dominated by JVM overhead and are not representative.  
-> From 10k chars onward, performance stabilizes, reaching ~27–30 million characters per second.
-> At 1 million characters, average throughput is ~29 M chars/sec, improving to ~30 M chars/sec after cache priming (~
-> 4–5% gain), indicating effective but low-overhead caching behavior.
+* The benchmark measures single-pass conversion latency across different input sizes using 20 runs per case.
+* Small inputs (≤1k chars) are dominated by JVM overhead and are not representative.
+* From 10k chars onward, performance stabilizes, reaching ~32–36 million characters per second.
+* At 1 million characters, average throughput is ~36 M chars/sec.  
+  Explicit cache priming shows minimal impact on average performance, indicating that the UnionCache is already
+  effective during normal execution.  
+  However, best-case latency improves (min ~23 ms), demonstrating strong cache locality under optimal conditions.
 
 ---
 
