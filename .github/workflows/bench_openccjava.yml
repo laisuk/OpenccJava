@@ -1,4 +1,4 @@
-name: OpenCCJava Benchmark
+name: OpenccJava Benchmark
 
 on:
   workflow_dispatch:
