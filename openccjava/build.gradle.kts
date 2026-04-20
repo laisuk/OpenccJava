@@ -61,6 +61,14 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.register<JavaExec>("runOpenccBench") {
+    group = "benchmark"
+    description = "Run the OpenCC micro benchmark from the test source set"
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("openccjava.bench.OpenccBench")
+    workingDir = projectDir
+}
+
 jmh {
     warmupIterations.set(3)
     iterations.set(5)

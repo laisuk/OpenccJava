@@ -253,7 +253,6 @@ public class Example {
 Most directional conversion methods support a boolean punctuation flag as a second parameter.
 Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `jp2t` are single-argument methods.
 
-
 ### 📚 Supported Config Keys
 
 ```java
@@ -658,17 +657,38 @@ openccjavacli.bat convert -c s2t -p --con-enc UTF-8
 
 ---
 
-### ⚡ Benchmark
+### ⚡ Benchmark (`s2t`, sliced input, `openccjava v1.2.2`)
 
-| Test Case                 | Input Size      | Platform                                      | Time              | Notes                             |
-|---------------------------|-----------------|-----------------------------------------------|-------------------|-----------------------------------|
-| Traditional → Simplified  | 3 million chars | Intel i5-13400 @ 2.5 GHz (Win 11 x64, JDK 21) | **≈ 60 – 130 ms** | Comparable to native coded OpenCC |
-| Simplified → Traditional  | 3 million chars | Same setup                                    | **≈ 80 – 150 ms** | Slight variation due to GC cycles |
-| Office Document (`.docx`) | 1 MB XML text   | Same setup                                    | **< 200 ms**      | Includes XML parse + repack       |
+Sample: `bench/sample.txt`  
+Sample size: `1,130,220 chars`  
+Warmup: `20 rounds on 10,000 chars`  
+Each case: **20 runs (1 conversion per run)**
 
-> 🧩 Benchmarks were performed with UTF-8 input/output, GC logging enabled, and stable performance across Windows, Linux,
-> and macOS.  
-> Actual results depend on JVM version, heap size, and available CPU threads.
+| Input size (chars)    | Runs | Total chars processed | Time min (ms) | Time avg (ms) | Time max (ms) | Throughput min (M chars/sec) | Throughput avg (M chars/sec) | Throughput max (M chars/sec) |
+|-----------------------|-----:|----------------------:|--------------:|--------------:|--------------:|-----------------------------:|-----------------------------:|-----------------------------:|
+| 100                   |   20 |                 2,000 |        0.1166 |        0.2762 |        0.3920 |                       0.2551 |                       0.4237 |                       0.8576 |
+| 1,000                 |   20 |                20,000 |        0.2471 |        1.0014 |        1.8572 |                       0.5384 |                       1.4699 |                       4.0469 |
+| 10,000                |   20 |               200,000 |        0.4343 |        0.6577 |        0.9239 |                      10.8237 |                      16.1503 |                      23.0256 |
+| 100,000               |   20 |             2,000,000 |        2.5115 |        3.8375 |        5.0935 |                      19.6329 |                      27.4124 |                      39.8168 |
+| 1,000,000             |   20 |            20,000,000 |       27.3959 |       34.7668 |       39.9854 |                      25.0091 |                      28.9931 |                      36.5018 |
+| 1,000,000 (cache-hot) |   20 |            20,000,000 |       25.8339 |       33.7213 |       42.3098 |                      23.6352 |                      30.2722 |                      38.7088 |
+
+### Benchmark summary (`s2t`)
+
+| Input size            | Avg time (ms) | Avg throughput (M chars/sec) |
+|-----------------------|--------------:|-----------------------------:|
+| 100                   |         0.276 |                        0.424 |
+| 1,000                 |         1.001 |                        1.470 |
+| 10,000                |         0.658 |                       16.150 |
+| 100,000               |         3.837 |                       27.412 |
+| 1,000,000             |        34.767 |                       28.993 |
+| 1,000,000 (cache-hot) |        33.721 |                       30.272 |
+
+> The benchmark measures single-pass conversion latency across different input sizes using 20 runs per case.  
+> Small inputs (≤1k chars) are dominated by JVM overhead and are not representative.  
+> From 10k chars onward, performance stabilizes, reaching ~27–30 million characters per second.
+> At 1 million characters, average throughput is ~29 M chars/sec, improving to ~30 M chars/sec after cache priming (~
+> 4–5% gain), indicating effective but low-overhead caching behavior.
 
 ---
 
