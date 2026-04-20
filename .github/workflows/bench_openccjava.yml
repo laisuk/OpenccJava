@@ -27,13 +27,6 @@ jobs:
       - name: 🔨 Build openccjava
         run: ./gradlew :openccjava:build -x test
 
-      - name: 🧪 Compile benchmark
-        run: |
-          mkdir -p bench/bin
-          javac -cp openccjava/build/libs/openccjava-1.2.2.jar \
-                -d bench/bin \
-                openccjava/src/test/java/openccjava/bench/OpenccBench.java
-
       - name: 🖥 System Info
         run: |
           echo "CPU Info:"
@@ -44,8 +37,7 @@ jobs:
 
       - name: 🚀 Run benchmark
         run: |
-          java -cp "bench/bin:openccjava/build/libs/openccjava-1.2.2.jar" \
-               OpenccBench | tee bench_result.txt
+          ./gradlew -q :openccjava:runOpenccBench | tee bench_result.txt
 
       - name: 📊 Upload benchmark result
         uses: actions/upload-artifact@v4
