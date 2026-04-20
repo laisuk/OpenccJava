@@ -30,7 +30,7 @@ jobs:
       - name: 🧪 Compile benchmark
         run: |
           mkdir -p bench/bin
-          javac -cp openccjava/build/libs/openccjava-*.jar \
+          javac -cp openccjava/build/libs/openccjava-1.2.2.jar \
                 -d bench/bin \
                 bench/OpenccBench.java
 
@@ -44,7 +44,7 @@ jobs:
 
       - name: 🚀 Run benchmark
         run: |
-          java -cp "bench/bin:openccjava/build/libs/openccjava-*.jar" \
+          java -cp "bench/bin:openccjava/build/libs/openccjava-1.2.2.jar" \
                OpenccBench | tee bench_result.txt
 
       - name: 📊 Upload benchmark result
