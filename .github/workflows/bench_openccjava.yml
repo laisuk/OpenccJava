@@ -32,7 +32,7 @@ jobs:
           mkdir -p bench/bin
           javac -cp openccjava/build/libs/openccjava-1.2.2.jar \
                 -d bench/bin \
-                bench/OpenccBench.java
+                openccjava/src/test/java/openccjava/bench/OpenccBench.java
 
       - name: 🖥 System Info
         run: |
