@@ -1,0 +1,54 @@
+name: OpenCCJava Benchmark
+
+on:
+  workflow_dispatch:
+#  push:
+#    branches: [ main ]
+#    paths:
+#      - 'openccjava/**'
+#      - 'bench/**'
+#      - '.github/workflows/bench_openccjava.yml'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: 🔨 Build openccjava
+        run: ./gradlew :openccjava:build -x test
+
+      - name: 🧪 Compile benchmark
+        run: |
+          mkdir -p bench/bin
+          javac -cp openccjava/build/libs/openccjava-*.jar \
+                -d bench/bin \
+                bench/OpenccBench.java
+
+      - name: 🖥 System Info
+        run: |
+          echo "CPU Info:"
+          lscpu
+          echo ""
+          echo "Memory Info:"
+          free -h
+
+      - name: 🚀 Run benchmark
+        run: |
+          java -cp "bench/bin:openccjava/build/libs/openccjava-*.jar" \
+               OpenccBench | tee bench_result.txt
+
+      - name: 📊 Upload benchmark result
+        uses: actions/upload-artifact@v4
+        with:
+          name: openccjava-benchmark
+          path: bench_result.txt
