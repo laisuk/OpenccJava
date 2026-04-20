@@ -659,38 +659,39 @@ openccjavacli.bat convert -c s2t -p --con-enc UTF-8
 
 ### ⚡ Benchmark (`s2t`, sliced input, `openccjava v1.2.2`)
 
+Environment: GitHub Actions Linux runner, Java 17 (`Temurin 17.0.18`), `AMD EPYC 9V74`, `4 vCPUs`  
 Sample: `bench/sample.txt`  
-Sample size: `1,130,220 chars`  
+Sample size: `1,108,590 chars`  
 Warmup: `20 rounds on 10,000 chars`  
 Each case: **20 runs (1 conversion per run)**
 
 | Input size (chars)    | Runs | Total chars processed | Time min (ms) | Time avg (ms) | Time max (ms) | Throughput min (M chars/sec) | Throughput avg (M chars/sec) | Throughput max (M chars/sec) |
 |-----------------------|-----:|----------------------:|--------------:|--------------:|--------------:|-----------------------------:|-----------------------------:|-----------------------------:|
-| 100                   |   20 |                 2,000 |        0.0617 |        0.1122 |        0.1725 |                       0.5797 |                       1.0036 |                       1.6208 |
-| 1,000                 |   20 |                20,000 |        0.2705 |        0.3075 |        0.3670 |                       2.7248 |                       3.2770 |                       3.6969 |
-| 10,000                |   20 |               200,000 |        0.4375 |        0.5349 |        0.8297 |                      12.0525 |                      19.0114 |                      22.8571 |
-| 100,000               |   20 |             2,000,000 |        2.6012 |        3.1671 |        3.8943 |                      25.6786 |                      31.9459 |                      38.4438 |
-| 1,000,000             |   20 |            20,000,000 |       24.8108 |       27.4818 |       30.7363 |                      32.5348 |                      36.5008 |                      40.3050 |
-| 1,000,000 (cache-hot) |   20 |            20,000,000 |       23.7439 |       27.6537 |       37.2454 |                      26.8490 |                      36.4443 |                      42.1161 |
+| 100                   |   20 |                 2,000 |        0.0869 |        0.2123 |        0.6252 |                       0.1599 |                       0.5643 |                       1.1510 |
+| 1,000                 |   20 |                20,000 |        0.3080 |        1.0492 |        1.6489 |                       0.6065 |                       1.3565 |                       3.2472 |
+| 10,000                |   20 |               200,000 |        1.1105 |        1.5012 |        2.5395 |                       3.9378 |                       6.8545 |                       9.0053 |
+| 100,000               |   20 |             2,000,000 |        8.9072 |       17.2694 |       68.8832 |                       1.4517 |                       8.5961 |                      11.2269 |
+| 1,000,000             |   20 |            20,000,000 |       95.4285 |      101.5516 |      115.1731 |                       8.6826 |                       9.8680 |                      10.4791 |
+| 1,000,000 (cache-hot) |   20 |            20,000,000 |       94.7716 |      101.6154 |      116.9032 |                       8.5541 |                       9.8622 |                      10.5517 |
 
 ### Benchmark summary (`s2t`)
 
-| Input size            | Avg time (ms) | Avg throughput (M chars/sec) |
-|-----------------------|--------------:|-----------------------------:|
-| 100                   |         0.112 |                        1.004 |
-| 1,000                 |         0.308 |                        3.277 |
-| 10,000                |         0.535 |                       19.011 |
-| 100,000               |         3.167 |                       31.946 |
-| 1,000,000             |        27.482 |                       36.501 |
-| 1,000,000 (cache-hot) |        27.654 |                       36.444 |
+| Input size            | Avg time (ms) | Avg throughput (M chars/sec) | Notes                                     |
+|-----------------------|--------------:|-----------------------------:|-------------------------------------------|
+| 100                   |         0.212 |                        0.564 | Dominated by fixed call/JVM overhead      |
+| 1,000                 |         1.049 |                        1.357 | Strong warmup effect across runs          |
+| 10,000                |         1.501 |                        6.854 | Approaching steady-state                  |
+| 100,000               |        17.269 |                        8.596 | Early cold runs skew the average downward |
+| 1,000,000             |       101.552 |                        9.868 | Stable large-input throughput             |
+| 1,000,000 (cache-hot) |       101.615 |                        9.862 | Nearly identical to the normal 1M run     |
 
 * The benchmark measures single-pass conversion latency across different input sizes using 20 runs per case.
-* Small inputs (≤1k chars) are dominated by JVM overhead and are not representative.
-* From 10k chars onward, performance stabilizes, reaching ~32–36 million characters per second.
-* At 1 million characters, average throughput is ~36 M chars/sec.  
-  Explicit cache priming shows minimal impact on average performance, indicating that the UnionCache is already
-  effective during normal execution.  
-  However, best-case latency improves (min ~23 ms), demonstrating strong cache locality under optimal conditions.
+* Small inputs (≤1k chars) are dominated by JVM and call overhead, so they are not representative of bulk conversion
+  throughput.
+* From 100k chars onward, throughput stabilizes around **9-10 M chars/sec** on this GitHub Actions runner.
+* At 1 million characters, average throughput is about **9.9 M chars/sec** for `s2t`.
+* Explicit cache priming has little effect on the average 1M result, suggesting normal execution already benefits from
+  warm caches.
 
 ---
 
@@ -717,4 +718,3 @@ leverages the `OpenccJava` library to provide simplified and traditional Chinese
 - © Laisuk.
 - See [LICENSE](./LICENSE) for details.
 - See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for bundled OpenCC lexicons (Apache License 2.0).
-
