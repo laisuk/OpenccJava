@@ -160,32 +160,7 @@ public class CjkText {
         if (s == null || s.isEmpty())
             return false;
 
-        int cjk = 0;
-        int ascii = 0;
-
-        for (int i = 0; i < s.length(); i++) {
-            char ch = s.charAt(i);
-
-            // Neutral whitespace
-            if (Character.isWhitespace(ch))
-                continue;
-
-            // Neutral digits (ASCII + FULLWIDTH)
-            if (isDigitAsciiOrFullWidth(ch))
-                continue;
-
-            if (isCjk(ch)) {
-                cjk++;
-                continue;
-            }
-
-            // Count ASCII letters only; ASCII punctuation is neutral
-            if (ch <= 0x7F && Character.isLetter(ch)) {
-                ascii++;
-            }
-        }
-
-        return cjk > 0 && cjk >= ascii;
+        return isMostlyCjkRange(s, 0, s.length());
     }
 
     private static boolean containsAnyCjk(String s, int start, int end) {
@@ -387,7 +362,7 @@ public class CjkText {
     }
 
     /**
-     * Range wrapper to reuse your existing isMostlyCjk(String) without changing it.
+     * Range-aware implementation for mostly-CJK checks.
      */
     private static boolean isMostlyCjkRange(String s, int start, int end) {
         if (start >= end) {
