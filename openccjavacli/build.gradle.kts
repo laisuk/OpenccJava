@@ -33,16 +33,36 @@ application {
     mainClass.set("openccjavacli.Main")
 }
 
+// Helper: turn "1.8"/"8"/"17" into major bytecode (52/61/etc.)
+fun majorFromJavaVersion(vRaw: String): Int {
+    val n = if (vRaw.startsWith("1.")) vRaw.substring(2) else vRaw
+    return n.toInt() + 44
+}
+
 // Make sure the CLI JAR is runnable (even though we ship a native exe as well)
-tasks.withType<Jar> {
-    manifest {
-        attributes(
-            "Main-Class" to application.mainClass.get(),
-            "Implementation-Title" to "OpenccJavaCli",
-            "Implementation-Version" to project.version
-            // Note: we intentionally do NOT set Automatic-Module-Name for CLI (no need)
-        )
+tasks.withType<Jar>().configureEach {
+    doFirst {
+        val cj = tasks.withType<JavaCompile>().findByName("compileJava")
+        val rawVer = when {
+            cj?.options?.release?.isPresent == true -> cj.options.release.get().toString()
+            cj != null -> cj.targetCompatibility
+            else -> JavaVersion.current().toString()
+        }
+        val bytecodeJava = if (rawVer == "8") "1.8" else rawVer
+        val major = majorFromJavaVersion(bytecodeJava)
+        manifest {
+            attributes(
+                "Main-Class" to application.mainClass.get(),
+                "Implementation-Title" to "OpenccJavaCli",
+                "Implementation-Version" to project.version,
+                "Major-Bytecode-Number" to major.toString(),
+                "Bytecode-Java-Version" to bytecodeJava
+                // Note: we intentionally do NOT set Automatic-Module-Name for CLI (no need)
+            )
+        }
     }
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
 }
 
 tasks.test {
