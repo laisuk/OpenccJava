@@ -3,7 +3,7 @@ plugins {
     application
     // --- GraalVM Native Build Tools (AOT compile to a single exe) ---
     // Must use Oracle GraalVM JDK to build
-//    id("org.graalvm.buildtools.native") version "0.10.2"
+//    id("org.graalvm.buildtools.native") version "0.11.5"
 }
 
 group = "io.github.laisuk"
@@ -160,6 +160,7 @@ val osKey = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.ge
 }
 
 val copyNativeImageJson by tasks.registering(Copy::class) {
+    description = "Copy native image json file to stdin."
     from("src/main/resources/native-image-json/$osKey")
     into(layout.buildDirectory.dir("generated/native-image/META-INF/native-image"))
 }
@@ -170,6 +171,7 @@ tasks.named<Copy>("processResources") {
 }
 
 val verifyNativeImageJson by tasks.registering {
+    description = "Verifying native image json."
     dependsOn(copyNativeImageJson)
     doLast {
         val dir = layout.buildDirectory
@@ -221,6 +223,7 @@ if (currentJava != null && currentJava.isJava11Compatible) {
     }
 
     tasks.register<Zip>("nativeDistZip") {
+        description = "create native distribution zip."
         dependsOn(tasks.named("nativeCompile"))
 
         val os = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem()
