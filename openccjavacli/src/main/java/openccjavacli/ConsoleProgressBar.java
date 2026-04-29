@@ -1,11 +1,15 @@
 package openccjavacli;
 
 class ConsoleProgressBar {
+    private static final char[] BLOCKS = {' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█'};
+    private static final char[] SPINNER = {'|', '/', '-', '\\'};
+
     private final int width;
-    private int lastPercent = -1;
+    private String lastRendered = "";
+    private int spinIndex = 0;
 
     ConsoleProgressBar(int width) {
-        this.width = width;
+        this.width = Math.max(10, width);
     }
 
     void update(int current, int total) {
@@ -13,30 +17,55 @@ class ConsoleProgressBar {
             return;
         }
 
-        int percent = current * 100 / total;
-        if (percent == lastPercent) {
-            return; // avoid noisy updates
-        }
-        lastPercent = percent;
+        int normalizedCurrent = Math.max(0, Math.min(current, total));
+        double progress = (double) normalizedCurrent / total;
 
-        int filled = percent * width / 100;
-        StringBuilder sb = new StringBuilder();
-        sb.append('\r'); // carriage return: overwrite same line
-        sb.append("[");
+        // smoother percentage (no jitter near 100%)
+        int percent = (int) (progress * 100.0);
+
+        String rendered = renderLine(normalizedCurrent, total, progress, percent);
+
+        // avoid unnecessary redraw (flicker reduction)
+        if (rendered.equals(lastRendered)) {
+            return;
+        }
+        lastRendered = rendered;
+
+        // carriage return overwrite
+        System.err.print('\r' + rendered);
+
+        if (normalizedCurrent >= total) {
+            System.err.println();
+        }
+    }
+
+    private String renderLine(int current, int total, double progress, int percent) {
+        // safe clamp
+        int filledUnits = Math.min(width * 8, (int) (progress * width * 8));
+
+        int fullBlocks = filledUnits / 8;
+        int partialBlock = filledUnits % 8;
+
+        StringBuilder bar = new StringBuilder(width + 2);
+        bar.append('[');
+
         for (int i = 0; i < width; i++) {
-            sb.append(i < filled ? '=' : ' ');
-        }
-        sb.append("] ");
-        if (percent < 100) {
-            sb.append(String.format("%3d%%", percent));
-        } else {
-            sb.append("100%");
+            if (i < fullBlocks) {
+                bar.append(BLOCKS[8]);
+            } else if (i == fullBlocks && partialBlock > 0) {
+                bar.append(BLOCKS[partialBlock]);
+            } else {
+                bar.append(BLOCKS[0]);
+            }
         }
 
-        System.err.print(sb);
+        bar.append(']');
 
-        if (percent == 100) {
-            System.err.println(); // move to next line at the end
-        }
+        // decoupled spinner (stable animation)
+        spinIndex = (spinIndex + 1) % SPINNER.length;
+        char spinner = current >= total ? '✔' : SPINNER[spinIndex];
+
+        // trailing spaces to clear leftovers (Windows safe)
+        return String.format("%s %3d%% (%d/%d) %c   ", bar, percent, current, total, spinner);
     }
 }
