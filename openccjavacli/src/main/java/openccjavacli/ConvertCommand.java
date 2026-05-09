@@ -111,6 +111,9 @@ public class ConvertCommand implements Callable<Integer> {
             String inFrom = (input != null) ? input.getPath() : "<stdin>";
             String outTo = (output != null) ? output.getPath() : "stdout";
             if (System.console() != null) {
+                if (!outputText.endsWith("\n")) {
+                    System.err.println();
+                }
                 System.err.println(BLUE + "Conversion completed (" + config + "): " + inFrom + " → " + outTo + RESET);
             }
             return ExitCode.OK;
