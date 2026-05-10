@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
+## [1.2.3] - 2026-05-11
+
+### Changed
+
+- Update dictionary data.
+
+---
 
 ## [1.2.2] - 2026-04-18
 
@@ -18,7 +25,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Keep `UnionCache` internal/package-private so it is not exposed as part of the supported public API surface.
 - `MiniDictJson` now accepts legacy two-element dictionary snapshot arrays (`[map, maxLength]`) while continuing to
   support the current three-element form with `minLength`.
-- Refined JavaDoc across `OpenCC`, `DictionaryMaxlength`, and `MiniDictJson` to match current runtime behavior and JSON
+- Refined Javadoc across `OpenCC`, `DictionaryMaxlength`, and `MiniDictJson` to match current runtime behavior and JSON
   schema.
 - Refactored `DictionaryMaxlength.toString()` to remove repetitive counting logic while preserving output.
 
