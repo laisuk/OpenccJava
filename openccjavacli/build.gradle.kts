@@ -108,6 +108,12 @@ val fatJar = tasks.register<Jar>("fatJar") {
             .map { zipTree(it) }
     })
 
+    // Preserve project MIT license explicitly
+    from(rootProject.file("LICENSE")) {
+        into("META-INF")
+        rename { "LICENSE-OpenccJavaCli-MIT.txt" }
+    }
+
     archiveClassifier.set("all")
 }
 

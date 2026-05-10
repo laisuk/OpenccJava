@@ -102,6 +102,11 @@ tasks.withType<Jar>().configureEach {
             )
         }
     }
+    // Preserve project MIT license explicitly
+    from(rootProject.file("LICENSE")) {
+        into("META-INF")
+        rename { "LICENSE-OpenccJava-MIT.txt" }
+    }
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 }
