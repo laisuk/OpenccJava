@@ -5,11 +5,20 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
+
 ## [1.2.3] - 2026-05-11
 
 ### Changed
 
-- Update dictionary data.
+- Refreshed dictionary data
+- Synced latest phrase mappings and conversion tables
+- Improved conversion accuracy and consistency
+
+### Notes
+
+- No API changes
+- No behavioral breaking changes
+- Fully compatible with previous 1.2.x releases
 
 ---
 
