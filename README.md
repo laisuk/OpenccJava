@@ -61,7 +61,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.2.2")
+    implementation("io.github.laisuk:openccjava:1.2.3")
 }
 ```
 
@@ -69,7 +69,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.2.2'
+    implementation 'io.github.laisuk:openccjava:1.2.3'
 }
 ```
 
@@ -80,7 +80,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3</version>
 </dependency>
 ```
 
@@ -96,7 +96,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.2.2' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.2.3' // replace with latest tag
 }
 ```
 
@@ -114,7 +114,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.2.2</version>
+<version>v1.2.3</version>
 </dependency>
 ```
 
