@@ -3,7 +3,7 @@ plugins {
     application
     // --- GraalVM Native Build Tools (AOT compile to a single exe) ---
     // Must use Oracle GraalVM JDK to build
-    id("org.graalvm.buildtools.native") version "0.11.5"
+//    id("org.graalvm.buildtools.native") version "0.11.5"
 }
 
 group = "io.github.laisuk"
@@ -155,6 +155,7 @@ tasks.register<Exec>("verifyFatJarSig") {
 
 // --- Uncomment these if using GraalVM native image ---
 // Must use Oracle GraalVM JDK to build
+/*
 
 val osKey = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem().run {
     when {
@@ -165,7 +166,7 @@ val osKey = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.ge
 }
 
 val copyNativeImageJson by tasks.registering(Copy::class) {
-    description = "Copy native image json file to stdin."
+    description = "Copy native image JSON file to stdin."
     from("src/main/resources/native-image-json/$osKey")
     into(layout.buildDirectory.dir("generated/native-image/META-INF/native-image"))
 }
@@ -176,7 +177,7 @@ tasks.named<Copy>("processResources") {
 }
 
 val verifyNativeImageJson by tasks.registering {
-    description = "Verifying native image json."
+    description = "Verifying native image JSON."
     dependsOn(copyNativeImageJson)
     doLast {
         val dir = layout.buildDirectory
@@ -264,3 +265,4 @@ if (currentJava != null && currentJava.isJava11Compatible) {
         from("../dicts") { into("dicts") }
     }
 }
+*/
