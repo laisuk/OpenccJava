@@ -6,11 +6,47 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.2.4-beta1] - 2026-05-13
+## [1.3.0-beta1] - Unreleased
+
+### Added
+
+* Added user custom dictionary support for `openccjava`.
+* Added construction-time custom dictionary injection via:
+
+    * `DictionaryMaxlength.fromDicts(...)`
+    * `OpenCC.fromDicts(...)`
+* Added post-load custom dictionary customization via:
+
+    * `DictionaryMaxlength.withCustomDicts(...)`
+    * `DictionaryMaxlength.withCustomDictFiles(...)`
+* Added `CustomDictSpec` for immutable custom dictionary patch specifications.
+* Added `CustomDictSpec.fromFile(...)` and `CustomDictSpec.fromFiles(...)` for UTF-8 OpenCC text dictionary loading.
+* Added `CustomDictSpec.fromPairs(...)` for in-memory custom dictionary mappings.
+* Added `DictSlot` enum for type-safe dictionary slot selection.
+* Added `CustomDictMode` with:
+
+    * `Append`
+    * `Override`
+* Added support for applying multiple custom dictionary specs in order.
+* Added support for file-level and in-memory pair-level custom dictionary merging.
+* Added defensive immutable handling for custom dictionary paths and pairs.
+* Added unit tests covering:
+
+    * append mode
+    * override mode
+    * construction-time customization
+    * post-load customization
+    * file-based custom dictionaries
+    * in-memory pair-based custom dictionaries
 
 ### Changed
 
-- Update dictionary data
+* Updated dictionary data.
+* Refactored dictionary customization pipeline to support reusable custom dictionary spec application.
+* Unified file-based and pair-based custom dictionary handling under shared internal application logic.
+* Improved dictionary entry rebuilding after custom dictionary application.
+* Improved JavaDoc documentation for custom dictionary APIs and behaviors.
+* Updated `README.md` with comprehensive user custom dictionary documentation and examples.
 
 ---
 
