@@ -239,6 +239,195 @@ public class DictionaryMaxlength {
         return r;
     }
 
+    // File level Custom Dictionary
+
+    public static DictionaryMaxlength fromDicts(List<CustomDictSpec> customSpecs) {
+        return fromDicts("dicts", customSpecs);
+    }
+
+    public static DictionaryMaxlength fromDicts(String basePath, List<CustomDictSpec> customSpecs) {
+        final DictionaryMaxlength r = fromDicts(basePath);
+        applyCustomDictSpecs(r, customSpecs);
+        return r;
+    }
+
+    private static void applyCustomDictSpecs(
+            DictionaryMaxlength dict,
+            List<CustomDictSpec> customSpecs
+    ) {
+        if (customSpecs == null || customSpecs.isEmpty()) {
+            return;
+        }
+
+        for (CustomDictSpec spec : customSpecs) {
+            applyCustomDictSpec(dict, spec);
+        }
+    }
+
+    private static void applyCustomDictSpec(
+            DictionaryMaxlength dict,
+            CustomDictSpec spec
+    ) {
+        Objects.requireNonNull(dict, "dict");
+        Objects.requireNonNull(spec, "spec");
+
+        final String key = SLOT_KEYS.get(spec.slot);
+
+        if (key == null) {
+            throw new IllegalArgumentException(
+                    "Unsupported DictSlot: " + spec.slot
+            );
+        }
+
+        DictEntry existing = getDictEntry(dict, key);
+
+        if (existing == null) {
+            existing = new DictEntry(
+                    new HashMap<>(),
+                    1,
+                    1
+            );
+        }
+
+        final Map<String, String> merged;
+
+        if (spec.mode == CustomDictMode.Override) {
+            merged = new HashMap<>();
+        } else {
+            merged = new HashMap<>(existing.dict);
+        }
+
+        for (Path path : spec.paths) {
+            try {
+                DictEntry loaded = loadDictionaryMaxlength(path);
+                merged.putAll(loaded.dict);
+            } catch (IOException e) {
+                throw new RuntimeException(
+                        "Failed to load custom dictionary: " + path,
+                        e
+                );
+            }
+        }
+
+        DictEntry rebuilt = rebuildDictEntry(merged);
+
+        setDictEntry(dict, key, rebuilt);
+    }
+
+    // Custom Dictionary Helpers
+    private static DictEntry getDictEntry(DictionaryMaxlength dict, String key) {
+        if ("st_characters".equals(key)) return dict.st_characters;
+        if ("st_phrases".equals(key)) return dict.st_phrases;
+        if ("st_punctuations".equals(key)) return dict.st_punctuations;
+
+        if ("ts_characters".equals(key)) return dict.ts_characters;
+        if ("ts_phrases".equals(key)) return dict.ts_phrases;
+        if ("ts_punctuations".equals(key)) return dict.ts_punctuations;
+
+        if ("tw_phrases".equals(key)) return dict.tw_phrases;
+        if ("tw_phrases_rev".equals(key)) return dict.tw_phrases_rev;
+        if ("tw_variants".equals(key)) return dict.tw_variants;
+        if ("tw_variants_rev".equals(key)) return dict.tw_variants_rev;
+        if ("tw_variants_rev_phrases".equals(key)) return dict.tw_variants_rev_phrases;
+
+        if ("hk_variants".equals(key)) return dict.hk_variants;
+        if ("hk_variants_rev".equals(key)) return dict.hk_variants_rev;
+        if ("hk_variants_rev_phrases".equals(key)) return dict.hk_variants_rev_phrases;
+
+        if ("jps_characters".equals(key)) return dict.jps_characters;
+        if ("jps_phrases".equals(key)) return dict.jps_phrases;
+        if ("jp_variants".equals(key)) return dict.jp_variants;
+        if ("jp_variants_rev".equals(key)) return dict.jp_variants_rev;
+
+        throw new IllegalArgumentException("Unknown dictionary key: " + key);
+    }
+
+    private static void setDictEntry(DictionaryMaxlength dict, String key, DictEntry entry) {
+        final BiConsumer<DictionaryMaxlength, DictEntry> setter = ASSIGN.get(key);
+
+        if (setter == null) {
+            throw new IllegalArgumentException("Unknown dictionary key: " + key);
+        }
+
+        setter.accept(dict, entry);
+    }
+
+    private static DictEntry rebuildDictEntry(Map<String, String> map) {
+        if (map == null || map.isEmpty()) {
+            return new DictEntry(new HashMap<>(), 1, 1);
+        }
+
+        int maxLength = 1;
+        int minLength = Integer.MAX_VALUE;
+
+        for (String key : map.keySet()) {
+            int len = key.length();
+
+            if (len > maxLength) {
+                maxLength = len;
+            }
+
+            if (len < minLength) {
+                minLength = len;
+            }
+        }
+
+        if (minLength == Integer.MAX_VALUE) {
+            minLength = 1;
+        }
+
+        return new DictEntry(map, maxLength, minLength);
+    }
+
+    // Post-Load Custom Dictionary
+
+    public DictionaryMaxlength withCustomDictFiles(List<CustomDictSpec> specs) {
+        DictionaryMaxlength copy = this.copy();
+        applyCustomDictSpecs(copy, specs);
+        return copy;
+    }
+
+    private DictionaryMaxlength copy() {
+        DictionaryMaxlength r = new DictionaryMaxlength();
+
+        r.st_characters = copyEntry(this.st_characters);
+        r.st_phrases = copyEntry(this.st_phrases);
+        r.st_punctuations = copyEntry(this.st_punctuations);
+
+        r.ts_characters = copyEntry(this.ts_characters);
+        r.ts_phrases = copyEntry(this.ts_phrases);
+        r.ts_punctuations = copyEntry(this.ts_punctuations);
+
+        r.tw_phrases = copyEntry(this.tw_phrases);
+        r.tw_phrases_rev = copyEntry(this.tw_phrases_rev);
+        r.tw_variants = copyEntry(this.tw_variants);
+        r.tw_variants_rev = copyEntry(this.tw_variants_rev);
+        r.tw_variants_rev_phrases = copyEntry(this.tw_variants_rev_phrases);
+
+        r.hk_variants = copyEntry(this.hk_variants);
+        r.hk_variants_rev = copyEntry(this.hk_variants_rev);
+        r.hk_variants_rev_phrases = copyEntry(this.hk_variants_rev_phrases);
+
+        r.jps_characters = copyEntry(this.jps_characters);
+        r.jps_phrases = copyEntry(this.jps_phrases);
+        r.jp_variants = copyEntry(this.jp_variants);
+        r.jp_variants_rev = copyEntry(this.jp_variants_rev);
+
+        return r;
+    }
+
+    private static DictEntry copyEntry(DictEntry entry) {
+        if (entry == null) {
+            return null;
+        }
+
+        return new DictEntry(
+                new HashMap<>(entry.dict),
+                entry.maxLength,
+                entry.minLength
+        );
+    }
+
     /**
      * Returns the mapping of dictionary identifiers to field setters.
      * <p>
@@ -259,6 +448,7 @@ public class DictionaryMaxlength {
     // --- No-reflection field assignment table (Java 8 compatible) ---
     private static final Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> ASSIGN;
     private static final Map<String, String> FILES;
+    private static final Map<DictSlot, String> SLOT_KEYS;
 
     static {
         Map<String, BiConsumer<DictionaryMaxlength, DictEntry>> m = new LinkedHashMap<>();
@@ -281,7 +471,6 @@ public class DictionaryMaxlength {
         m.put("jps_phrases", (o, e) -> o.jps_phrases = e);
         m.put("jp_variants", (o, e) -> o.jp_variants = e);
         m.put("jp_variants_rev", (o, e) -> o.jp_variants_rev = e);
-
         ASSIGN = Collections.unmodifiableMap(m);
 
         Map<String, String> f = new LinkedHashMap<>();
@@ -304,6 +493,27 @@ public class DictionaryMaxlength {
         f.put("jp_variants", "JPVariants.txt");
         f.put("jp_variants_rev", "JPVariantsRev.txt");
         FILES = Collections.unmodifiableMap(f);
+
+        Map<DictSlot, String> s = new EnumMap<>(DictSlot.class);
+        s.put(DictSlot.STCharacters, "st_characters");
+        s.put(DictSlot.STPhrases, "st_phrases");
+        s.put(DictSlot.STPunctuations, "st_punctuations");
+        s.put(DictSlot.TSCharacters, "ts_characters");
+        s.put(DictSlot.TSPhrases, "ts_phrases");
+        s.put(DictSlot.TSPunctuations, "ts_punctuations");
+        s.put(DictSlot.TWPhrases, "tw_phrases");
+        s.put(DictSlot.TWPhrasesRev, "tw_phrases_rev");
+        s.put(DictSlot.TWVariants, "tw_variants");
+        s.put(DictSlot.TWVariantsRev, "tw_variants_rev");
+        s.put(DictSlot.TWVariantsRevPhrases, "tw_variants_rev_phrases");
+        s.put(DictSlot.HKVariants, "hk_variants");
+        s.put(DictSlot.HKVariantsRev, "hk_variants_rev");
+        s.put(DictSlot.HKVariantsRevPhrases, "hk_variants_rev_phrases");
+        s.put(DictSlot.JPShinjitaiCharacters, "jps_characters");
+        s.put(DictSlot.JPShinjitaiPhrases, "jps_phrases");
+        s.put(DictSlot.JPVariants, "jp_variants");
+        s.put(DictSlot.JPVariantsRev, "jp_variants_rev");
+        SLOT_KEYS = Collections.unmodifiableMap(s);
     }
 
     /**

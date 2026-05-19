@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 //import java.io.File;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -80,4 +83,163 @@ class DictionaryLibTest {
         System.out.println("✅ dictionary_maxlength.json written at: " + file.getAbsolutePath());
     }
 
+    @Test
+    void testFromDictsWithCustomAppendFile() throws IOException {
+        Path custom = Files.createTempFile("openccjava-custom-stphrases-", ".txt");
+        Files.write(
+                custom,
+                Collections.singletonList("软件\t軟體"),
+                StandardCharsets.UTF_8
+        );
+
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromFile(
+                                DictSlot.STPhrases,
+                                custom,
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        assertEquals("軟體", dict.st_phrases.dict.get("软件"));
+        assertTrue(dict.st_phrases.maxLength >= "软件".length());
+        assertTrue(dict.st_phrases.minLength <= "软件".length());
+
+        Files.deleteIfExists(custom);
+    }
+
+    @Test
+    void testFromDictsWithCustomOverrideFile() throws IOException {
+        Path custom = Files.createTempFile("openccjava-custom-stphrases-override-", ".txt");
+        Files.write(
+                custom,
+                Collections.singletonList("帕兰蒂尔\t柏蘭蒂爾"),
+                StandardCharsets.UTF_8
+        );
+
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromFile(
+                                DictSlot.STPhrases,
+                                custom,
+                                CustomDictMode.Override
+                        )
+                )
+        );
+
+        assertEquals("柏蘭蒂爾", dict.st_phrases.dict.get("帕兰蒂尔"));
+        assertEquals(1, dict.st_phrases.dict.size());
+        assertEquals("帕兰蒂尔".length(), dict.st_phrases.maxLength);
+        assertEquals("帕兰蒂尔".length(), dict.st_phrases.minLength);
+
+        Files.deleteIfExists(custom);
+    }
+
+    @Test
+    void testFromDictsWithCustomOverrideFileTwoEntries() throws IOException {
+        Path custom = Files.createTempFile("openccjava-custom-stphrases-override-", ".txt");
+
+        try {
+            Files.write(
+                    custom,
+                    Arrays.asList(
+                            "测试词\t專用詞",
+                            "测试鼠标\t測試滑鼠"
+                    ),
+                    StandardCharsets.UTF_8
+            );
+
+            DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                    Collections.singletonList(
+                            CustomDictSpec.fromFile(
+                                    DictSlot.STPhrases,
+                                    custom,
+                                    CustomDictMode.Override
+                            )
+                    )
+            );
+
+            assertEquals(2, dict.st_phrases.dict.size());
+            assertEquals("專用詞", dict.st_phrases.dict.get("测试词"));
+            assertEquals("測試滑鼠", dict.st_phrases.dict.get("测试鼠标"));
+
+            assertEquals("测试鼠标".length(), dict.st_phrases.maxLength);
+            assertEquals("测试词".length(), dict.st_phrases.minLength);
+        } finally {
+            Files.deleteIfExists(custom);
+        }
+    }
+
+    @Test
+    void testWithCustomDictFilesAppendReturnsCustomizedCopy() throws IOException {
+        Path custom = Files.createTempFile("openccjava-postload-append-", ".txt");
+
+        try {
+            Files.write(
+                    custom,
+                    Collections.singletonList("测试词\t專用詞"),
+                    StandardCharsets.UTF_8
+            );
+
+            DictionaryMaxlength base = DictionaryMaxlength.fromDicts();
+
+            DictionaryMaxlength customized = base.withCustomDictFiles(
+                    Collections.singletonList(
+                            CustomDictSpec.fromFile(
+                                    DictSlot.STPhrases,
+                                    custom,
+                                    CustomDictMode.Append
+                            )
+                    )
+            );
+
+            assertNotSame(base, customized);
+            assertNull(base.st_phrases.dict.get("测试词"));
+            assertEquals("專用詞", customized.st_phrases.dict.get("测试词"));
+        } finally {
+            Files.deleteIfExists(custom);
+        }
+    }
+
+    @Test
+    void testWithCustomDictFilesOverrideReturnsCustomizedCopy() throws IOException {
+        Path custom = Files.createTempFile("openccjava-postload-override-", ".txt");
+
+        try {
+            Files.write(
+                    custom,
+                    Arrays.asList(
+                            "测试词\t專用詞",
+                            "测试鼠标\t測試滑鼠"
+                    ),
+                    StandardCharsets.UTF_8
+            );
+
+            DictionaryMaxlength base = DictionaryMaxlength.fromDicts();
+
+            DictionaryMaxlength customized = base.withCustomDictFiles(
+                    Collections.singletonList(
+                            CustomDictSpec.fromFile(
+                                    DictSlot.STPhrases,
+                                    custom,
+                                    CustomDictMode.Override
+                            )
+                    )
+            );
+
+            assertNotSame(base, customized);
+
+            assertTrue(base.st_phrases.dict.size() > 2);
+            assertEquals(2, customized.st_phrases.dict.size());
+
+            assertEquals("專用詞", customized.st_phrases.dict.get("测试词"));
+            assertEquals("測試滑鼠", customized.st_phrases.dict.get("测试鼠标"));
+
+            assertEquals("测试鼠标".length(), customized.st_phrases.maxLength);
+            assertEquals("测试词".length(), customized.st_phrases.minLength);
+        } finally {
+            Files.deleteIfExists(custom);
+        }
+    }
 }

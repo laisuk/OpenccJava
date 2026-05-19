@@ -3,7 +3,11 @@ package openccjava;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.logging.Level;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -189,5 +193,67 @@ class OpenCCTest {
         assertNotNull(output);
         assertEquals(input.length(), output.length()); // rough check, assuming 1:1 mapping
         System.out.println("s2t() conversion of 100K chars completed in " + durationMs + " ms");
+    }
+
+    @Test
+    void testOpenCCFromDictsAppendCustomFile() throws Exception {
+        Path custom = Files.createTempFile(
+                "openccjava-opencc-append-",
+                ".txt"
+        );
+
+        Files.write(
+                custom,
+                Collections.singletonList("软件\t軟體"),
+                StandardCharsets.UTF_8
+        );
+
+        OpenCC cc = OpenCC.fromDicts(
+                OpenccConfig.S2T,
+                Collections.singletonList(
+                        CustomDictSpec.fromFile(
+                                DictSlot.STPhrases,
+                                custom,
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        String result = cc.convert("软件");
+
+        assertEquals("軟體", result);
+
+        Files.deleteIfExists(custom);
+    }
+
+    @Test
+    void testOpenCCFromDictsOverrideCustomFile() throws Exception {
+        Path custom = Files.createTempFile(
+                "openccjava-opencc-override-",
+                ".txt"
+        );
+
+        try {
+            Files.write(
+                    custom,
+                    Collections.singletonList("测试词\t專用詞"),
+                    StandardCharsets.UTF_8
+            );
+
+            OpenCC cc = OpenCC.fromDicts(
+                    OpenccConfig.S2T,
+                    Collections.singletonList(
+                            CustomDictSpec.fromFile(
+                                    DictSlot.STPhrases,
+                                    custom,
+                                    CustomDictMode.Override
+                            )
+                    )
+            );
+
+            assertEquals("專用詞", cc.convert("测试词"));
+        } finally {
+            Files.deleteIfExists(custom);
+        }
     }
 }

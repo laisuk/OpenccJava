@@ -213,6 +213,33 @@ public class OpenCC {
         return new OpenCC(configId);
     }
 
+    // Static Custom Dictionary Implementation
+
+    public static OpenCC fromDicts(List<CustomDictSpec> specs) {
+        return fromDicts(DEFAULT_CONFIG, specs);
+    }
+
+    public static OpenCC fromDicts(
+            OpenccConfig config,
+            List<CustomDictSpec> specs
+    ) {
+        DictionaryMaxlength dict =
+                DictionaryMaxlength.fromDicts(specs);
+
+        return new OpenCC(config, dict);
+    }
+
+    public static OpenCC fromDicts(
+            OpenccConfig config,
+            String basePath,
+            List<CustomDictSpec> specs
+    ) {
+        DictionaryMaxlength dict =
+                DictionaryMaxlength.fromDicts(basePath, specs);
+
+        return new OpenCC(config, dict);
+    }
+
     // ---------- Instance constructors + API ----------
 
     /**
@@ -293,6 +320,15 @@ public class OpenCC {
     public OpenCC(OpenccConfig configId) {
         this.dictionary = DictionaryHolder.get(); // Lazy static, loaded on first access
         setConfig(configId);
+    }
+
+    public OpenCC(DictionaryMaxlength dictionary) {
+        this(DEFAULT_CONFIG, dictionary);
+    }
+
+    public OpenCC(OpenccConfig config, DictionaryMaxlength dictionary) {
+        this.dictionary = Objects.requireNonNull(dictionary, "dictionary");
+        setConfig(config);
     }
 
     /**
