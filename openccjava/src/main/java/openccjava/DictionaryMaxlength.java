@@ -239,12 +239,51 @@ public class DictionaryMaxlength {
         return r;
     }
 
-    // File level Custom Dictionary
-
+    /**
+     * Loads all dictionary files from the default {@code dicts} directory and
+     * applies custom dictionary files to selected slots.
+     *
+     * <p>This is the file-level preload customization path. The official
+     * dictionaries are loaded first, then each {@link CustomDictSpec} patches
+     * one selected {@link DictSlot}. Custom dictionary files are parsed with the
+     * same parser used for built-in OpenCC text dictionaries.</p>
+     *
+     * <p>This method creates and returns a caller-owned dictionary. It does not
+     * read from or modify {@link OpenCC.DictionaryHolder}. If {@code customSpecs}
+     * is {@code null} or empty, this behaves like {@link #fromDicts()}.</p>
+     *
+     * @param customSpecs custom dictionary specs to apply; may be {@code null}
+     *                    or empty
+     * @return a newly loaded {@code DictionaryMaxlength} with custom patches applied
+     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code customSpecs} contains a {@code null} spec
+     */
     public static DictionaryMaxlength fromDicts(List<CustomDictSpec> customSpecs) {
         return fromDicts("dicts", customSpecs);
     }
 
+    /**
+     * Loads all dictionary files from the specified base directory and applies
+     * custom dictionary files to selected slots.
+     *
+     * <p>The base official dictionaries are loaded first from {@code basePath};
+     * then each {@link CustomDictSpec} patches its selected {@link DictSlot}.
+     * Custom dictionary files are parsed with the same parser used for built-in
+     * OpenCC text dictionaries.</p>
+     *
+     * <p>This method creates and returns a caller-owned dictionary. It does not
+     * read from or modify {@link OpenCC.DictionaryHolder}. If {@code customSpecs}
+     * is {@code null} or empty, this behaves like {@link #fromDicts(String)}.</p>
+     *
+     * @param basePath the path to the directory containing official dictionary
+     *                 {@code .txt} files; must not be {@code null}
+     * @param customSpecs custom dictionary specs to apply; may be {@code null}
+     *                    or empty
+     * @return a newly loaded {@code DictionaryMaxlength} with custom patches applied
+     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code basePath} is {@code null} or
+     *                              {@code customSpecs} contains a {@code null} spec
+     */
     public static DictionaryMaxlength fromDicts(String basePath, List<CustomDictSpec> customSpecs) {
         final DictionaryMaxlength r = fromDicts(basePath);
         applyCustomDictSpecs(r, customSpecs);
@@ -379,8 +418,24 @@ public class DictionaryMaxlength {
         return new DictEntry(map, maxLength, minLength);
     }
 
-    // Post-Load Custom Dictionary
-
+    /**
+     * Returns a customized copy of this dictionary with custom dictionary files
+     * applied to selected slots.
+     *
+     * <p>This is the post-load customization path. The current instance is not
+     * mutated. Instead, all dictionary entries are copied first and the custom
+     * specs are applied to the copy. Custom dictionary files are parsed with the
+     * same parser used for built-in OpenCC text dictionaries.</p>
+     *
+     * <p>If {@code specs} is {@code null} or empty, this method still returns a
+     * separate copy with the same dictionary contents. This method does not read
+     * from or modify {@link OpenCC.DictionaryHolder}.</p>
+     *
+     * @param specs custom dictionary specs to apply; may be {@code null} or empty
+     * @return a customized copy of this dictionary
+     * @throws RuntimeException if a custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code specs} contains a {@code null} spec
+     */
     public DictionaryMaxlength withCustomDictFiles(List<CustomDictSpec> specs) {
         DictionaryMaxlength copy = this.copy();
         applyCustomDictSpecs(copy, specs);

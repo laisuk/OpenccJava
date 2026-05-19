@@ -213,12 +213,51 @@ public class OpenCC {
         return new OpenCC(configId);
     }
 
-    // Static Custom Dictionary Implementation
-
+    /**
+     * Creates an {@link OpenCC} instance with the default configuration
+     * ({@code s2t}) and custom dictionary files.
+     *
+     * <p>This method loads a caller-owned {@link DictionaryMaxlength} through
+     * {@link DictionaryMaxlength#fromDicts(java.util.List)}. It does not use or
+     * modify {@link DictionaryHolder}. If {@code specs} is {@code null} or
+     * empty, the returned converter uses a separately loaded dictionary without
+     * custom patches.</p>
+     *
+     * <p>Custom dictionary files are parsed with the same parser used for
+     * built-in OpenCC text dictionaries. After construction, the converter is
+     * immutable for normal conversion use and does not hot-reload custom files.</p>
+     *
+     * @param specs custom dictionary specs to apply; may be {@code null} or empty
+     * @return a new converter using a caller-owned dictionary
+     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code specs} contains a {@code null} spec
+     */
     public static OpenCC fromDicts(List<CustomDictSpec> specs) {
         return fromDicts(DEFAULT_CONFIG, specs);
     }
 
+    /**
+     * Creates an {@link OpenCC} instance with a typed configuration and custom
+     * dictionary files.
+     *
+     * <p>This method loads a caller-owned {@link DictionaryMaxlength} through
+     * {@link DictionaryMaxlength#fromDicts(java.util.List)}. It does not use or
+     * modify {@link DictionaryHolder}. If {@code specs} is {@code null} or
+     * empty, the returned converter uses a separately loaded dictionary without
+     * custom patches.</p>
+     *
+     * <p>If {@code config} is {@code null}, the default configuration
+     * ({@code s2t}) is used. Custom dictionary files are parsed with the same
+     * parser used for built-in OpenCC text dictionaries. After construction,
+     * the converter is immutable for normal conversion use and does not
+     * hot-reload custom files.</p>
+     *
+     * @param config the configuration ID, or {@code null} to use the default
+     * @param specs custom dictionary specs to apply; may be {@code null} or empty
+     * @return a new converter using a caller-owned dictionary
+     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code specs} contains a {@code null} spec
+     */
     public static OpenCC fromDicts(
             OpenccConfig config,
             List<CustomDictSpec> specs
@@ -229,6 +268,31 @@ public class OpenCC {
         return new OpenCC(config, dict);
     }
 
+    /**
+     * Creates an {@link OpenCC} instance from a custom official dictionary
+     * directory and custom dictionary files.
+     *
+     * <p>This method loads a caller-owned {@link DictionaryMaxlength} through
+     * {@link DictionaryMaxlength#fromDicts(String, java.util.List)}. It does
+     * not use or modify {@link DictionaryHolder}. If {@code specs} is
+     * {@code null} or empty, the returned converter uses a separately loaded
+     * dictionary from {@code basePath} without custom patches.</p>
+     *
+     * <p>If {@code config} is {@code null}, the default configuration
+     * ({@code s2t}) is used. Custom dictionary files are parsed with the same
+     * parser used for built-in OpenCC text dictionaries. After construction,
+     * the converter is immutable for normal conversion use and does not
+     * hot-reload custom files.</p>
+     *
+     * @param config the configuration ID, or {@code null} to use the default
+     * @param basePath the path to the directory containing official dictionary
+     *                 {@code .txt} files; must not be {@code null}
+     * @param specs custom dictionary specs to apply; may be {@code null} or empty
+     * @return a new converter using a caller-owned dictionary
+     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code basePath} is {@code null} or
+     *                              {@code specs} contains a {@code null} spec
+     */
     public static OpenCC fromDicts(
             OpenccConfig config,
             String basePath,
@@ -322,10 +386,42 @@ public class OpenCC {
         setConfig(configId);
     }
 
+    /**
+     * Constructs an {@code OpenCC} instance using the default configuration
+     * ({@code s2t}) and a caller-supplied dictionary.
+     *
+     * <p>The supplied {@link DictionaryMaxlength} is used directly. This
+     * constructor does not use or modify {@link DictionaryHolder}. It is
+     * intended for dictionaries built with custom files or loaded by the caller.</p>
+     *
+     * <p>After construction, normal conversion is immutable and fast. To change
+     * custom dictionary contents, build a new {@link DictionaryMaxlength} and
+     * create a new {@code OpenCC} instance.</p>
+     *
+     * @param dictionary the dictionary to use; must not be {@code null}
+     * @throws NullPointerException if {@code dictionary} is {@code null}
+     */
     public OpenCC(DictionaryMaxlength dictionary) {
         this(DEFAULT_CONFIG, dictionary);
     }
 
+    /**
+     * Constructs an {@code OpenCC} instance using a typed configuration and a
+     * caller-supplied dictionary.
+     *
+     * <p>The supplied {@link DictionaryMaxlength} is used directly. This
+     * constructor does not use or modify {@link DictionaryHolder}. It is
+     * intended for dictionaries built with custom files or loaded by the caller.</p>
+     *
+     * <p>If {@code config} is {@code null}, the default configuration
+     * ({@code s2t}) is used. After construction, normal conversion is immutable
+     * and fast. To change custom dictionary contents, build a new
+     * {@link DictionaryMaxlength} and create a new {@code OpenCC} instance.</p>
+     *
+     * @param config the configuration ID, or {@code null} to use the default
+     * @param dictionary the dictionary to use; must not be {@code null}
+     * @throws NullPointerException if {@code dictionary} is {@code null}
+     */
     public OpenCC(OpenccConfig config, DictionaryMaxlength dictionary) {
         this.dictionary = Objects.requireNonNull(dictionary, "dictionary");
         setConfig(config);

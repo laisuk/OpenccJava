@@ -253,6 +253,180 @@ public class Example {
 Most directional conversion methods support a boolean punctuation flag as a second parameter.
 Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `jp2t` are single-argument methods.
 
+### 📘 User Custom Dictionaries
+
+Custom dictionaries patch specific OpenCC dictionary slots. The base official dictionaries are loaded first, then custom
+dictionary files are applied to the selected slots.
+
+Normal `OpenCC` usage still uses the lazy default `DictionaryHolder` singleton. Custom dictionary usage does not touch
+`DictionaryHolder`: file-level custom dictionaries build a caller-owned `DictionaryMaxlength`, and post-load
+customization returns a customized copy without mutating the original `DictionaryMaxlength`. After an `OpenCC` instance
+is
+constructed, runtime conversion remains immutable and fast.
+
+Only users who intentionally use both the default singleton path and custom dictionary paths may hold two dictionary
+copies in memory. This is intentional and avoids global mutable state.
+
+#### CustomDictMode
+
+- `CustomDictMode.Append` merges custom entries into the selected slot. Custom entries win if keys already exist. This
+  is
+  the recommended/default mode for most users.
+- `CustomDictMode.Override` replaces the selected slot entirely. This is advanced mode. Other slots in the same
+  conversion chain may still run afterward; for example, `STCharacters` may still apply after `STPhrases`.
+
+#### Dictionary File Format
+
+Custom dictionary files use the same parser as OpenCC text dictionaries:
+
+- UTF-8 text
+- One entry per line
+- `source<TAB>target`
+- Blank/comment lines follow existing parser behavior
+- Only the first target token is used, matching OpenCC dictionary behavior
+
+#### File-Level Preload Customization
+
+Use `OpenCC.fromDicts(...)` or `DictionaryMaxlength.fromDicts(..., specs)` when you want to load official dictionary
+text
+files and apply custom files before constructing the converter.
+
+```java
+import openccjava.*;
+
+import java.nio.file.Paths;
+import java.util.Collections;
+
+public class CustomDictFileExample {
+    static void main(String[] args) {
+        OpenCC cc = OpenCC.fromDicts(
+                OpenccConfig.S2T,
+                Collections.singletonList(
+                        CustomDictSpec.fromFile(
+                                DictSlot.STPhrases,
+                                Paths.get("custom_st_phrases.txt"),
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        System.out.println(cc.convert("测试词"));
+    }
+}
+```
+
+#### Post-Load Customization
+
+Use `DictionaryMaxlength.withCustomDictFiles(...)` when you already have a loaded dictionary, such as one loaded from a
+serialized `dictionary_maxlength.json`. This returns a customized copy and does not mutate the original dictionary.
+
+```java
+import openccjava.*;
+
+import java.nio.file.Paths;
+import java.util.Collections;
+
+public class PostLoadCustomDictExample {
+    static void main(String[] args) throws Exception {
+        DictionaryMaxlength dict = DictionaryMaxlength
+                .fromJsonFileNoDeps("dicts/dictionary_maxlength.json")
+                .withCustomDictFiles(
+                        Collections.singletonList(
+                                CustomDictSpec.fromFile(
+                                        DictSlot.STPhrases,
+                                        Paths.get("custom_st_phrases.txt"),
+                                        CustomDictMode.Append
+                                )
+                        )
+                );
+
+        OpenCC cc = new OpenCC(OpenccConfig.S2T, dict);
+
+        System.out.println(cc.convert("测试词"));
+    }
+}
+```
+
+#### Multiple Custom Files
+
+Use `CustomDictSpec.fromFiles(...)` to apply multiple files to one slot. Files are applied in list order; later entries
+with the same source key win.
+
+```java
+import openccjava.*;
+
+import java.nio.file.Paths;
+import java.util.Arrays;
+
+public class MultipleCustomDictFilesExample {
+    static void main(String[] args) {
+        OpenCC cc = OpenCC.fromDicts(
+                OpenccConfig.S2T,
+                Arrays.asList(
+                        CustomDictSpec.fromFiles(
+                                DictSlot.STPhrases,
+                                Arrays.asList(
+                                        Paths.get("custom_st_phrases.txt"),
+                                        Paths.get("project_terms.txt")
+                                ),
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        System.out.println(cc.convert("测试词"));
+    }
+}
+```
+
+#### Public API
+
+- `DictSlot` selects the OpenCC dictionary slot to patch.
+- `CustomDictMode` selects append or override behavior.
+- `CustomDictSpec.fromFile(...)` creates a spec for one custom dictionary file.
+- `CustomDictSpec.fromFiles(...)` creates a spec for multiple custom dictionary files.
+- `DictionaryMaxlength.fromDicts(List<CustomDictSpec>)` loads default text dictionaries and applies custom specs.
+- `DictionaryMaxlength.fromDicts(String, List<CustomDictSpec>)` loads text dictionaries from a base path and applies
+  custom specs.
+- `DictionaryMaxlength.withCustomDictFiles(...)` returns a customized copy of an already loaded dictionary.
+- `OpenCC.fromDicts(...)` creates a converter from a caller-owned custom dictionary.
+- `OpenCC(OpenccConfig config, DictionaryMaxlength dictionary)` creates a converter from a caller-supplied dictionary.
+- `OpenCC(DictionaryMaxlength dictionary)` uses the default `s2t` config with a caller-supplied dictionary.
+
+#### DictSlot Mapping
+
+| DictSlot              | Dictionary file           | Serialized field        |
+|-----------------------|---------------------------|-------------------------|
+| STCharacters          | STCharacters.txt          | st_characters           |
+| STPhrases             | STPhrases.txt             | st_phrases              |
+| STPunctuations        | STPunctuations.txt        | st_punctuations         |
+| TSCharacters          | TSCharacters.txt          | ts_characters           |
+| TSPhrases             | TSPhrases.txt             | ts_phrases              |
+| TSPunctuations        | TSPunctuations.txt        | ts_punctuations         |
+| TWPhrases             | TWPhrases.txt             | tw_phrases              |
+| TWPhrasesRev          | TWPhrasesRev.txt          | tw_phrases_rev          |
+| TWVariants            | TWVariants.txt            | tw_variants             |
+| TWVariantsRev         | TWVariantsRev.txt         | tw_variants_rev         |
+| TWVariantsRevPhrases  | TWVariantsRevPhrases.txt  | tw_variants_rev_phrases |
+| HKVariants            | HKVariants.txt            | hk_variants             |
+| HKVariantsRev         | HKVariantsRev.txt         | hk_variants_rev         |
+| HKVariantsRevPhrases  | HKVariantsRevPhrases.txt  | hk_variants_rev_phrases |
+| JPShinjitaiCharacters | JPShinjitaiCharacters.txt | jps_characters          |
+| JPShinjitaiPhrases    | JPShinjitaiPhrases.txt    | jps_phrases             |
+| JPVariants            | JPVariants.txt            | jp_variants             |
+| JPVariantsRev         | JPVariantsRev.txt         | jp_variants_rev         |
+
+#### Limitations / Notes
+
+- Custom dictionaries are applied before `OpenCC` construction.
+- No runtime hot reload is provided.
+- To update custom dictionaries, build a new `DictionaryMaxlength` and then create a new `OpenCC` instance.
+- `Override` replaces only the selected slot, not the whole conversion pipeline.
+- `Append` is recommended for most user dictionaries.
+- Wrong slot choice may produce no effect or unexpected fallback behavior.
+- `DictionaryHolder` / default singleton is not modified.
+- The custom path may load its own dictionary copy; this is intentional and avoids global mutable state.
+
 ### 📚 Supported Config Keys
 
 ```java
