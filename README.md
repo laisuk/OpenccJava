@@ -256,7 +256,7 @@ Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `j
 ### 📘 User Custom Dictionaries
 
 Custom dictionaries patch specific OpenCC dictionary slots. The base official dictionaries are loaded first, then custom
-dictionary files are applied to the selected slots.
+dictionary files and/or in-memory pairs are applied to the selected slots.
 
 Normal `OpenCC` usage still uses the lazy default `DictionaryHolder` singleton. Custom dictionary usage does not touch
 `DictionaryHolder`: file-level custom dictionaries build a caller-owned `DictionaryMaxlength`, and post-load
@@ -269,11 +269,12 @@ copies in memory. This is intentional and avoids global mutable state.
 
 #### CustomDictMode
 
-- `CustomDictMode.Append` merges custom entries into the selected slot. Custom entries win if keys already exist. This
+- `CustomDictMode.Append` merges custom entries into the existing slot. Custom entries win if keys already exist. This
   is
   the recommended/default mode for most users.
-- `CustomDictMode.Override` replaces the selected slot entirely. This is advanced mode. Other slots in the same
-  conversion chain may still run afterward; for example, `STCharacters` may still apply after `STPhrases`.
+- `CustomDictMode.Override` replaces the selected slot before applying custom entries. This is advanced mode. Other
+  slots
+  in the same conversion chain may still run afterward; for example, `STCharacters` may still apply after `STPhrases`.
 
 #### Dictionary File Format
 
@@ -285,11 +286,21 @@ Custom dictionary files use the same parser as OpenCC text dictionaries:
 - Blank/comment lines follow existing parser behavior
 - Only the first target token is used, matching OpenCC dictionary behavior
 
+#### File-Based vs In-Memory Custom Dictionaries
+
+- File-based custom dictionaries use `CustomDictSpec.fromFile(...)` or `CustomDictSpec.fromFiles(...)` and load UTF-8
+  OpenCC text dictionary files.
+- In-memory custom dictionaries use `CustomDictSpec.fromPairs(...)` and apply a `Map<String, String>` directly, which is
+  useful for runtime terms or application-provided user dictionaries.
+- When custom specs for the same slot include both file paths and pairs, apply file specs first and pair specs
+  afterward.
+  Pair entries override file entries when the same source key exists; internally, `pairs` are applied after `paths`.
+- Insertion order is preserved for in-memory pairs. Use `LinkedHashMap` when order matters.
+
 #### File-Level Preload Customization
 
 Use `OpenCC.fromDicts(...)` or `DictionaryMaxlength.fromDicts(..., specs)` when you want to load official dictionary
-text
-files and apply custom files before constructing the converter.
+text files and apply custom entries before constructing the converter.
 
 ```java
 import openccjava.*;
@@ -315,10 +326,111 @@ public class CustomDictFileExample {
 }
 ```
 
+You can also build a caller-owned `DictionaryMaxlength` at construction time, then pass it to `OpenCC`:
+
+```java
+import openccjava.*;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class CustomDictPairsAtLoadExample {
+    static void main(String[] args) {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("测试词", "專用詞");
+        pairs.put("鼠标", "滑鼠");
+
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.STPhrases,
+                                pairs,
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        OpenCC cc = new OpenCC(OpenccConfig.S2T, dict);
+
+        System.out.println(cc.convert("测试词和鼠标"));
+    }
+}
+```
+
+For direct converter construction, `OpenCC.fromDicts(...)` accepts the same specs:
+
+```java
+import openccjava.*;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class OpenCCFromPairsExample {
+    static void main(String[] args) {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("测试词", "專用詞");
+        pairs.put("鼠标", "滑鼠");
+
+        OpenCC cc = OpenCC.fromDicts(
+                OpenccConfig.S2T,
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.STPhrases,
+                                pairs,
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        System.out.println(cc.convert("测试词和鼠标"));
+    }
+}
+```
+
 #### Post-Load Customization
 
-Use `DictionaryMaxlength.withCustomDictFiles(...)` when you already have a loaded dictionary, such as one loaded from a
-serialized `dictionary_maxlength.json`. This returns a customized copy and does not mutate the original dictionary.
+Use `DictionaryMaxlength.withCustomDicts(...)` or `DictionaryMaxlength.withCustomDictFiles(...)` when you already have a
+loaded dictionary, such as one loaded from a serialized `dictionary_maxlength.json`. Both methods return a customized
+copy
+and do not mutate the original dictionary.
+
+`withCustomDicts(...)` accepts specs created from files, pairs, or both sources:
+
+```java
+import openccjava.*;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class PostLoadCustomPairsExample {
+    static void main(String[] args) {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("测试词", "專用詞");
+        pairs.put("鼠标", "滑鼠");
+
+        DictionaryMaxlength dict = DictionaryMaxlength
+                .fromDicts()
+                .withCustomDicts(
+                        Collections.singletonList(
+                                CustomDictSpec.fromPairs(
+                                        DictSlot.STPhrases,
+                                        pairs,
+                                        CustomDictMode.Append
+                                )
+                        )
+                );
+
+        OpenCC cc = new OpenCC(dict);
+
+        System.out.println(cc.convert("测试词和鼠标"));
+    }
+}
+```
+
+`withCustomDictFiles(...)` is a convenience method for file-based specs:
 
 ```java
 import openccjava.*;
@@ -379,15 +491,57 @@ public class MultipleCustomDictFilesExample {
 }
 ```
 
+File specs and pair specs can be combined. File paths are applied first, then in-memory pairs:
+
+```java
+import openccjava.*;
+
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class CustomDictFilesAndPairsExample {
+    static void main(String[] args) {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("测试词", "專用詞");
+        pairs.put("鼠标", "滑鼠");
+
+        OpenCC cc = OpenCC.fromDicts(
+                OpenccConfig.S2T,
+                Arrays.asList(
+                        CustomDictSpec.fromFiles(
+                                DictSlot.STPhrases,
+                                Arrays.asList(
+                                        Paths.get("custom_st_phrases.txt"),
+                                        Paths.get("project_terms.txt")
+                                ),
+                                CustomDictMode.Append
+                        ),
+                        CustomDictSpec.fromPairs(
+                                DictSlot.STPhrases,
+                                pairs,
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        System.out.println(cc.convert("测试词和鼠标"));
+    }
+}
+```
+
 #### Public API
 
 - `DictSlot` selects the OpenCC dictionary slot to patch.
 - `CustomDictMode` selects append or override behavior.
 - `CustomDictSpec.fromFile(...)` creates a spec for one custom dictionary file.
 - `CustomDictSpec.fromFiles(...)` creates a spec for multiple custom dictionary files.
+- `CustomDictSpec.fromPairs(...)` creates a spec for in-memory custom dictionary pairs.
 - `DictionaryMaxlength.fromDicts(List<CustomDictSpec>)` loads default text dictionaries and applies custom specs.
 - `DictionaryMaxlength.fromDicts(String, List<CustomDictSpec>)` loads text dictionaries from a base path and applies
   custom specs.
+- `DictionaryMaxlength.withCustomDicts(...)` returns a customized copy using specs with files, pairs, or both.
 - `DictionaryMaxlength.withCustomDictFiles(...)` returns a customized copy of an already loaded dictionary.
 - `OpenCC.fromDicts(...)` creates a converter from a caller-owned custom dictionary.
 - `OpenCC(OpenccConfig config, DictionaryMaxlength dictionary)` creates a converter from a caller-supplied dictionary.
@@ -423,6 +577,7 @@ public class MultipleCustomDictFilesExample {
 - To update custom dictionaries, build a new `DictionaryMaxlength` and then create a new `OpenCC` instance.
 - `Override` replaces only the selected slot, not the whole conversion pipeline.
 - `Append` is recommended for most user dictionaries.
+- If file and pair entries define the same source key, the pair entry wins.
 - Wrong slot choice may produce no effect or unexpected fallback behavior.
 - `DictionaryHolder` / default singleton is not modified.
 - The custom path may load its own dictionary copy; this is intentional and avoids global mutable state.
