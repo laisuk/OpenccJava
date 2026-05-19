@@ -236,7 +236,10 @@ class OpenCCTest {
         try {
             Files.write(
                     custom,
-                    Collections.singletonList("测试词\t專用詞"),
+                    Arrays.asList(
+                            "测试词\t專用詞",
+                            "帕兰蒂尼\t勃蘭蒂尼"
+                    ),
                     StandardCharsets.UTF_8
             );
 
@@ -252,6 +255,7 @@ class OpenCCTest {
             );
 
             assertEquals("專用詞", cc.convert("测试词"));
+            assertEquals("勃蘭蒂尼", cc.convert("帕兰蒂尼"));
         } finally {
             Files.deleteIfExists(custom);
         }
