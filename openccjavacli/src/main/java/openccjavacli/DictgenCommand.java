@@ -12,11 +12,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Command(name = "dictgen",
-        description = "\033[1;34mGenerate dictionary for OpenccJava\033[0m",
+        description = "\033[1;34mGenerate base dictionary for OpenccJava\033[0m",
         mixinStandardHelpOptions = true)
 public class DictgenCommand implements Runnable {
 
-    @Option(names = {"-f", "--format"}, description = "Dictionary format: [json]", defaultValue = "json")
+    @Option(names = {"-f", "--format"}, description = "Dictionary output format: [json]", defaultValue = "json")
     private String format;
 
     @Option(names = {"-o", "--output"}, paramLabel = "<filename>", description = "Output filename")
