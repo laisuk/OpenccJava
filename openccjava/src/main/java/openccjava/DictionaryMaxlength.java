@@ -255,7 +255,7 @@ public class DictionaryMaxlength {
      * @param customSpecs custom dictionary specs to apply; may be {@code null}
      *                    or empty
      * @return a newly loaded {@code DictionaryMaxlength} with custom patches applied
-     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws RuntimeException     if an official or custom dictionary file cannot be loaded
      * @throws NullPointerException if {@code customSpecs} contains a {@code null} spec
      */
     public static DictionaryMaxlength fromDicts(List<CustomDictSpec> customSpecs) {
@@ -275,12 +275,12 @@ public class DictionaryMaxlength {
      * read from or modify {@link OpenCC.DictionaryHolder}. If {@code customSpecs}
      * is {@code null} or empty, this behaves like {@link #fromDicts(String)}.</p>
      *
-     * @param basePath the path to the directory containing official dictionary
-     *                 {@code .txt} files; must not be {@code null}
+     * @param basePath    the path to the directory containing official dictionary
+     *                    {@code .txt} files; must not be {@code null}
      * @param customSpecs custom dictionary specs to apply; may be {@code null}
      *                    or empty
      * @return a newly loaded {@code DictionaryMaxlength} with custom patches applied
-     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws RuntimeException     if an official or custom dictionary file cannot be loaded
      * @throws NullPointerException if {@code basePath} is {@code null} or
      *                              {@code customSpecs} contains a {@code null} spec
      */
@@ -347,6 +347,11 @@ public class DictionaryMaxlength {
                 );
             }
         }
+
+        // Apply in-memory custom pairs after files.
+        // If the same source key appears in both paths and pairs,
+        // pairs win because they are applied last.
+        merged.putAll(spec.pairs);
 
         DictEntry rebuilt = rebuildDictEntry(merged);
 
@@ -419,6 +424,28 @@ public class DictionaryMaxlength {
     }
 
     /**
+     * Returns a customized copy of this dictionary with in-memory custom dictionary
+     * pairs applied to selected slots.
+     *
+     * <p>This is the post-load customization path. The current instance is not
+     * mutated. Instead, all dictionary entries are copied first and the custom
+     * pairs are applied to the copy.</p>
+     *
+     * <p>If {@code specs} is {@code null} or empty, this method still returns a
+     * separate copy with the same dictionary contents. This method does not read
+     * from or modify {@link OpenCC.DictionaryHolder}.</p>
+     *
+     * @param specs custom dictionary specs to apply; may be {@code null} or empty
+     * @return a customized copy of this dictionary
+     * @throws NullPointerException if {@code specs} contains a {@code null} spec
+     */
+    public DictionaryMaxlength withCustomDicts(List<CustomDictSpec> specs) {
+        DictionaryMaxlength copy = this.copy();
+        applyCustomDictSpecs(copy, specs);
+        return copy;
+    }
+
+    /**
      * Returns a customized copy of this dictionary with custom dictionary files
      * applied to selected slots.
      *
@@ -433,7 +460,7 @@ public class DictionaryMaxlength {
      *
      * @param specs custom dictionary specs to apply; may be {@code null} or empty
      * @return a customized copy of this dictionary
-     * @throws RuntimeException if a custom dictionary file cannot be loaded
+     * @throws RuntimeException     if a custom dictionary file cannot be loaded
      * @throws NullPointerException if {@code specs} contains a {@code null} spec
      */
     public DictionaryMaxlength withCustomDictFiles(List<CustomDictSpec> specs) {

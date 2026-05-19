@@ -260,4 +260,40 @@ class OpenCCTest {
             Files.deleteIfExists(custom);
         }
     }
+
+    @Test
+    void testOpenCCFromDictsBaseOverrideCustomFile() throws Exception {
+        Path custom = Files.createTempFile(
+                "openccjava-opencc-override-",
+                ".txt"
+        );
+
+        try {
+            Files.write(
+                    custom,
+                    Arrays.asList(
+                            "测试词\t專用詞",
+                            "帕兰蒂尼\t勃蘭蒂尼"
+                    ),
+                    StandardCharsets.UTF_8
+            );
+
+            OpenCC cc = OpenCC.fromDicts(
+                    OpenccConfig.S2T,
+                    "dicts",
+                    Collections.singletonList(
+                            CustomDictSpec.fromFile(
+                                    DictSlot.STPhrases,
+                                    custom,
+                                    CustomDictMode.Override
+                            )
+                    )
+            );
+
+            assertEquals("專用詞", cc.convert("测试词"));
+            assertEquals("勃蘭蒂尼", cc.convert("帕兰蒂尼"));
+        } finally {
+            Files.deleteIfExists(custom);
+        }
+    }
 }

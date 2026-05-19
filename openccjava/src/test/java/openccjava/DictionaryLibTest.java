@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -241,5 +243,35 @@ class DictionaryLibTest {
         } finally {
             Files.deleteIfExists(custom);
         }
+    }
+
+    @Test
+    void testWithCustomDictsOverrideReturnsCustomizedCopy() {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("测试词", "專用詞");
+        pairs.put("测试鼠标", "測試滑鼠");
+
+        DictionaryMaxlength base = DictionaryMaxlength.fromDicts();
+
+        DictionaryMaxlength customized = base.withCustomDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.STPhrases,
+                                pairs,
+                                CustomDictMode.Override
+                        )
+                )
+        );
+
+        assertNotSame(base, customized);
+
+        assertTrue(base.st_phrases.dict.size() > 2);
+        assertEquals(2, customized.st_phrases.dict.size());
+
+        assertEquals("專用詞", customized.st_phrases.dict.get("测试词"));
+        assertEquals("測試滑鼠", customized.st_phrases.dict.get("测试鼠标"));
+
+        assertEquals("测试鼠标".length(), customized.st_phrases.maxLength);
+        assertEquals("测试词".length(), customized.st_phrases.minLength);
     }
 }
