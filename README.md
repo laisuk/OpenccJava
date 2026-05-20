@@ -549,26 +549,26 @@ public class CustomDictFilesAndPairsExample {
 
 #### DictSlot Mapping
 
-| DictSlot              | Dictionary file           | Serialized field        |
-|-----------------------|---------------------------|-------------------------|
-| STCharacters          | STCharacters.txt          | st_characters           |
-| STPhrases             | STPhrases.txt             | st_phrases              |
-| STPunctuations        | STPunctuations.txt        | st_punctuations         |
-| TSCharacters          | TSCharacters.txt          | ts_characters           |
-| TSPhrases             | TSPhrases.txt             | ts_phrases              |
-| TSPunctuations        | TSPunctuations.txt        | ts_punctuations         |
-| TWPhrases             | TWPhrases.txt             | tw_phrases              |
-| TWPhrasesRev          | TWPhrasesRev.txt          | tw_phrases_rev          |
-| TWVariants            | TWVariants.txt            | tw_variants             |
-| TWVariantsRev         | TWVariantsRev.txt         | tw_variants_rev         |
-| TWVariantsRevPhrases  | TWVariantsRevPhrases.txt  | tw_variants_rev_phrases |
-| HKVariants            | HKVariants.txt            | hk_variants             |
-| HKVariantsRev         | HKVariantsRev.txt         | hk_variants_rev         |
-| HKVariantsRevPhrases  | HKVariantsRevPhrases.txt  | hk_variants_rev_phrases |
-| JPShinjitaiCharacters | JPShinjitaiCharacters.txt | jps_characters          |
-| JPShinjitaiPhrases    | JPShinjitaiPhrases.txt    | jps_phrases             |
-| JPVariants            | JPVariants.txt            | jp_variants             |
-| JPVariantsRev         | JPVariantsRev.txt         | jp_variants_rev         |
+| DictSlot             | Dictionary file           | Serialized field        |
+|----------------------|---------------------------|-------------------------|
+| STCharacters         | STCharacters.txt          | st_characters           |
+| STPhrases            | STPhrases.txt             | st_phrases              |
+| STPunctuations       | STPunctuations.txt        | st_punctuations         |
+| TSCharacters         | TSCharacters.txt          | ts_characters           |
+| TSPhrases            | TSPhrases.txt             | ts_phrases              |
+| TSPunctuations       | TSPunctuations.txt        | ts_punctuations         |
+| TWPhrases            | TWPhrases.txt             | tw_phrases              |
+| TWPhrasesRev         | TWPhrasesRev.txt          | tw_phrases_rev          |
+| TWVariants           | TWVariants.txt            | tw_variants             |
+| TWVariantsRev        | TWVariantsRev.txt         | tw_variants_rev         |
+| TWVariantsRevPhrases | TWVariantsRevPhrases.txt  | tw_variants_rev_phrases |
+| HKVariants           | HKVariants.txt            | hk_variants             |
+| HKVariantsRev        | HKVariantsRev.txt         | hk_variants_rev         |
+| HKVariantsRevPhrases | HKVariantsRevPhrases.txt  | hk_variants_rev_phrases |
+| JPSCharacters        | JPShinjitaiCharacters.txt | jps_characters          |
+| JPSPhrases           | JPShinjitaiPhrases.txt    | jps_phrases             |
+| JPVariants           | JPVariants.txt            | jp_variants             |
+| JPVariantsRev        | JPVariantsRev.txt         | jp_variants_rev         |
 
 #### Limitations / Notes
 

@@ -591,8 +591,8 @@ public class DictionaryMaxlength {
         s.put(DictSlot.HKVariants, "hk_variants");
         s.put(DictSlot.HKVariantsRev, "hk_variants_rev");
         s.put(DictSlot.HKVariantsRevPhrases, "hk_variants_rev_phrases");
-        s.put(DictSlot.JPShinjitaiCharacters, "jps_characters");
-        s.put(DictSlot.JPShinjitaiPhrases, "jps_phrases");
+        s.put(DictSlot.JPSCharacters, "jps_characters");
+        s.put(DictSlot.JPSPhrases, "jps_phrases");
         s.put(DictSlot.JPVariants, "jp_variants");
         s.put(DictSlot.JPVariantsRev, "jp_variants_rev");
         SLOT_KEYS = Collections.unmodifiableMap(s);

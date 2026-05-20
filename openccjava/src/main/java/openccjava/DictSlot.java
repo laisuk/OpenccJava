@@ -88,13 +88,13 @@ public enum DictSlot {
      * Traditional Japanese Kyujitai to Shinjitai character dictionary
      * ({@code JPShinjitaiCharacters.txt}).
      */
-    JPShinjitaiCharacters,
+    JPSCharacters,
 
     /**
      * Traditional Japanese Kyujitai to Shinjitai phrase dictionary
      * ({@code JPShinjitaiPhrases.txt}).
      */
-    JPShinjitaiPhrases,
+    JPSPhrases,
 
     /**
      * Traditional-to-Japanese variant dictionary ({@code JPVariants.txt}).
