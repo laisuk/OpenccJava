@@ -303,6 +303,57 @@ public class DictionaryMaxlength {
         }
     }
 
+    /**
+     * Applies a single custom dictionary specification to the target dictionary slot.
+     *
+     * <p>
+     * This method is the centralized customization pipeline used by
+     * {@code fromDicts(...)} and post-load customization APIs such as
+     * {@code withCustomDicts(...)}.
+     * </p>
+     *
+     * <p>
+     * The target dictionary slot is resolved from {@link DictSlot} into the
+     * internal {@link DictionaryMaxlength} field mapping. Depending on the
+     * selected {@link CustomDictMode}, the existing slot content is either:
+     * </p>
+     *
+     * <ul>
+     *     <li>
+     *         <b>Append</b> — merges custom entries on top of the existing
+     *         OpenCC dictionary content.
+     *     </li>
+     *     <li>
+     *         <b>Override</b> — fully replaces the target slot with only the
+     *         supplied custom dictionary content.
+     *     </li>
+     * </ul>
+     *
+     * <p>
+     * Custom dictionary files are applied first, followed by in-memory
+     * dictionary pairs. If duplicate source keys exist, later entries replace
+     * earlier ones using normal {@link Map#putAll(Map)} semantics.
+     * </p>
+     *
+     * <p>
+     * In-memory {@code pairs} are intentionally applied after external files,
+     * allowing dynamically supplied application dictionaries to override file
+     * based dictionaries when conflicts occur.
+     * </p>
+     *
+     * <p>
+     * After merging, the dictionary slot is rebuilt to recompute starter
+     * indexes, maximum phrase lengths, and internal lookup structures required
+     * by the conversion engine.
+     * </p>
+     *
+     * @param dict Target dictionary instance to modify.
+     * @param spec Custom dictionary specification describing the target slot,
+     *             dictionary sources, and merge mode.
+     * @throws NullPointerException     If {@code dict} or {@code spec} is {@code null}.
+     * @throws IllegalArgumentException If the provided {@link DictSlot} is unsupported.
+     * @throws RuntimeException         If a custom dictionary file cannot be loaded.
+     */
     private static void applyCustomDictSpec(
             DictionaryMaxlength dict,
             CustomDictSpec spec
@@ -396,6 +447,44 @@ public class DictionaryMaxlength {
         setter.accept(dict, entry);
     }
 
+    /**
+     * Rebuilds a {@link DictEntry} from a merged dictionary map.
+     *
+     * <p>
+     * This helper recalculates the minimum and maximum source phrase lengths
+     * required by the OpenCC conversion engine after custom dictionary
+     * modifications have been applied.
+     * </p>
+     *
+     * <p>
+     * The resulting {@link DictEntry} preserves the supplied dictionary map
+     * instance and derives:
+     * </p>
+     *
+     * <ul>
+     *     <li>
+     *         <b>maxLength</b> — the longest source phrase length.
+     *     </li>
+     *     <li>
+     *         <b>minLength</b> — the shortest source phrase length.
+     *     </li>
+     * </ul>
+     *
+     * <p>
+     * These values are later used by segmentation and phrase matching logic
+     * to accelerate conversion lookups.
+     * </p>
+     *
+     * <p>
+     * If the supplied map is {@code null} or empty, a minimal empty
+     * dictionary entry is returned with both lengths initialized to {@code 1}
+     * to preserve internal conversion invariants.
+     * </p>
+     *
+     * @param map Dictionary key-value mapping to rebuild.
+     * @return A rebuilt {@link DictEntry} containing the supplied map and
+     * recalculated phrase length metadata.
+     */
     private static DictEntry rebuildDictEntry(Map<String, String> map) {
         if (map == null || map.isEmpty()) {
             return new DictEntry(new HashMap<>(), 1, 1);
