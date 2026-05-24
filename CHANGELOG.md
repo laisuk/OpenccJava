@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.0-beta1] - Unreleased
+## [1.3.0] - Unreleased
 
 ### Added
 
@@ -45,7 +45,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 * Refactored dictionary customization pipeline to support reusable custom dictionary spec application.
 * Unified file-based and pair-based custom dictionary handling under shared internal application logic.
 * Improved dictionary entry rebuilding after custom dictionary application.
-* Improved JavaDoc documentation for custom dictionary APIs and behaviors.
+* Improved Javadoc documentation for custom dictionary APIs and behaviors.
 * Updated `README.md` with comprehensive user custom dictionary documentation and examples.
 
 ---
