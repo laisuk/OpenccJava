@@ -10,7 +10,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Update and optimize dictionary to reduce ambiguity.
+- Update and optimize dictionary data to reduce conversion ambiguity.
+- Added flexible JSON serialization overloads with configurable pretty-printing and deterministic key sorting.
+- Added deterministic lexical key sorting support for JSON dictionary serialization.
+- Improved no-dependency JSON serialization API organization while preserving backward compatibility.
+- Refactored existing `serializeToJson*NoDeps()` APIs to delegate to the new configurable serialization overloads.
+- Improved JSON serialization documentation and README usage examples.
+
+### CLI
+
+- Added `-s` / `--sort` option to `dictgen` for deterministic lexical JSON key ordering.
+- Added support for combining `--compact` and `--sort` in `dictgen`.
+- Preserved previous default `dictgen` behavior (`pretty + sorted`) for backward compatibility.
 
 ---
 

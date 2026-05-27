@@ -897,17 +897,65 @@ Reflow attempts to:
 
 ---
 
+#### Dictionary JSON Serialization
+
+`DictionaryMaxlength` can write dictionary JSON without any external JSON dependency. File output is UTF-8.
+Use `pretty=true` for indentation and newlines, or `pretty=false` for compact output with no indentation/newlines.
+Use `sortKeys=true` for deterministic lexical key ordering when you want reproducible output, stable diffs, or easier
+debugging. Sorting is for output reproducibility and readability, not deserialization speed.
+
+```java
+import openccjava.DictionaryMaxlength;
+
+import java.nio.file.Paths;
+
+public class DictionaryJsonExample {
+    static void main(String[] args) throws Exception {
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts();
+
+        // Pretty, sorted JSON file.
+        dict.serializeToJson(Paths.get("dictionary_maxlength.json"), true, true);
+
+        // Compact JSON file.
+        dict.serializeToJson("dictionary_maxlength.compact.json", false, false);
+
+        // Compact, sorted JSON file.
+        dict.serializeToJson(Paths.get("dictionary_maxlength.compact.sorted.json"), false, true);
+
+        // JSON string serialization.
+        String json = dict.serializeToJsonString(false, false);
+        System.out.println(json.length());
+    }
+}
+```
+
+The older no-dependency methods such as `serializeToJsonNoDeps(...)`,
+`serializeToJsonStringNoDeps()`, `serializeToJsonStringNoDepsCompact()`, and
+`serializeToJsonFileNoDepsCompact(...)` remain available for source compatibility.
+
 #### OpenccJava Dictionary Generator
 
-Generate JSON dictionary from raw `dicts/*.txt`
+Generate a JSON dictionary from raw `dicts/*.txt`:
+
+```bash
+openccjavacli dictgen
+openccjavacli dictgen --sort
+openccjavacli dictgen --compact
+openccjavacli dictgen --compact --sort
+```
+
+Plain `dictgen` keeps the previous pretty, sorted output behavior. `--compact` writes compact JSON; add `--sort`
+when compact output should also have deterministic lexical key ordering.
 
 ```bash
 OpenccJavaCli dictgen --help
-Usage: opencccli dictgen [-hV] [-f=<format>] [-o=<filename>]
+Usage: opencccli dictgen [-chV] [-s] [-f=<format>] [-o=<filename>]
 Generate dictionary for OpenccJava
+  -c, --compact             Enable non-indented JSON output (default: false)
   -f, --format=<format>     Dictionary format: [json]
   -h, --help                Show this help message and exit.
   -o, --output=<filename>   Output filename
+  -s, --sort                Sort JSON dictionary keys for deterministic output
   -V, --version             Print version information and exit.
 ```
 

@@ -932,73 +932,150 @@ public class DictionaryMaxlength {
     // --- Public no-deps serializer ---------------------------------------------
 
     /**
-     * Serializes this {@code DictionaryMaxlength} to JSON without external libraries.
+     * Serializes this {@code DictionaryMaxlength} to a JSON file without using
+     * any external JSON dependency.
+     *
      * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
      *
-     * @param outputPath path to write (UTF-8)
+     * <p>When {@code pretty} is {@code true}, the output includes indentation
+     * and newlines. When {@code pretty} is {@code false}, the output is compact:
+     * no indentation and no extra newlines. When {@code sortKeys} is
+     * {@code true}, dictionary keys are written in deterministic lexical order
+     * for stable diffs, debugging, and reproducible output. Sorting is for
+     * reproducible output and readability, not deserialization speed.</p>
+     *
+     * <pre>{@code
+     * DictionaryMaxlength dict = DictionaryMaxlength.fromDicts();
+     * dict.serializeToJson(Paths.get("dictionary_maxlength.json"), true, true);
+     * }</pre>
+     *
+     * @param outputPath the target file path where UTF-8 JSON will be written
+     * @param pretty     if {@code true}, write indentation and newlines; if
+     *                   {@code false}, write compact JSON
+     * @param sortKeys   if {@code true}, sort dictionary keys lexically for
+     *                   deterministic output
      * @throws IOException if writing fails
      */
-    public void serializeToJsonNoDeps(String outputPath) throws IOException {
-        try (Writer w = new BufferedWriter(
-                new OutputStreamWriter(Files.newOutputStream(Paths.get(outputPath)), StandardCharsets.UTF_8))) {
-            writeJsonNoDeps(w, /*pretty*/ true, /*sortKeys*/ true);
-        }
-    }
-
-    /**
-     * Serializes this {@code DictionaryMaxlength} to JSON without external libraries.
-     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
-     *
-     * @param outputPath the target file path where the JSON will be written (UTF-8)
-     * @throws java.io.IOException if writing fails
-     */
-    public void serializeToJsonNoDeps(Path outputPath) throws IOException {
-        try (Writer w = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8)) {
-            writeJsonNoDeps(w, /*pretty*/ true, /*sortKeys*/ true);
-        }
-    }
-
-    /**
-     * Serializes this {@code DictionaryMaxlength} to a compact JSON string without external libraries.
-     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
-     *
-     * @return compact JSON (UTF-16 in-memory; write with UTF-8 when saving to disk)
-     * @throws IOException if an I/O error occurs while generating the JSON
-     */
-    public String serializeToJsonStringNoDeps() throws IOException {
-        StringWriter sw = new StringWriter(1 << 20); // pre-size to ~1MB to reduce reallocates
-        writeJsonNoDeps(sw, /*pretty*/ false, /*sortKeys*/ false);
-        return sw.toString();
-    }
-
-    /**
-     * Serializes this {@code DictionaryMaxlength} to a compact JSON string without external libraries.
-     *
-     * @return the serialized JSON string in compact form
-     * @throws java.io.IOException if serialization fails
-     */
-    public String serializeToJsonStringNoDepsCompact() throws IOException {
-        StringWriter sw = new StringWriter(1 << 20);
-        writeJsonNoDeps(sw, /*pretty*/ false, /*sortKeys*/ false);
-        return sw.toString();
-    }
-
-    /**
-     * Serializes this {@code DictionaryMaxlength} to a compact JSON file (UTF-8), no external libraries.
-     * <p>
-     * Compact form = no indentation/newlines, natural key order (sortKeys=false).</p>
-     *
-     * @param outputPath destination path (will be created or truncated)
-     * @throws IOException if writing fails
-     */
-    public void serializeToJsonFileNoDepsCompact(Path outputPath) throws IOException {
-        // Use a buffered UTF-8 writer for speed and correctness.
+    public void serializeToJson(Path outputPath, boolean pretty, boolean sortKeys) throws IOException {
         try (Writer w = new BufferedWriter(
                 new OutputStreamWriter(Files.newOutputStream(outputPath), StandardCharsets.UTF_8),
                 1 << 20)) {
-            writeJsonNoDeps(w, /* pretty */ false, /* sortKeys */ false);
+            writeJsonNoDeps(w, pretty, sortKeys);
             w.flush();
         }
+    }
+
+    /**
+     * Serializes this {@code DictionaryMaxlength} to a JSON file without using
+     * any external JSON dependency.
+     *
+     * <p>The file is written as UTF-8. See
+     * {@link #serializeToJson(Path, boolean, boolean)} for details about
+     * {@code pretty} and {@code sortKeys}.</p>
+     *
+     * <pre>{@code
+     * DictionaryMaxlength dict = DictionaryMaxlength.fromDicts();
+     * dict.serializeToJson("dictionary_maxlength.json", false, true);
+     * }</pre>
+     *
+     * @param outputPath the target file path where UTF-8 JSON will be written
+     * @param pretty     if {@code true}, write indentation and newlines; if
+     *                   {@code false}, write compact JSON
+     * @param sortKeys   if {@code true}, sort dictionary keys lexically for
+     *                   deterministic output
+     * @throws IOException if writing fails
+     */
+    public void serializeToJson(String outputPath, boolean pretty, boolean sortKeys) throws IOException {
+        serializeToJson(Paths.get(outputPath), pretty, sortKeys);
+    }
+
+    /**
+     * Serializes this {@code DictionaryMaxlength} to a JSON string without
+     * using any external JSON dependency.
+     *
+     * <p>When {@code pretty} is {@code true}, the returned string includes
+     * indentation and newlines. When {@code pretty} is {@code false}, the
+     * returned string is compact: no indentation and no extra newlines. When
+     * {@code sortKeys} is {@code true}, dictionary keys are written in
+     * deterministic lexical order for stable diffs, debugging, and reproducible
+     * output. Sorting is for reproducible output and readability, not
+     * deserialization speed.</p>
+     *
+     * <pre>{@code
+     * DictionaryMaxlength dict = DictionaryMaxlength.fromDicts();
+     * String json = dict.serializeToJsonString(false, false);
+     * }</pre>
+     *
+     * @param pretty   if {@code true}, write indentation and newlines; if
+     *                 {@code false}, write compact JSON
+     * @param sortKeys if {@code true}, sort dictionary keys lexically for
+     *                 deterministic output
+     * @return JSON text held as a Java {@code String}
+     * @throws IOException if an I/O error occurs while generating the JSON
+     */
+    public String serializeToJsonString(boolean pretty, boolean sortKeys) throws IOException {
+        StringWriter sw = new StringWriter(1 << 20);
+        writeJsonNoDeps(sw, pretty, sortKeys);
+        return sw.toString();
+    }
+
+    /**
+     * Serializes this {@code DictionaryMaxlength} to pretty JSON without
+     * external libraries.
+     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
+     *
+     * @param outputPath path to write as UTF-8
+     * @throws IOException if writing fails
+     */
+    public void serializeToJsonNoDeps(String outputPath) throws IOException {
+        serializeToJson(Paths.get(outputPath), true, true);
+    }
+
+    /**
+     * Serializes this {@code DictionaryMaxlength} to pretty JSON without
+     * external libraries.
+     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
+     *
+     * @param outputPath the target file path where UTF-8 JSON will be written
+     * @throws IOException if writing fails
+     */
+    public void serializeToJsonNoDeps(Path outputPath) throws IOException {
+        serializeToJson(outputPath, true, true);
+    }
+
+    /**
+     * Serializes this {@code DictionaryMaxlength} to a compact JSON string
+     * without external libraries.
+     * <p>Format per field: {@code "name": [ { "k":"v", ... }, maxLength, minLength ]}</p>
+     *
+     * @return compact JSON text held as a Java {@code String}
+     * @throws IOException if an I/O error occurs while generating the JSON
+     */
+    public String serializeToJsonStringNoDeps() throws IOException {
+        return serializeToJsonString(false, false);
+    }
+
+    /**
+     * Serializes this {@code DictionaryMaxlength} to a compact JSON string
+     * without external libraries.
+     *
+     * @return compact JSON text held as a Java {@code String}
+     * @throws IOException if serialization fails
+     */
+    public String serializeToJsonStringNoDepsCompact() throws IOException {
+        return serializeToJsonString(false, false);
+    }
+
+    /**
+     * Serializes this {@code DictionaryMaxlength} to a compact JSON file
+     * without external libraries.
+     * <p>Compact form means no indentation and no extra newlines.</p>
+     *
+     * @param outputPath destination path where UTF-8 JSON will be written
+     * @throws IOException if writing fails
+     */
+    public void serializeToJsonFileNoDepsCompact(Path outputPath) throws IOException {
+        serializeToJson(outputPath, false, false);
     }
 
     // --- Implementation ----------------------------------------------------------
@@ -1113,12 +1190,9 @@ public class DictionaryMaxlength {
         boolean firstKV = true;
 
         if (sortKeys) {
-            // Deterministic: sort by key length (asc), then alphabetically
+            // Deterministic lexical order for stable generated JSON.
             String[] keys = entry.dict.keySet().toArray(new String[0]);
-            java.util.Arrays.sort(keys, (a, b) -> {
-                int d = a.length() - b.length();
-                return (d != 0) ? d : a.compareTo(b);
-            });
+            java.util.Arrays.sort(keys);
 
             for (String k : keys) {
                 if (!firstKV) {

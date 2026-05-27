@@ -25,6 +25,9 @@ public class DictgenCommand implements Runnable {
     @Option(names = {"-c", "--compact"}, description = "Enable non-indented JSON output (default: false)")
     private boolean compact;
 
+    @Option(names = {"-s", "--sort"}, description = "Sort JSON dictionary keys for deterministic output")
+    private boolean sort;
+
     private static final Logger LOGGER = Logger.getLogger(DictgenCommand.class.getName());
     private static final String GREEN = "\033[1;32m";
     private static final String BLUE = "\033[1;34m";
@@ -80,13 +83,10 @@ public class DictgenCommand implements Runnable {
             DictionaryMaxlength dicts = DictionaryMaxlength.fromDicts();
 
             if ("json".equals(format)) {
-                if (compact) {
-                    // Minified (no indentation/newlines), UTF-8, no external deps
-                    dicts.serializeToJsonFileNoDepsCompact(outputPath);
-                } else {
-                    // Existing pretty/default path (keep prior behavior)
-                    dicts.serializeToJsonNoDeps(outputPath);
-                }
+                // Pretty by default; --compact removes indentation/newlines.
+                // Plain dictgen remains sorted to preserve previous default output.
+                boolean sortKeys = sort || !compact;
+                dicts.serializeToJson(outputPath, !compact, sortKeys);
                 System.out.println(BLUE + "Dictionary saved in JSON format at: " + outputPath + RESET);
             }
 
