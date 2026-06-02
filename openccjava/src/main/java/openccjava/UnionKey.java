@@ -39,9 +39,9 @@ public enum UnionKey {
      */
     TwPhrasesOnly,
     /**
-     * Taiwan variants only (character-level).
+     * Taiwan variant phrases followed by character-level variants.
      */
-    TwVariantsOnly,
+    TwVariantsPair,
     /**
      * Reverse mapping of Taiwan phrases only.
      */
@@ -58,9 +58,9 @@ public enum UnionKey {
 
     // ===== Hong Kong-specific unions =====
     /**
-     * Hong Kong variants only (character-level).
+     * Hong Kong variant phrases followed by character-level variants.
      */
-    HkVariantsOnly,
+    HkVariantsPair,
     /**
      * Hong Kong reverse phrase pairs.
      */

@@ -60,6 +60,11 @@ public enum DictSlot {
     TWVariants,
 
     /**
+     * Traditional-to-Taiwan variant phrase dictionary ({@code TWVariantsPhrases.txt}).
+     */
+    TWVariantsPhrases,
+
+    /**
      * Taiwan variant reverse dictionary ({@code TWVariantsRev.txt}).
      */
     TWVariantsRev,
@@ -73,6 +78,11 @@ public enum DictSlot {
      * Traditional-to-Hong-Kong variant dictionary ({@code HKVariants.txt}).
      */
     HKVariants,
+
+    /**
+     * Traditional-to-Hong-Kong variant phrase dictionary ({@code HKVariantsPhrases.txt}).
+     */
+    HKVariantsPhrases,
 
     /**
      * Hong Kong variant reverse dictionary ({@code HKVariantsRev.txt}).

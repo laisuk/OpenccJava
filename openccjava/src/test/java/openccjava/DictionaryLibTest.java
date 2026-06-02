@@ -30,8 +30,16 @@ class DictionaryLibTest {
         assertNotNull(original);
         assertFalse(original.st_characters.dict.isEmpty(), "st_characters should be non-empty");
         assertFalse(original.ts_phrases.dict.isEmpty(), "ts_phrases should be non-empty");
+        assertNotNull(original.tw_variants_phrases, "tw_variants_phrases should load strictly");
+        assertNotNull(original.hk_variants_phrases, "hk_variants_phrases should load strictly");
         assertTrue(original.tw_variants_rev.maxLength > 0, "tw_variants_rev should have maxLength > 0");
 
+    }
+
+    @Test
+    void testNewVariantPhraseSlotsExist() {
+        assertEquals(DictSlot.TWVariantsPhrases, DictSlot.valueOf("TWVariantsPhrases"));
+        assertEquals(DictSlot.HKVariantsPhrases, DictSlot.valueOf("HKVariantsPhrases"));
     }
 
     @Test
@@ -52,6 +60,8 @@ class DictionaryLibTest {
                 loaded.st_characters.maxLength,
                 "Max length should be preserved"
         );
+        assertNotNull(loaded.tw_variants_phrases);
+        assertNotNull(loaded.hk_variants_phrases);
 
         File file = new File(TEST_JSON_OUTPUT);
         file.deleteOnExit();
@@ -273,5 +283,123 @@ class DictionaryLibTest {
 
         assertEquals("测试鼠标".length(), customized.st_phrases.maxLength);
         assertEquals("测试词".length(), customized.st_phrases.minLength);
+    }
+
+    @Test
+    void testWithCustomDictsPreservesNewVariantPhraseSlots() {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("喫茶小舖", "喫茶小舖");
+
+        DictionaryMaxlength base = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.TWVariantsPhrases,
+                                pairs,
+                                CustomDictMode.Append
+                        )
+                )
+        );
+        DictionaryMaxlength customized = base.withCustomDicts(Collections.<CustomDictSpec>emptyList());
+
+        assertNotSame(base, customized);
+        assertEquals("喫茶小舖", customized.tw_variants_phrases.dict.get("喫茶小舖"));
+        assertNotNull(customized.hk_variants_phrases);
+    }
+
+    @Test
+    void testCustomAppendWorksForTWVariantsPhrases() {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("喫茶小舖", "喫茶小舖");
+
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.TWVariantsPhrases,
+                                pairs,
+                                CustomDictMode.Append
+                        )
+                )
+        );
+
+        assertEquals("喫茶小舖", dict.tw_variants_phrases.dict.get("喫茶小舖"));
+    }
+
+    @Test
+    void testCustomOverrideWorksForHKVariantsPhrases() {
+        Map<String, String> pairs = new LinkedHashMap<>();
+        pairs.put("喫茶小舖", "喫茶小舖");
+
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.HKVariantsPhrases,
+                                pairs,
+                                CustomDictMode.Override
+                        )
+                )
+        );
+
+        assertEquals(1, dict.hk_variants_phrases.dict.size());
+        assertEquals("喫茶小舖", dict.hk_variants_phrases.dict.get("喫茶小舖"));
+    }
+
+    @Test
+    void testTWVariantPhrasesApplyBeforeCharacters() {
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(Arrays.asList(
+                CustomDictSpec.fromPairs(
+                        DictSlot.TWVariantsPhrases,
+                        Collections.singletonMap("喫茶小舖", "喫茶小舖"),
+                        CustomDictMode.Override
+                ),
+                CustomDictSpec.fromPairs(
+                        DictSlot.TWVariants,
+                        Collections.singletonMap("舖", "鋪"),
+                        CustomDictMode.Override
+                )
+        ));
+
+        OpenCC opencc = new OpenCC(OpenccConfig.T2TW, dict);
+
+        assertEquals("喫茶小舖", opencc.convert("喫茶小舖", false));
+    }
+
+    @Test
+    void testHKVariantPhrasesApplyBeforeCharacters() {
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(Arrays.asList(
+                CustomDictSpec.fromPairs(
+                        DictSlot.HKVariantsPhrases,
+                        Collections.singletonMap("喫茶小舖", "喫茶小舖"),
+                        CustomDictMode.Override
+                ),
+                CustomDictSpec.fromPairs(
+                        DictSlot.HKVariants,
+                        Collections.singletonMap("舖", "鋪"),
+                        CustomDictMode.Override
+                )
+        ));
+
+        OpenCC opencc = new OpenCC(OpenccConfig.T2HK, dict);
+
+        assertEquals("喫茶小舖", opencc.convert("喫茶小舖", false));
+    }
+
+    @Test
+    void testReverseVariantPairBehaviorRemainsPhraseBeforeCharacters() {
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(Arrays.asList(
+                CustomDictSpec.fromPairs(
+                        DictSlot.TWVariantsRevPhrases,
+                        Collections.singletonMap("喫茶小舖", "喫茶小舖"),
+                        CustomDictMode.Override
+                ),
+                CustomDictSpec.fromPairs(
+                        DictSlot.TWVariantsRev,
+                        Collections.singletonMap("舖", "鋪"),
+                        CustomDictMode.Override
+                )
+        ));
+
+        OpenCC opencc = new OpenCC(OpenccConfig.TW2T, dict);
+
+        assertEquals("喫茶小舖", opencc.convert("喫茶小舖", false));
     }
 }

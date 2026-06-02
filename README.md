@@ -258,6 +258,11 @@ Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `j
 Custom dictionaries patch specific OpenCC dictionary slots. The base official dictionaries are loaded first, then custom
 dictionary files and/or in-memory pairs are applied to the selected slots.
 
+`TWVariantsPhrases` and `HKVariantsPhrases` are forward regional variant phrase slots. They are applied before
+`TWVariants` / `HKVariants`, so phrase-level regional variants win over conflicting character-level variants. The
+built-in `TWVariantsPhrases.txt` and `HKVariantsPhrases.txt` files are required official dictionaries; missing files are
+load errors, the same as other official dictionary files.
+
 Normal `OpenCC` usage still uses the lazy default `DictionaryHolder` singleton. Custom dictionary usage does not touch
 `DictionaryHolder`: file-level custom dictionaries build a caller-owned `DictionaryMaxlength`, and post-load
 customization returns a customized copy without mutating the original `DictionaryMaxlength`. After an `OpenCC` instance
@@ -296,6 +301,36 @@ Custom dictionary files use the same parser as OpenCC text dictionaries:
   afterward.
   Pair entries override file entries when the same source key exists; internally, `pairs` are applied after `paths`.
 - Insertion order is preserved for in-memory pairs. Use `LinkedHashMap` when order matters.
+
+Forward Taiwan/Hong Kong regional variant phrase slots can also be patched with append or override specs:
+
+```java
+import openccjava.*;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+public class RegionalVariantPhraseExample {
+    static void main(String[] args) {
+        Map<String, String> pairs = new HashMap<>();
+        pairs.put("喫茶小舖", "喫茶小舖");
+
+        CustomDictSpec spec = CustomDictSpec.fromPairs(
+                DictSlot.TWVariantsPhrases,
+                pairs,
+                CustomDictMode.Append
+        );
+
+        DictionaryMaxlength dict = DictionaryMaxlength
+                .fromDicts()
+                .withCustomDicts(Collections.singletonList(spec));
+
+        OpenCC opencc = new OpenCC(OpenccConfig.S2TW, dict);
+        System.out.println(opencc.convert("喫茶小舖", false));
+    }
+}
+```
 
 #### File-Level Preload Customization
 
@@ -560,9 +595,11 @@ public class CustomDictFilesAndPairsExample {
 | TWPhrases            | TWPhrases.txt             | tw_phrases              |
 | TWPhrasesRev         | TWPhrasesRev.txt          | tw_phrases_rev          |
 | TWVariants           | TWVariants.txt            | tw_variants             |
+| TWVariantsPhrases    | TWVariantsPhrases.txt     | tw_variants_phrases     |
 | TWVariantsRev        | TWVariantsRev.txt         | tw_variants_rev         |
 | TWVariantsRevPhrases | TWVariantsRevPhrases.txt  | tw_variants_rev_phrases |
 | HKVariants           | HKVariants.txt            | hk_variants             |
+| HKVariantsPhrases    | HKVariantsPhrases.txt     | hk_variants_phrases     |
 | HKVariantsRev        | HKVariantsRev.txt         | hk_variants_rev         |
 | HKVariantsRevPhrases | HKVariantsRevPhrases.txt  | hk_variants_rev_phrases |
 | JPSCharacters        | JPShinjitaiCharacters.txt | jps_characters          |

@@ -121,6 +121,10 @@ public class DictionaryMaxlength {
      */
     public DictEntry tw_variants;
     /**
+     * Taiwan variant phrase mappings.
+     */
+    public DictEntry tw_variants_phrases;
+    /**
      * Taiwan variant reverse mappings.
      */
     public DictEntry tw_variants_rev;
@@ -134,6 +138,10 @@ public class DictionaryMaxlength {
      * Hong Kong variant mappings.
      */
     public DictEntry hk_variants;
+    /**
+     * Hong Kong variant phrase mappings.
+     */
+    public DictEntry hk_variants_phrases;
     /**
      * Hong Kong variant reverse mappings.
      */
@@ -169,9 +177,9 @@ public class DictionaryMaxlength {
         DictEntry[] entries = {
                 st_characters, st_phrases, st_punctuations,
                 ts_characters, ts_phrases, ts_punctuations,
-                tw_phrases, tw_phrases_rev, tw_variants,
+                tw_phrases, tw_phrases_rev, tw_variants, tw_variants_phrases,
                 tw_variants_rev, tw_variants_rev_phrases,
-                hk_variants, hk_variants_rev, hk_variants_rev_phrases,
+                hk_variants, hk_variants_phrases, hk_variants_rev, hk_variants_rev_phrases,
                 jps_characters, jps_phrases, jp_variants, jp_variants_rev
         };
 
@@ -422,10 +430,12 @@ public class DictionaryMaxlength {
         if ("tw_phrases".equals(key)) return dict.tw_phrases;
         if ("tw_phrases_rev".equals(key)) return dict.tw_phrases_rev;
         if ("tw_variants".equals(key)) return dict.tw_variants;
+        if ("tw_variants_phrases".equals(key)) return dict.tw_variants_phrases;
         if ("tw_variants_rev".equals(key)) return dict.tw_variants_rev;
         if ("tw_variants_rev_phrases".equals(key)) return dict.tw_variants_rev_phrases;
 
         if ("hk_variants".equals(key)) return dict.hk_variants;
+        if ("hk_variants_phrases".equals(key)) return dict.hk_variants_phrases;
         if ("hk_variants_rev".equals(key)) return dict.hk_variants_rev;
         if ("hk_variants_rev_phrases".equals(key)) return dict.hk_variants_rev_phrases;
 
@@ -572,10 +582,12 @@ public class DictionaryMaxlength {
         r.tw_phrases = copyEntry(this.tw_phrases);
         r.tw_phrases_rev = copyEntry(this.tw_phrases_rev);
         r.tw_variants = copyEntry(this.tw_variants);
+        r.tw_variants_phrases = copyEntry(this.tw_variants_phrases);
         r.tw_variants_rev = copyEntry(this.tw_variants_rev);
         r.tw_variants_rev_phrases = copyEntry(this.tw_variants_rev_phrases);
 
         r.hk_variants = copyEntry(this.hk_variants);
+        r.hk_variants_phrases = copyEntry(this.hk_variants_phrases);
         r.hk_variants_rev = copyEntry(this.hk_variants_rev);
         r.hk_variants_rev_phrases = copyEntry(this.hk_variants_rev_phrases);
 
@@ -633,9 +645,11 @@ public class DictionaryMaxlength {
         m.put("tw_phrases", (o, e) -> o.tw_phrases = e);
         m.put("tw_phrases_rev", (o, e) -> o.tw_phrases_rev = e);
         m.put("tw_variants", (o, e) -> o.tw_variants = e);
+        m.put("tw_variants_phrases", (o, e) -> o.tw_variants_phrases = e);
         m.put("tw_variants_rev", (o, e) -> o.tw_variants_rev = e);
         m.put("tw_variants_rev_phrases", (o, e) -> o.tw_variants_rev_phrases = e);
         m.put("hk_variants", (o, e) -> o.hk_variants = e);
+        m.put("hk_variants_phrases", (o, e) -> o.hk_variants_phrases = e);
         m.put("hk_variants_rev", (o, e) -> o.hk_variants_rev = e);
         m.put("hk_variants_rev_phrases", (o, e) -> o.hk_variants_rev_phrases = e);
         m.put("jps_characters", (o, e) -> o.jps_characters = e);
@@ -654,9 +668,11 @@ public class DictionaryMaxlength {
         f.put("tw_phrases", "TWPhrases.txt");
         f.put("tw_phrases_rev", "TWPhrasesRev.txt");
         f.put("tw_variants", "TWVariants.txt");
+        f.put("tw_variants_phrases", "TWVariantsPhrases.txt");
         f.put("tw_variants_rev", "TWVariantsRev.txt");
         f.put("tw_variants_rev_phrases", "TWVariantsRevPhrases.txt");
         f.put("hk_variants", "HKVariants.txt");
+        f.put("hk_variants_phrases", "HKVariantsPhrases.txt");
         f.put("hk_variants_rev", "HKVariantsRev.txt");
         f.put("hk_variants_rev_phrases", "HKVariantsRevPhrases.txt");
         f.put("jps_characters", "JPShinjitaiCharacters.txt");
@@ -675,9 +691,11 @@ public class DictionaryMaxlength {
         s.put(DictSlot.TWPhrases, "tw_phrases");
         s.put(DictSlot.TWPhrasesRev, "tw_phrases_rev");
         s.put(DictSlot.TWVariants, "tw_variants");
+        s.put(DictSlot.TWVariantsPhrases, "tw_variants_phrases");
         s.put(DictSlot.TWVariantsRev, "tw_variants_rev");
         s.put(DictSlot.TWVariantsRevPhrases, "tw_variants_rev_phrases");
         s.put(DictSlot.HKVariants, "hk_variants");
+        s.put(DictSlot.HKVariantsPhrases, "hk_variants_phrases");
         s.put(DictSlot.HKVariantsRev, "hk_variants_rev");
         s.put(DictSlot.HKVariantsRevPhrases, "hk_variants_rev_phrases");
         s.put(DictSlot.JPSCharacters, "jps_characters");
@@ -1126,9 +1144,11 @@ public class DictionaryMaxlength {
         firstField = writeField(w, "tw_phrases", tw_phrases, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "tw_phrases_rev", tw_phrases_rev, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "tw_variants", tw_variants, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "tw_variants_phrases", tw_variants_phrases, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "tw_variants_rev", tw_variants_rev, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "tw_variants_rev_phrases", tw_variants_rev_phrases, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "hk_variants", hk_variants, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "hk_variants_phrases", hk_variants_phrases, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "hk_variants_rev", hk_variants_rev, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "hk_variants_rev_phrases", hk_variants_rev_phrases, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "jps_characters", jps_characters, firstField, ind1, ind2, nl, sortKeys);

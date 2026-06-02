@@ -163,7 +163,7 @@ public class PdfCommand implements Runnable {
             System.err.println("📄 Input : " + input.toPath().toAbsolutePath().normalize());
             System.err.println("📁 Output: " + output.toPath().toAbsolutePath().normalize());
             System.err.println("⚙️  Config: " + (extract ? "Extract only" : config +
-                                                                            (punct ? " (punct on)" : " (punct off)")) +
+                                                                            (punct ? " (punct: on)" : " (punct: off)")) +
                     (addHeader ? ", header" : "") +
                     (reflow ? ", reflow" : "") +
                     (compact ? ", compact" : ""));

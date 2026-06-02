@@ -99,8 +99,9 @@ public class DictgenCommand implements Runnable {
     private void downloadDictsFromGithub(Path dictDir) throws IOException {
         String[] dictFiles = {
                 "STCharacters.txt", "STPhrases.txt", "TSCharacters.txt", "TSPhrases.txt",
-                "TWPhrases.txt", "TWPhrasesRev.txt", "TWVariants.txt", "TWVariantsRev.txt", "TWVariantsRevPhrases.txt",
-                "HKVariants.txt", "HKVariantsRev.txt", "HKVariantsRevPhrases.txt",
+                "TWPhrases.txt", "TWPhrasesRev.txt", "TWVariants.txt", "TWVariantsPhrases.txt",
+                "TWVariantsRev.txt", "TWVariantsRevPhrases.txt",
+                "HKVariants.txt", "HKVariantsPhrases.txt", "HKVariantsRev.txt", "HKVariantsRevPhrases.txt",
                 "JPShinjitaiCharacters.txt", "JPShinjitaiPhrases.txt", "JPVariants.txt", "JPVariantsRev.txt"
         };
 

@@ -20,6 +20,8 @@ public class DictionaryMaxlengthNoDepsTest {
             "{\n" +
                     "  \"st_characters\": [ { \"汉\": \"漢\", \"发\": \"發\" }, 1, 1 ],\n" +
                     "  \"st_phrases\":    [ { \"后台\": \"後台\" }, 2, 2 ],\n" +
+                    "  \"tw_variants_phrases\": [ { \"喫茶小舖\": \"喫茶小舖\" }, 4, 4 ],\n" +
+                    "  \"hk_variants_phrases\": [ { \"喫茶小舖\": \"喫茶小舖\" }, 4, 4 ],\n" +
                     "  \"jps_characters\":[ { \"芸\": \"藝\" }, 1, 1 ],\n" +
                     "  \"unknown_block\": [ { \"x\": \"y\" }, 9, 1 ]\n" +
                     "}";
@@ -47,6 +49,9 @@ public class DictionaryMaxlengthNoDepsTest {
         assertEquals(1, d.jps_characters.maxLength);
         assertEquals(1, d.jps_characters.minLength);
         assertEquals(Collections.singletonMap("芸", "藝"), d.jps_characters.dict);
+
+        assertEquals("喫茶小舖", d.tw_variants_phrases.dict.get("喫茶小舖"));
+        assertEquals("喫茶小舖", d.hk_variants_phrases.dict.get("喫茶小舖"));
 
         // Unknown key ignored — no assertion needed for unknown_block
     }
@@ -91,6 +96,9 @@ public class DictionaryMaxlengthNoDepsTest {
 
             assertNotNull(d.jps_characters);
             assertFalse(d.jps_characters.dict.isEmpty());
+
+            assertNotNull(d.tw_variants_phrases);
+            assertNotNull(d.hk_variants_phrases);
 
             // Spot-check a known mapping if you’re comfortable hard-coding it:
             assertEquals("後", d.st_characters.dict.get("后"));
@@ -167,6 +175,14 @@ public class DictionaryMaxlengthNoDepsTest {
         stPhrases.put("后台", "後台");
         expected.st_phrases = new DictionaryMaxlength.DictEntry(stPhrases, 2, 2);
 
+        Map<String, String> twVariantPhrases = new LinkedHashMap<>();
+        twVariantPhrases.put("喫茶小舖", "喫茶小舖");
+        expected.tw_variants_phrases = new DictionaryMaxlength.DictEntry(twVariantPhrases, 4, 4);
+
+        Map<String, String> hkVariantPhrases = new LinkedHashMap<>();
+        hkVariantPhrases.put("喫茶小舖", "喫茶小舖");
+        expected.hk_variants_phrases = new DictionaryMaxlength.DictEntry(hkVariantPhrases, 4, 4);
+
         Map<String, String> jpsChars = new LinkedHashMap<>();
         jpsChars.put("芸", "藝");
         expected.jps_characters = new DictionaryMaxlength.DictEntry();
@@ -212,10 +228,12 @@ public class DictionaryMaxlengthNoDepsTest {
         compare("tw_phrases", a.tw_phrases, b.tw_phrases);
         compare("tw_phrases_rev", a.tw_phrases_rev, b.tw_phrases_rev);
         compare("tw_variants", a.tw_variants, b.tw_variants);
+        compare("tw_variants_phrases", a.tw_variants_phrases, b.tw_variants_phrases);
         compare("tw_variants_rev", a.tw_variants_rev, b.tw_variants_rev);
         compare("tw_variants_rev_phrases", a.tw_variants_rev_phrases, b.tw_variants_rev_phrases);
 
         compare("hk_variants", a.hk_variants, b.hk_variants);
+        compare("hk_variants_phrases", a.hk_variants_phrases, b.hk_variants_phrases);
         compare("hk_variants_rev", a.hk_variants_rev, b.hk_variants_rev);
         compare("hk_variants_rev_phrases", a.hk_variants_rev_phrases, b.hk_variants_rev_phrases);
 

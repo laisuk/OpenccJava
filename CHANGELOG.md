@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Update and optimize dictionary data to reduce conversion ambiguity.
+- Added forward regional variant phrase dictionary slots:
+    - `DictSlot.TWVariantsPhrases` backed by `TWVariantsPhrases.txt`.
+    - `DictSlot.HKVariantsPhrases` backed by `HKVariantsPhrases.txt`.
+- Updated TW/HK forward regional variant conversion to apply phrase-level variant dictionaries before character-level
+  variants:
+    - `tw_variants_phrases` before `tw_variants`.
+    - `hk_variants_phrases` before `hk_variants`.
+- Updated `DictionaryMaxlength` JSON hydration, serialization, copying, strict text-dictionary loading, and custom
+  dictionary patching for `tw_variants_phrases` and `hk_variants_phrases`.
+- Renamed internal forward TW/HK variant union keys from `TwVariantsOnly` / `HkVariantsOnly` to `TwVariantsPair` /
+  `HkVariantsPair`.
+- Preserved reverse TW/HK variant ordering through existing reverse phrase + character dictionaries.
 - Added flexible JSON serialization overloads with configurable pretty-printing and deterministic key sorting.
 - Added deterministic lexical key sorting support for JSON dictionary serialization.
 - Improved no-dependency JSON serialization API organization while preserving backward compatibility.
@@ -21,6 +33,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - Added `-s` / `--sort` option to `dictgen` for deterministic lexical JSON key ordering.
 - Added support for combining `--compact` and `--sort` in `dictgen`.
+- Updated `dictgen` dictionary download list to include `TWVariantsPhrases.txt` and `HKVariantsPhrases.txt`.
 - Preserved previous default `dictgen` behavior (`pretty + sorted`) for backward compatibility.
 
 ---
