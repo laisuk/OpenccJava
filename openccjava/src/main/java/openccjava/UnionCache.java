@@ -47,6 +47,9 @@ final class UnionCache {
             case TwVariantsPair:
                 return getOrInit(slots.tw_variants_pair,
                         () -> StarterUnion.build(Arrays.asList(d.tw_variants_phrases, d.tw_variants)));
+            case S2TwpR2TwTriple:
+                return getOrInit(slots.s2twp_r2_tw_triple,
+                        () -> StarterUnion.build(Arrays.asList(d.tw_phrases, d.tw_variants_phrases, d.tw_variants)));
             case TwPhrasesRevOnly:
                 return getOrInit(slots.tw_phrases_rev_only,
                         () -> StarterUnion.build(Collections.singletonList(d.tw_phrases_rev)));
@@ -92,6 +95,7 @@ final class UnionCache {
         final AtomicReference<StarterUnion> t2s_punct = new AtomicReference<>();
         final AtomicReference<StarterUnion> tw_phrases_only = new AtomicReference<>();
         final AtomicReference<StarterUnion> tw_variants_pair = new AtomicReference<>();
+        final AtomicReference<StarterUnion> s2twp_r2_tw_triple = new AtomicReference<>();
         final AtomicReference<StarterUnion> tw_phrases_rev_only = new AtomicReference<>();
         final AtomicReference<StarterUnion> tw_rev_pair = new AtomicReference<>();
         final AtomicReference<StarterUnion> tw2sp_r1_tw_rev_triple = new AtomicReference<>();

@@ -38,6 +38,14 @@ class OpenCCTest {
     }
 
     @Test
+    void testS2TwpCombinesTaiwanPhraseAndVariantNormalizationAfterS2T() {
+        OpenCC cc = OpenCC.fromConfig(OpenccConfig.S2TWP);
+
+        assertEquals("軟體為", cc.convert("软件为"));
+        assertEquals("軟體眾", cc.convert("软件众"));
+    }
+
+    @Test
     void testZhoCheckTraditional() {
         String text = "繁體中文";
         int result = OpenCC.zhoCheck(text);

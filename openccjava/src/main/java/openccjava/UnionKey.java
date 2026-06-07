@@ -43,6 +43,11 @@ public enum UnionKey {
      */
     TwVariantsPair,
     /**
+     * S2TWP round-2 Taiwan triple:
+     * tw_phrases + tw_variants_phrases + tw_variants.
+     */
+    S2TwpR2TwTriple,
+    /**
      * Reverse mapping of Taiwan phrases only.
      */
     TwPhrasesRevOnly,

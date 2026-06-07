@@ -229,7 +229,7 @@ public class OpenCC {
      *
      * @param specs custom dictionary specs to apply; may be {@code null} or empty
      * @return a new converter using a caller-owned dictionary
-     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws RuntimeException     if an official or custom dictionary file cannot be loaded
      * @throws NullPointerException if {@code specs} contains a {@code null} spec
      */
     public static OpenCC fromDicts(List<CustomDictSpec> specs) {
@@ -253,9 +253,9 @@ public class OpenCC {
      * hot-reload custom files.</p>
      *
      * @param config the configuration ID, or {@code null} to use the default
-     * @param specs custom dictionary specs to apply; may be {@code null} or empty
+     * @param specs  custom dictionary specs to apply; may be {@code null} or empty
      * @return a new converter using a caller-owned dictionary
-     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws RuntimeException     if an official or custom dictionary file cannot be loaded
      * @throws NullPointerException if {@code specs} contains a {@code null} spec
      */
     public static OpenCC fromDicts(
@@ -284,12 +284,12 @@ public class OpenCC {
      * the converter is immutable for normal conversion use and does not
      * hot-reload custom files.</p>
      *
-     * @param config the configuration ID, or {@code null} to use the default
+     * @param config   the configuration ID, or {@code null} to use the default
      * @param basePath the path to the directory containing official dictionary
      *                 {@code .txt} files; must not be {@code null}
-     * @param specs custom dictionary specs to apply; may be {@code null} or empty
+     * @param specs    custom dictionary specs to apply; may be {@code null} or empty
      * @return a new converter using a caller-owned dictionary
-     * @throws RuntimeException if an official or custom dictionary file cannot be loaded
+     * @throws RuntimeException     if an official or custom dictionary file cannot be loaded
      * @throws NullPointerException if {@code basePath} is {@code null} or
      *                              {@code specs} contains a {@code null} spec
      */
@@ -418,7 +418,7 @@ public class OpenCC {
      * and fast. To change custom dictionary contents, build a new
      * {@link DictionaryMaxlength} and create a new {@code OpenCC} instance.</p>
      *
-     * @param config the configuration ID, or {@code null} to use the default
+     * @param config     the configuration ID, or {@code null} to use the default
      * @param dictionary the dictionary to use; must not be {@code null}
      * @throws NullPointerException if {@code dictionary} is {@code null}
      */
@@ -1150,7 +1150,13 @@ public class OpenCC {
     }
 
     /**
-     * Converts Simplified Chinese to Traditional Chinese (Taiwan with phrase and variant adjustments).
+     * Converts Simplified Chinese to Taiwan-style Traditional Chinese.
+     *
+     * <p>The conversion is applied in two rounds:</p>
+     * <ol>
+     *   <li>Simplified Chinese to Traditional Chinese.</li>
+     *   <li>Traditional Chinese to Taiwan phrase and variant normalization.</li>
+     * </ol>
      *
      * @param input       the text in Simplified Chinese
      * @param punctuation whether to also convert punctuation marks

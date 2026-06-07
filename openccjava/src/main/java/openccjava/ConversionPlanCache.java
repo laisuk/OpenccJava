@@ -138,10 +138,9 @@ public final class ConversionPlanCache {
      * For each case, the following rules apply:
      * </p>
      * <ul>
-     *   <li>{@code r1}, {@code r2}, {@code r3} – the per-round dictionary lists</li>
+     *   <li>{@code r1}, {@code r2} – the per-round dictionary lists</li>
      *   <li>{@link DictRefs} – created with the first round and extended with
-     *       {@link DictRefs#withRound2(List, StarterUnion)} or
-     *       {@link DictRefs#withRound3(List, StarterUnion)} as needed</li>
+     *       {@link DictRefs#withRound2(List, StarterUnion)} as needed</li>
      *   <li>{@link StarterUnion} – retrieved from this cache's {@link UnionCache}</li>
      * </ul>
      *
@@ -153,7 +152,7 @@ public final class ConversionPlanCache {
     private DictRefs buildPlan(OpenccConfig config, boolean punctuation) {
         final DictionaryMaxlength d = provider.get();
 
-        List<DictionaryMaxlength.DictEntry> r1, r2, r3;
+        List<DictionaryMaxlength.DictEntry> r1, r2;
         DictRefs refs;
 
         switch (config) {
@@ -188,11 +187,9 @@ public final class ConversionPlanCache {
             case S2TWP: {
                 r1 = new ArrayList<>(Arrays.asList(d.st_phrases, d.st_characters));
                 if (punctuation) r1.add(d.st_punctuations);
-                r2 = Collections.singletonList(d.tw_phrases);
-                r3 = Arrays.asList(d.tw_variants_phrases, d.tw_variants);
+                r2 = Arrays.asList(d.tw_phrases, d.tw_variants_phrases, d.tw_variants);
                 refs = new DictRefs(r1, unionCache.unionFor(punctuation ? UnionKey.S2T_PUNCT : UnionKey.S2T))
-                        .withRound2(r2, unionCache.unionFor(UnionKey.TwPhrasesOnly))
-                        .withRound3(r3, unionCache.unionFor(UnionKey.TwVariantsPair));
+                        .withRound2(r2, unionCache.unionFor(UnionKey.S2TwpR2TwTriple));
                 break;
             }
             case TW2SP: {
