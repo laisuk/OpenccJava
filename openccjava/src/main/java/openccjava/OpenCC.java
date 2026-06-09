@@ -1442,6 +1442,33 @@ public class OpenCC {
     }
 
     /**
+     * Applies DeTofu display-compatible fallbacks using the built-in mappings plus
+     * custom in-memory fallback mappings.
+     *
+     * <p>Custom mappings are applied after the built-in table. If the same tofu-risk
+     * character exists in both sources, the custom mapping takes precedence.</p>
+     *
+     * <p>Keys are tofu-risk characters and values are their display-compatible
+     * fallback characters.</p>
+     *
+     * @param text  the input text; {@code null} is treated as empty text
+     * @param level the threshold-based DeTofu extension level
+     * @param pairs custom tofu-risk character mappings
+     * @return text with mapped tofu-risk characters replaced and unmapped characters preserved
+     * @throws NullPointerException if {@code pairs} is {@code null}
+     */
+    public String deTofuWithCustomPairs(
+            String text,
+            DeTofu.Level level,
+            java.util.Map<String, String> pairs
+    ) {
+        return DeTofu
+                .builtinMap(level)
+                .withCustomPairs(pairs)
+                .convert(text);
+    }
+
+    /**
      * Legacy helper that performed direct char-to-char punctuation substitution.
      *
      * <p><b>Deprecated since 1.1.0:</b> Punctuation conversion is now handled by

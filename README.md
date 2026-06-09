@@ -253,6 +253,166 @@ public class Example {
 Most directional conversion methods support a boolean punctuation flag as a second parameter.
 Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `jp2t` are single-argument methods.
 
+## DeTofu display-compatible fallback
+
+DeTofu is an optional post-conversion display compatibility pass. It replaces only mapped tofu-risk rare CJK extension
+characters with display-compatible fallback characters. It is useful after conversions such as `t2s`, where some rare
+Traditional characters may convert to non-BMP Simplified extension characters that render as boxes on some systems,
+browsers, document viewers, e-book readers, or mobile platforms.
+
+For example, `驂騑` converted by `t2s` may become `骖𬴂`. Applying DeTofu can turn it into `骖騑` for safer display.
+Unknown or unmapped characters are preserved unchanged.
+
+DeTofu is not part of OpenCC dictionary conversion logic. It does not affect phrase matching, regional variants,
+punctuation conversion, script detection, or dictionary data. Apply it after normal OpenCC conversion when display
+compatibility is more important than preserving every converted rare extension character.
+
+Built-in mappings are embedded under `dicts/TSCharactersTofu.txt`. Users do not need to manage this file for normal
+usage.
+
+### Java API usage
+
+```java
+import openccjava.OpenCC;
+import openccjava.OpenccConfig;
+import openccjava.DeTofu;
+
+public class DeTofuApiExample {
+    static void main(String[] args) {
+        OpenCC cc = new OpenCC(OpenccConfig.T2S);
+
+        String converted = cc.convert("儼驂騑於上路，訪風景於崇阿，𱁬");
+        String safe = cc.deTofu(converted, DeTofu.Level.ExtB);
+
+        System.out.println(safe);
+        // 俨骖騑于上路，访风景于崇阿，𱁬
+    }
+}
+```
+
+You can also use the DeTofu utility directly:
+
+```java
+import openccjava.DeTofu;
+
+public class DeTofuDirectExample {
+    static void main(String[] args) {
+        String safe = DeTofu.convert("骖𬴂", DeTofu.Level.ExtB);
+        System.out.println(safe);
+        // 骖騑
+    }
+}
+```
+
+### DeTofu API
+
+- `DeTofu.convert(...)`
+- `OpenCC.deTofu(...)`
+- `OpenCC.deTofuWithCustomFile(...)`
+- `OpenCC.deTofuWithCustomPairs(...)`
+- `DeTofu.builtinMap(...)`
+- `DeTofu.Map.withCustomFile(...)`
+- `DeTofu.Map.withCustomPairs(...)`
+
+### Custom fallback file
+
+OpenccJava supports both file-based and in-memory custom DeTofu mappings. File-based mappings are convenient for CLI and
+external configuration. In-memory mappings are useful for applications that generate or manage fallback mappings
+programmatically.
+
+- `deTofuWithCustomFile(...)`
+- `deTofuWithCustomPairs(...)`
+
+```java
+import openccjava.OpenCC;
+import openccjava.DeTofu;
+
+public class DeTofuCustomFileExample {
+    static void main(String[] args) throws Exception {
+        OpenCC cc = new OpenCC();
+
+        String safe = cc.deTofuWithCustomFile(
+                "𣭲毛",
+                DeTofu.Level.ExtB,
+                "custom-tofu.txt"
+        );
+
+        System.out.println(safe);
+        // 氂毛
+    }
+}
+```
+
+Custom DeTofu fallback files use UTF-8 text with one mapping per line:
+
+```text
+# Format: tofu_char<TAB>fallback_char<TAB>extension
+𣭲	氂	B
+𬴂	騑	ExtC
+```
+
+Blank lines and lines beginning with `#` are ignored. The extension column accepts compact `B`-`I` or legacy
+`ExtB`-`ExtI`. Custom mappings are applied after built-in mappings and override built-in mappings for the same
+tofu-risk character.
+
+### Custom in-memory fallback mappings
+
+```java
+public String deTofuWithCustomPairs(
+        String text,
+        DeTofu.Level level,
+        Map<String, String> pairs
+);
+```
+
+Use `deTofuWithCustomPairs(...)` when fallback mappings are generated dynamically or loaded from a database,
+configuration file, network source, or GUI settings:
+
+```java
+import openccjava.OpenCC;
+import openccjava.DeTofu;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class DeTofuCustomPairsExample {
+    static void main(String[] args) {
+        OpenCC cc = new OpenCC();
+
+        Map<String, String> pairs = new HashMap<>();
+        pairs.put("𣭲", "氂");
+        pairs.put("𬴂", "騑");
+
+        String safe = cc.deTofuWithCustomPairs(
+                "𣭲毛 骖𬴂",
+                DeTofu.Level.ExtB,
+                pairs
+        );
+
+        System.out.println(safe);
+        // 氂毛 骖騑
+    }
+}
+```
+
+Keys are tofu-risk characters. Values are display-compatible fallback characters. Custom mappings are applied after
+built-in mappings and override built-in mappings for the same tofu-risk character.
+
+### Level behavior
+
+DeTofu levels are threshold-based:
+
+- `ExtB` means ExtB and above.
+- `ExtC` means ExtC and above.
+- `ExtD` means ExtD and above.
+- `ExtE` means ExtE and above.
+- `ExtF` means ExtF and above.
+- `ExtG` means ExtG and above.
+- `ExtH` means ExtH and above.
+- `ExtI` means ExtI only.
+
+CLI aliases may use `all`, `ext-b`, `ext-c`, `ext-d`, `ext-e`, `ext-f`, `ext-g`, `ext-h`, or `ext-i`.
+
 ### 📘 User Custom Dictionaries
 
 Custom dictionaries patch specific OpenCC dictionary slots. The base official dictionaries are loaded first, then custom
@@ -819,6 +979,7 @@ bin/OpenccJavaCli.bat convert -c s2t -i input.txt -o output.txt
 ```bash
 bin/OpenccJavaCli convert --help                                                           
 Usage: openccjavacli convert [-hpV] -c=<conversion> [--con-enc=<encoding>]
+                             [--detofu=<level>] [--detofu-file=<file>]
                              [-i=<file>] [--in-enc=<encoding>] [-o=<file>]
                              [--out-enc=<encoding>]
 Convert plain text using OpenccJava
@@ -828,6 +989,12 @@ Convert plain text using OpenccJava
       --con-enc=<encoding>   Console encoding for interactive mode. Ignored if
                                not attached to a terminal. Common <encoding>:
                                UTF-8, GBK, Big5
+      --detofu=<level>       Apply tofu-safe fallback after conversion: all,
+                               ext-b, ext-c, ext-d, ext-e, ext-f, ext-g,
+                               ext-h, ext-i
+      --detofu-file=<file>   Load additional DeTofu fallback mappings from a
+                               UTF-8 text file. Custom mappings override
+                               built-in mappings (requires --detofu)
   -h, --help                 Show this help message and exit.
   -i, --input=<file>         Input file
       --in-enc=<encoding>    Input encoding
@@ -835,6 +1002,24 @@ Convert plain text using OpenccJava
       --out-enc=<encoding>   Output encoding
   -p, --punct                Punctuation conversion (default: false)
   -V, --version              Print version information and exit.
+```
+
+#### DeTofu fallback with `convert`
+
+```bash
+echo "儼驂騑於上路，訪風景於崇阿，𱁬" | openccjavacli convert -c t2s --detofu all
+```
+
+Expected output:
+
+```text
+俨骖騑于上路，访风景于崇阿，𱁬
+```
+
+With a custom fallback file:
+
+```bash
+openccjavacli convert -c t2s --detofu all --detofu-file custom-tofu.txt
 ```
 
 ### Office document conversion:

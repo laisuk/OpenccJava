@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.io.IOException;
 
@@ -387,5 +389,22 @@ class OpenCCTest {
                 "俨骖騑于上路，访风景于崇阿，𱁬",
                 output
         );
+    }
+
+    @Test
+    void testDeTofuWithCustomPairsOverridesBuiltin() {
+        Map<String, String> pairs = new HashMap<>();
+
+        pairs.put("𣭲", "氂");
+
+        OpenCC cc = new OpenCC();
+
+        String output = cc.deTofuWithCustomPairs(
+                "𣭲毛",
+                DeTofu.Level.ExtB,
+                pairs
+        );
+
+        assertEquals("氂毛", output);
     }
 }
