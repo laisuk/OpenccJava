@@ -8,33 +8,75 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.3.1] - Unreleased
 
+### Added
+
+* Added optional DeTofu display-compatibility fallback support for rare non-BMP CJK extension characters.
+* Added built-in DeTofu fallback mappings embedded in `dicts/TSCharactersTofu.txt`.
+* Added `DeTofu` utility API for applying display-compatible fallback substitutions after OpenCC conversion.
+* Added `DeTofu.Level` extension threshold levels:
+
+    * `ExtB`
+    * `ExtC`
+    * `ExtD`
+    * `ExtE`
+    * `ExtF`
+    * `ExtG`
+    * `ExtH`
+    * `ExtI`
+* Added `OpenCC.deTofu(...)` convenience API.
+* Added `OpenCC.deTofuWithCustomFile(...)` convenience API.
+* Added support for custom UTF-8 DeTofu fallback files that extend or override built-in mappings.
+* Added DeTofu regression tests covering:
+
+    * Built-in fallback mappings.
+    * OpenCC conversion + DeTofu integration.
+    * Custom fallback file overrides.
+    * Preservation of unmapped extension characters.
+
 ### Changed
 
-- Update and optimize dictionary data to reduce conversion ambiguity.
-- Added forward regional variant phrase dictionary slots:
-    - `DictSlot.TWVariantsPhrases` backed by `TWVariantsPhrases.txt`.
-    - `DictSlot.HKVariantsPhrases` backed by `HKVariantsPhrases.txt`.
-- Updated TW/HK forward regional variant conversion to apply phrase-level variant dictionaries before character-level
+* Update and optimize dictionary data to reduce conversion ambiguity.
+* Added forward regional variant phrase dictionary slots:
+
+    * `DictSlot.TWVariantsPhrases` backed by `TWVariantsPhrases.txt`.
+    * `DictSlot.HKVariantsPhrases` backed by `HKVariantsPhrases.txt`.
+* Updated TW/HK forward regional variant conversion to apply phrase-level variant dictionaries before character-level
   variants:
-    - `tw_variants_phrases` before `tw_variants`.
-    - `hk_variants_phrases` before `hk_variants`.
-- Updated `DictionaryMaxlength` JSON hydration, serialization, copying, strict text-dictionary loading, and custom
+
+    * `tw_variants_phrases` before `tw_variants`.
+    * `hk_variants_phrases` before `hk_variants`.
+* Updated `DictionaryMaxlength` JSON hydration, serialization, copying, strict text-dictionary loading, and custom
   dictionary patching for `tw_variants_phrases` and `hk_variants_phrases`.
-- Renamed internal forward TW/HK variant union keys from `TwVariantsOnly` / `HkVariantsOnly` to `TwVariantsPair` /
+* Renamed internal forward TW/HK variant union keys from `TwVariantsOnly` / `HkVariantsOnly` to `TwVariantsPair` /
   `HkVariantsPair`.
-- Preserved reverse TW/HK variant ordering through existing reverse phrase + character dictionaries.
-- Added flexible JSON serialization overloads with configurable pretty-printing and deterministic key sorting.
-- Added deterministic lexical key sorting support for JSON dictionary serialization.
-- Improved no-dependency JSON serialization API organization while preserving backward compatibility.
-- Refactored existing `serializeToJson*NoDeps()` APIs to delegate to the new configurable serialization overloads.
-- Improved JSON serialization documentation and README usage examples.
+* Preserved reverse TW/HK variant ordering through existing reverse phrase + character dictionaries.
+* Added flexible JSON serialization overloads with configurable pretty-printing and deterministic key sorting.
+* Added deterministic lexical key sorting support for JSON dictionary serialization.
+* Improved no-dependency JSON serialization API organization while preserving backward compatibility.
+* Refactored existing `serializeToJson*NoDeps()` APIs to delegate to the new configurable serialization overloads.
+* Improved JSON serialization documentation and README usage examples.
 
 ### CLI
 
-- Added `-s` / `--sort` option to `dictgen` for deterministic lexical JSON key ordering.
-- Added support for combining `--compact` and `--sort` in `dictgen`.
-- Updated `dictgen` dictionary download list to include `TWVariantsPhrases.txt` and `HKVariantsPhrases.txt`.
-- Preserved previous default `dictgen` behavior (`pretty + sorted`) for backward compatibility.
+* Added `--detofu <level>` option to `convert` for applying DeTofu display-compatible fallback mappings after OpenCC
+  conversion.
+* Added `--detofu-file <file>` option to `convert` for loading additional UTF-8 DeTofu fallback mappings. Custom
+  mappings override built-in mappings.
+* Supported DeTofu levels:
+
+    * `all`
+    * `ext-b`
+    * `ext-c`
+    * `ext-d`
+    * `ext-e`
+    * `ext-f`
+    * `ext-g`
+    * `ext-h`
+    * `ext-i`
+* Added `-s` / `--sort` option to `dictgen` for deterministic lexical JSON key ordering.
+* Added support for combining `--compact` and `--sort` in `dictgen`.
+* Updated `dictgen` dictionary download list to include `TWVariantsPhrases.txt` and `HKVariantsPhrases.txt`.
+* Preserved previous default `dictgen` behavior (`pretty + sorted`) for backward compatibility.
 
 ---
 

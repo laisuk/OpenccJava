@@ -1,6 +1,7 @@
 package openccjavacli;
 
 import openccjava.OpenCC;
+import openccjava.DeTofu;
 import picocli.CommandLine.*;
 import picocli.CommandLine.Model.CommandSpec;
 
@@ -37,6 +38,20 @@ public class ConvertCommand implements Callable<Integer> {
     @Option(names = {"-p", "--punct"}, description = "Punctuation conversion (default: false)")
     private boolean punct;
 
+    @Option(
+            names = "--detofu",
+            paramLabel = "<level>",
+            description = "Apply tofu-safe fallback after conversion: all, ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h, ext-i"
+    )
+    private String detofu;
+
+    @Option(
+            names = "--detofu-file",
+            paramLabel = "<file>",
+            description = "Load additional DeTofu fallback mappings from a UTF-8 text file. Custom mappings override built-in mappings (requires --detofu)"
+    )
+    private File detofuFile;
+
     @Option(names = {"--in-enc"}, paramLabel = "<encoding>", defaultValue = "UTF-8", description = "Input encoding")
     private String inEncoding;
 
@@ -72,6 +87,11 @@ public class ConvertCommand implements Callable<Integer> {
             return ExitCode.USAGE;
         }
 
+        if (detofuFile != null && (detofu == null || detofu.trim().isEmpty())) {
+            System.err.println("❌ --detofu-file requires --detofu");
+            return ExitCode.USAGE;
+        }
+
         return handleTextConversion();
     }
 
@@ -99,6 +119,14 @@ public class ConvertCommand implements Callable<Integer> {
             }
 
             String outputText = opencc.convert(inputText, punct);
+
+            if (detofu != null && !detofu.trim().isEmpty()) {
+                DeTofu.Level level = DeTofu.Level.parse(detofu);
+
+                outputText = detofuFile != null
+                        ? opencc.deTofuWithCustomFile(outputText, level, detofuFile.getPath())
+                        : opencc.deTofu(outputText, level);
+            }
 
             if (output != null) {
                 Files.write(output.toPath(), outputText.getBytes(Charset.forName(outEncoding)));

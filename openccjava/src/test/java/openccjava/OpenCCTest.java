@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.logging.Level;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -303,5 +304,88 @@ class OpenCCTest {
         } finally {
             Files.deleteIfExists(custom);
         }
+    }
+
+    // DeTofu Tests
+
+    @Test
+    void testDeTofuBuiltin() {
+        OpenCC cc = new OpenCC();
+
+        String output = cc.deTofu(
+                "骖𬴂",
+                DeTofu.Level.ExtB
+        );
+
+        assertEquals("骖騑", output);
+    }
+
+    @Test
+    void testDeTofuPreservesUnmappedCharacter() {
+        OpenCC cc = new OpenCC();
+
+        String output = cc.deTofu(
+                "𱁬",
+                DeTofu.Level.ExtB
+        );
+
+        assertEquals("𱁬", output);
+    }
+
+    @Test
+    void testOpenCCT2SDeTofu() {
+        OpenCC cc = new OpenCC(OpenccConfig.T2S);
+
+        String output = cc.deTofu(
+                cc.convert("儼驂騑於上路，訪風景於崇阿"),
+                DeTofu.Level.ExtB
+        );
+
+        assertEquals(
+                "俨骖騑于上路，访风景于崇阿",
+                output
+        );
+    }
+
+    @Test
+    void testDeTofuWithCustomFileOverridesBuiltin() throws IOException {
+        Path path = Files.createTempFile(
+                "openccjava-detofu-",
+                ".txt"
+        );
+
+        try {
+            Files.write(
+                    path,
+                    "𣭲\t氂\tB\n".getBytes(StandardCharsets.UTF_8)
+            );
+
+            OpenCC cc = new OpenCC();
+
+            String output = cc.deTofuWithCustomFile(
+                    "𣭲毛",
+                    DeTofu.Level.ExtB,
+                    path.toString()
+            );
+
+            assertEquals("氂毛", output);
+        } finally {
+            Files.deleteIfExists(path);
+        }
+    }
+
+    @Test
+    void testOpenCCT2SDeTofuPreservesUnmappedCharacter() {
+        OpenCC cc = new OpenCC(OpenccConfig.T2S);
+
+        String output = cc.deTofu(
+                cc.convert("儼驂騑於上路，訪風景於崇阿，𱁬"),
+                DeTofu.Level.ExtB
+        );
+
+        assertEquals(
+                "俨骖騑于上路，访风景于崇阿，𱁬",
+                output
+        );
     }
 }

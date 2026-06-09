@@ -3,6 +3,7 @@ package openccjava;
 import openccjava.DictionaryMaxlength.DictEntry;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1386,6 +1387,58 @@ public class OpenCC {
     @Deprecated
     public final int zhoCheckInstance(String input) {
         return OpenCC.zhoCheck(input);
+    }
+
+    /**
+     * Applies DeTofu display-compatible fallbacks to mapped rare CJK extension characters.
+     *
+     * <p>This is a convenience wrapper around {@link DeTofu#convert(String, DeTofu.Level)}.</p>
+     *
+     * <p>DeTofu is a display compatibility pass. It does not modify OpenCC conversion
+     * dictionaries, phrase matching, regional variant selection, script detection, or
+     * punctuation conversion.</p>
+     *
+     * <p>For converted text, apply DeTofu after {@code convert(...)}.</p>
+     *
+     * @param text  the input text; {@code null} is treated as empty text
+     * @param level the threshold-based DeTofu extension level
+     * @return text with mapped tofu-risk characters replaced and unmapped characters preserved
+     */
+    public String deTofu(String text, DeTofu.Level level) {
+        return DeTofu.convert(text, level);
+    }
+
+    /**
+     * Applies DeTofu display-compatible fallbacks using the built-in mappings plus a custom fallback file.
+     *
+     * <p>This is a convenience wrapper around {@link DeTofu#builtinMap(DeTofu.Level)},
+     * {@link DeTofu.Map#withCustomFile(String)}, and {@link DeTofu.Map#convert(String)}.</p>
+     *
+     * <p>Custom mappings are applied after the built-in table. If the same tofu-risk
+     * character exists in both sources, the custom file mapping takes precedence.</p>
+     *
+     * <p>The fallback file must be UTF-8 text with one mapping per line:</p>
+     *
+     * <pre>{@code
+     * tofu_char<TAB>fallback_char<TAB>extension
+     * }</pre>
+     *
+     * <p>The extension column accepts either {@code B}–{@code I} or
+     * {@code ExtB}–{@code ExtI}. Lines beginning with {@code #} and blank lines
+     * are ignored.</p>
+     *
+     * @param text  the input text; {@code null} is treated as empty text
+     * @param level the threshold-based DeTofu extension level
+     * @param path  path to a UTF-8 custom DeTofu fallback file
+     * @return text with mapped tofu-risk characters replaced and unmapped characters preserved
+     * @throws IOException          if the custom fallback file cannot be read
+     * @throws NullPointerException if {@code path} is {@code null}
+     */
+    public String deTofuWithCustomFile(String text, DeTofu.Level level, String path) throws IOException {
+        return DeTofu
+                .builtinMap(level)
+                .withCustomFile(path)
+                .convert(text);
     }
 
     /**
