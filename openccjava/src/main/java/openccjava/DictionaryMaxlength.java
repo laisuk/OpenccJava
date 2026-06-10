@@ -891,6 +891,46 @@ public class DictionaryMaxlength {
     // --- Zero-dependency JSON loading ---
 
     /**
+     * Loads a {@code DictionaryMaxlength} from a JSON file.
+     *
+     * <p>This compatibility overload delegates to {@link #fromJsonNoDeps(Path)}.</p>
+     *
+     * @param jsonFile the JSON file to read
+     * @return a populated {@code DictionaryMaxlength} instance
+     * @throws IOException if reading fails
+     */
+    public static DictionaryMaxlength fromJson(File jsonFile) throws IOException {
+        Objects.requireNonNull(jsonFile, "jsonFile");
+        return fromJsonNoDeps(jsonFile.toPath());
+    }
+
+    /**
+     * Loads a {@code DictionaryMaxlength} from a JSON file path.
+     *
+     * <p>This compatibility overload delegates to {@link #fromJsonFileNoDeps(String)}.</p>
+     *
+     * @param path the JSON file path
+     * @return a populated {@code DictionaryMaxlength} instance
+     * @throws IOException if reading fails
+     */
+    public static DictionaryMaxlength fromJson(String path) throws IOException {
+        return fromJsonFileNoDeps(path);
+    }
+
+    /**
+     * Loads a {@code DictionaryMaxlength} from a JSON input stream.
+     *
+     * <p>This compatibility overload delegates to {@link #fromJsonNoDeps(InputStream)}.</p>
+     *
+     * @param in an input stream containing the JSON (UTF-8 encoded)
+     * @return a populated {@code DictionaryMaxlength} instance
+     * @throws IOException if reading fails
+     */
+    public static DictionaryMaxlength fromJson(InputStream in) throws IOException {
+        return fromJsonNoDeps(in);
+    }
+
+    /**
      * Loads a {@code DictionaryMaxlength} from a JSON file without using external libraries.
      * <p>
      * This method expects the JSON to follow the {@code dictionary_maxlength.json} schema:
