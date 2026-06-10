@@ -32,6 +32,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     * OpenCC conversion + DeTofu integration.
     * Custom fallback file overrides.
     * Preservation of unmapped extension characters.
+* Added direct Hong Kong phrase-level conversion configs and APIs:
+
+    * `OpenccConfig.S2HKP` / config key `s2hkp`.
+    * `OpenccConfig.HK2SP` / config key `hk2sp`.
+    * `OpenCC.s2hkp(String, boolean)` for Simplified → Hong Kong Traditional with HK phrase normalization.
+    * `OpenCC.hk2sp(String, boolean)` for Hong Kong Traditional phrase/variant normalization → Simplified.
+* Added Hong Kong phrase dictionary slots:
+
+    * `DictSlot.HKPhrases` backed by `HKPhrases.txt`.
+    * `DictSlot.HKPhrasesRev` backed by `HKPhrasesRev.txt`.
 
 ### Changed
 
@@ -47,6 +57,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     * `hk_variants_phrases` before `hk_variants`.
 * Updated `DictionaryMaxlength` JSON hydration, serialization, copying, strict text-dictionary loading, and custom
   dictionary patching for `tw_variants_phrases` and `hk_variants_phrases`.
+* Updated `DictionaryMaxlength` text loading and JSON hydration so missing `HKPhrases.txt`, `HKPhrasesRev.txt`, or older
+  JSON snapshots without `hk_phrases` / `hk_phrases_rev` initialize those slots as empty dictionaries.
 * Renamed internal forward TW/HK variant union keys from `TwVariantsOnly` / `HkVariantsOnly` to `TwVariantsPair` /
   `HkVariantsPair`.
 * Preserved reverse TW/HK variant ordering through existing reverse phrase + character dictionaries.

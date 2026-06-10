@@ -704,6 +704,12 @@ public class OpenCC {
             case TW2SP:
                 result = tw2sp(input, punctuation);
                 break;
+            case S2HKP:
+                result = s2hkp(input, punctuation);
+                break;
+            case HK2SP:
+                result = hk2sp(input, punctuation);
+                break;
             case S2HK:
                 result = s2hk(input, punctuation);
                 break;
@@ -1177,6 +1183,42 @@ public class OpenCC {
      */
     public String tw2sp(String input, boolean punctuation) {
         DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.TW2SP, punctuation);
+        return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
+    }
+
+    /**
+     * Converts Simplified Chinese to Hong Kong Traditional Chinese with
+     * phrase-level Hong Kong normalization.
+     *
+     * <p>This applies Simplified-to-Traditional conversion first, then applies
+     * Hong Kong phrase, phrase-variant, and character-variant dictionaries.
+     * Optional punctuation conversion uses the same dictionary-based mechanism
+     * as {@link #s2twp(String, boolean)}.</p>
+     *
+     * @param input       the text in Simplified Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in phrase-normalized Hong Kong Traditional Chinese
+     */
+    public String s2hkp(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.S2HKP, punctuation);
+        return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
+    }
+
+    /**
+     * Converts Hong Kong Traditional Chinese to Simplified Chinese with
+     * phrase-level Hong Kong reverse normalization.
+     *
+     * <p>This applies Hong Kong phrase and variant reverse normalization first,
+     * then applies Traditional-to-Simplified conversion. Optional punctuation
+     * conversion uses the same dictionary-based mechanism as
+     * {@link #tw2sp(String, boolean)}.</p>
+     *
+     * @param input       the text in Hong Kong Traditional Chinese
+     * @param punctuation whether to also convert punctuation marks
+     * @return the converted text in Simplified Chinese
+     */
+    public String hk2sp(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.HK2SP, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 

@@ -245,6 +245,8 @@ public class Example {
         cc.t2s("漢字", false);       // 汉字 - Traditional → Simplified
         cc.s2tw("汉字", false);      // 漢字 - Simplified → Taiwan Traditional
         cc.tw2sp("臺灣計程車", false); // 台湾出租车 - Taiwan Traditional → Simplified with idioms
+        cc.s2hkp("香港鼠标", false); // 香港滑鼠 - Simplified → Hong Kong Traditional with phrases
+        cc.hk2sp("香港滑鼠", false); // 香港鼠标 - Hong Kong Traditional with phrases → Simplified
         cc.t2jp("傳統");             // 伝統 - Traditional → Japanese Kanji
     }
 }
@@ -252,6 +254,8 @@ public class Example {
 
 Most directional conversion methods support a boolean punctuation flag as a second parameter.
 Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `jp2t` are single-argument methods.
+Use `s2hkp` / `hk2sp` when Hong Kong phrase-level mappings from `HKPhrases.txt` / `HKPhrasesRev.txt`
+should be applied in addition to HK variant normalization.
 
 ## DeTofu display-compatible fallback
 
@@ -758,6 +762,8 @@ public class CustomDictFilesAndPairsExample {
 | TWVariantsPhrases    | TWVariantsPhrases.txt     | tw_variants_phrases     |
 | TWVariantsRev        | TWVariantsRev.txt         | tw_variants_rev         |
 | TWVariantsRevPhrases | TWVariantsRevPhrases.txt  | tw_variants_rev_phrases |
+| HKPhrases            | HKPhrases.txt             | hk_phrases              |
+| HKPhrasesRev         | HKPhrasesRev.txt          | hk_phrases_rev          |
 | HKVariants           | HKVariants.txt            | hk_variants             |
 | HKVariantsPhrases    | HKVariantsPhrases.txt     | hk_variants_phrases     |
 | HKVariantsRev        | HKVariantsRev.txt         | hk_variants_rev         |
@@ -787,24 +793,26 @@ List<String> configs = OpenCC.getSupportedConfigs();
 
 The following configuration keys correspond to OpenCC conversion modes:
 
-| Config Key | Direction                                    | Description                                                                      |
-|------------|----------------------------------------------|----------------------------------------------------------------------------------|
-| **s2t**    | Simplified → Traditional                     | General conversion from Simplified Chinese to Traditional Chinese.               |
-| **t2s**    | Traditional → Simplified                     | Converts Traditional Chinese text to Simplified Chinese.                         |
-| **s2tw**   | Simplified → Traditional (Taiwan)            | Uses Taiwan-specific vocabulary and character preferences.                       |
-| **tw2s**   | Traditional (Taiwan) → Simplified            | Converts Taiwan Traditional Chinese to Simplified Chinese.                       |
-| **s2twp**  | Simplified → Traditional (Taiwan + phrases)  | Applies Taiwan-specific character and phrase mappings.                           |
-| **tw2sp**  | Traditional (Taiwan + phrases) → Simplified  | Converts Taiwan-phrased Traditional Chinese to Simplified Chinese.               |
-| **s2hk**   | Simplified → Traditional (Hong Kong)         | Uses Hong Kong variant characters and word choices.                              |
-| **hk2s**   | Traditional (Hong Kong) → Simplified         | Converts Hong Kong Traditional Chinese to Simplified Chinese.                    |
-| **t2tw**   | Traditional → Traditional (Taiwan)           | Normalizes Traditional Chinese to Taiwan variant.                                |
-| **t2twp**  | Traditional → Traditional (Taiwan + phrases) | Includes Taiwan-specific phrase-level normalization.                             |
-| **t2hk**   | Traditional → Traditional (Hong Kong)        | Normalizes Traditional Chinese to Hong Kong variant.                             |
-| **tw2t**   | Traditional (Taiwan) → Traditional           | Converts Taiwan variant back to general Traditional Chinese.                     |
-| **tw2tp**  | Traditional (Taiwan + phrases) → Traditional | Converts Taiwan phrased Traditional Chinese to general Traditional.              |
-| **hk2t**   | Traditional (Hong Kong) → Traditional        | Converts Hong Kong variant back to general Traditional Chinese.                  |
-| **t2jp**   | Traditional → Japanese Shinjitai             | Converts Traditional Japanese Kyujitai to Japanese Shinjitai (simplified kanji). |
-| **jp2t**   | Japanese Shinjitai → Traditional             | Converts Japanese Shinjitai characters back to Traditional Japanese Kyujitai.    |
+| Config Key | Direction                                      | Description                                                                      |
+|------------|------------------------------------------------|----------------------------------------------------------------------------------|
+| **s2t**    | Simplified → Traditional                       | General conversion from Simplified Chinese to Traditional Chinese.               |
+| **t2s**    | Traditional → Simplified                       | Converts Traditional Chinese text to Simplified Chinese.                         |
+| **s2tw**   | Simplified → Traditional (Taiwan)              | Uses Taiwan-specific vocabulary and character preferences.                       |
+| **tw2s**   | Traditional (Taiwan) → Simplified              | Converts Taiwan Traditional Chinese to Simplified Chinese.                       |
+| **s2twp**  | Simplified → Traditional (Taiwan + phrases)    | Applies Taiwan-specific character and phrase mappings.                           |
+| **tw2sp**  | Traditional (Taiwan + phrases) → Simplified    | Converts Taiwan-phrased Traditional Chinese to Simplified Chinese.               |
+| **s2hk**   | Simplified → Traditional (Hong Kong)           | Uses Hong Kong variant characters and word choices.                              |
+| **hk2s**   | Traditional (Hong Kong) → Simplified           | Converts Hong Kong Traditional Chinese to Simplified Chinese.                    |
+| **s2hkp**  | Simplified → Traditional (Hong Kong + phrases) | Applies HK phrase mappings, HK phrase variants, and HK character variants.       |
+| **hk2sp**  | Traditional (Hong Kong + phrases) → Simplified | Applies HK phrase/variant reverse normalization before Simplified conversion.    |
+| **t2tw**   | Traditional → Traditional (Taiwan)             | Normalizes Traditional Chinese to Taiwan variant.                                |
+| **t2twp**  | Traditional → Traditional (Taiwan + phrases)   | Includes Taiwan-specific phrase-level normalization.                             |
+| **t2hk**   | Traditional → Traditional (Hong Kong)          | Normalizes Traditional Chinese to Hong Kong variant.                             |
+| **tw2t**   | Traditional (Taiwan) → Traditional             | Converts Taiwan variant back to general Traditional Chinese.                     |
+| **tw2tp**  | Traditional (Taiwan + phrases) → Traditional   | Converts Taiwan phrased Traditional Chinese to general Traditional.              |
+| **hk2t**   | Traditional (Hong Kong) → Traditional          | Converts Hong Kong variant back to general Traditional Chinese.                  |
+| **t2jp**   | Traditional → Japanese Shinjitai               | Converts Traditional Japanese Kyujitai to Japanese Shinjitai (simplified kanji). |
+| **jp2t**   | Japanese Shinjitai → Traditional               | Converts Japanese Shinjitai characters back to Traditional Japanese Kyujitai.    |
 
 ---
 
@@ -984,8 +992,9 @@ Usage: openccjavacli convert [-hpV] -c=<conversion> [--con-enc=<encoding>]
                              [--out-enc=<encoding>]
 Convert plain text using OpenccJava
   -c, --config=<conversion>  Conversion configuration. Supported: s2t, t2s,
-                               s2tw, tw2s, s2twp, tw2sp, s2hk, hk2s, t2tw,
-                               t2twp, tw2t, tw2tp, t2hk, hk2t, t2jp, jp2t
+                               s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp,
+                               s2hk, hk2s, t2tw, t2twp, tw2t, tw2tp,
+                               t2hk, hk2t, t2jp, jp2t
       --con-enc=<encoding>   Console encoding for interactive mode. Ignored if
                                not attached to a terminal. Common <encoding>:
                                UTF-8, GBK, Big5

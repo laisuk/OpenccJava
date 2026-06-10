@@ -93,11 +93,19 @@ class OpenCCTest {
         assertEquals(OpenccConfig.S2TWP, OpenccConfig.tryParse("s2twp"));
         assertEquals(OpenccConfig.S2TWP, OpenccConfig.tryParse("S2Twp"));
         assertEquals(OpenccConfig.S2TWP, OpenccConfig.tryParse("S2TWP"));
+        assertEquals(OpenccConfig.S2HKP, OpenccConfig.tryParse("s2hkp"));
+        assertEquals(OpenccConfig.HK2SP, OpenccConfig.tryParse("hk2sp"));
         // ✅ Round-trip consistency
         for (OpenccConfig cfg : OpenccConfig.values()) {
             assertEquals(cfg, OpenccConfig.tryParse(cfg.toCanonicalName()));
             assertEquals(cfg.toCanonicalName(), cfg.toCanonicalName().toLowerCase()); // ensure lowercase form
         }
+    }
+
+    @Test
+    void testSupportedConfigsIncludeDirectHongKongPhraseConfigs() {
+        assertTrue(OpenCC.getSupportedConfigs().contains("s2hkp"));
+        assertTrue(OpenCC.getSupportedConfigs().contains("hk2sp"));
     }
 
     @Test
@@ -138,6 +146,77 @@ class OpenCCTest {
             assertEquals(c, OpenccConfig.tryParse(c.toCanonicalName()));
             assertEquals(c, OpenccConfig.tryParse(c.name())); // enum-style
         }
+    }
+
+    @Test
+    void testDirectHongKongPhraseConfigConversions() {
+        DictionaryMaxlength dict = minimalDirectHongKongPhraseDictionary();
+
+        OpenCC s2hkp = new OpenCC(OpenccConfig.S2HKP, dict);
+        assertEquals("港字詞", s2hkp.convert("汉字词"));
+
+        OpenCC hk2sp = new OpenCC(OpenccConfig.HK2SP, dict);
+        assertEquals("汉字词", hk2sp.convert("港字詞"));
+    }
+
+    @Test
+    void testDirectHongKongPhraseApis() {
+        OpenCC cc = new OpenCC(OpenccConfig.S2T, minimalDirectHongKongPhraseDictionary());
+
+        assertEquals("港字詞", cc.s2hkp("汉字词", false));
+        assertEquals("汉字词", cc.hk2sp("港字詞", false));
+    }
+
+    private static DictionaryMaxlength minimalDirectHongKongPhraseDictionary() {
+        DictionaryMaxlength dict = new DictionaryMaxlength();
+        Map<String, String> stCharacters = new HashMap<>();
+        stCharacters.put("汉", "漢");
+        stCharacters.put("词", "詞");
+        dict.st_characters = entry(stCharacters);
+        dict.st_phrases = new DictionaryMaxlength.DictEntry();
+        dict.st_punctuations = new DictionaryMaxlength.DictEntry();
+        Map<String, String> tsCharacters = new HashMap<>();
+        tsCharacters.put("漢", "汉");
+        tsCharacters.put("詞", "词");
+        dict.ts_characters = entry(tsCharacters);
+        dict.ts_phrases = new DictionaryMaxlength.DictEntry();
+        dict.ts_punctuations = new DictionaryMaxlength.DictEntry();
+        dict.tw_phrases = new DictionaryMaxlength.DictEntry();
+        dict.tw_phrases_rev = new DictionaryMaxlength.DictEntry();
+        dict.tw_variants = new DictionaryMaxlength.DictEntry();
+        dict.tw_variants_phrases = new DictionaryMaxlength.DictEntry();
+        dict.tw_variants_rev = new DictionaryMaxlength.DictEntry();
+        dict.tw_variants_rev_phrases = new DictionaryMaxlength.DictEntry();
+        dict.hk_phrases = entry(pair("漢字詞", "港字詞"));
+        dict.hk_phrases_rev = entry(pair("港字詞", "漢字詞"));
+        dict.hk_variants = new DictionaryMaxlength.DictEntry();
+        dict.hk_variants_phrases = new DictionaryMaxlength.DictEntry();
+        dict.hk_variants_rev = new DictionaryMaxlength.DictEntry();
+        dict.hk_variants_rev_phrases = new DictionaryMaxlength.DictEntry();
+        dict.jps_characters = new DictionaryMaxlength.DictEntry();
+        dict.jps_phrases = new DictionaryMaxlength.DictEntry();
+        dict.jp_variants = new DictionaryMaxlength.DictEntry();
+        dict.jp_variants_rev = new DictionaryMaxlength.DictEntry();
+        return dict;
+    }
+
+    private static DictionaryMaxlength.DictEntry entry(Map<String, String> pairs) {
+        int maxLength = 0;
+        int minLength = Integer.MAX_VALUE;
+        for (String key : pairs.keySet()) {
+            maxLength = Math.max(maxLength, key.length());
+            minLength = Math.min(minLength, key.length());
+        }
+        if (pairs.isEmpty()) {
+            minLength = 0;
+        }
+        return new DictionaryMaxlength.DictEntry(pairs, maxLength, minLength);
+    }
+
+    private static Map<String, String> pair(String key, String value) {
+        Map<String, String> pairs = new HashMap<>();
+        pairs.put(key, value);
+        return pairs;
     }
 
     @Test
@@ -199,7 +278,7 @@ class OpenCCTest {
         long durationMs = (System.nanoTime() - start) / 1_000_000;
 
         // Assertions
-        assertEquals(16, OpenCC.getSupportedConfigIds().size());
+        assertEquals(OpenccConfig.values().length, OpenCC.getSupportedConfigIds().size());
         assertEquals(OpenccConfig.S2T, opencc.getConfigId());
         assertNotNull(output);
         assertEquals(input.length(), output.length()); // rough check, assuming 1:1 mapping

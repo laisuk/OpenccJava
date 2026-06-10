@@ -67,9 +67,19 @@ public enum UnionKey {
      */
     HkVariantsPair,
     /**
+     * S2HKP round-2 Hong Kong triple:
+     * hk_phrases + hk_variants_phrases + hk_variants.
+     */
+    S2HkpR2HkTriple,
+    /**
      * Hong Kong reverse phrase pairs.
      */
     HkRevPair,
+    /**
+     * HK2SP round-1 Hong Kong reverse triple:
+     * hk_phrases_rev + hk_variants_rev_phrases + hk_variants_rev.
+     */
+    Hk2SpR1HkRevTriple,
 
     // ===== Japan-specific unions =====
     /**

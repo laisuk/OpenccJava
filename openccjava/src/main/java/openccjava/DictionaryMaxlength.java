@@ -135,6 +135,14 @@ public class DictionaryMaxlength {
 
     // Hong Kong variants
     /**
+     * Hong Kong phrase mappings.
+     */
+    public DictEntry hk_phrases;
+    /**
+     * Hong Kong phrase reverse mappings.
+     */
+    public DictEntry hk_phrases_rev;
+    /**
      * Hong Kong variant mappings.
      */
     public DictEntry hk_variants;
@@ -179,7 +187,8 @@ public class DictionaryMaxlength {
                 ts_characters, ts_phrases, ts_punctuations,
                 tw_phrases, tw_phrases_rev, tw_variants, tw_variants_phrases,
                 tw_variants_rev, tw_variants_rev_phrases,
-                hk_variants, hk_variants_phrases, hk_variants_rev, hk_variants_rev_phrases,
+                hk_phrases, hk_phrases_rev, hk_variants, hk_variants_phrases,
+                hk_variants_rev, hk_variants_rev_phrases,
                 jps_characters, jps_phrases, jp_variants, jp_variants_rev
         };
 
@@ -232,9 +241,18 @@ public class DictionaryMaxlength {
                 } else {
                     final String resPath = "/" + basePath + "/" + filename;
                     try (InputStream in = DictionaryMaxlength.class.getResourceAsStream(resPath)) {
-                        if (in == null) throw new FileNotFoundException("Missing resource: " + resPath +
-                                " (also checked FS: " + fsPath.toAbsolutePath() + ")");
-                        entry = loadDictionaryMaxlength(in);
+                        if (in == null) {
+                            if (isOptionalTextDictionary(dictName)) {
+                                // Direct HK phrase dictionaries were added after the original schema.
+                                // Treat missing files as empty so older dictionary folders still load.
+                                entry = new DictEntry();
+                            } else {
+                                throw new FileNotFoundException("Missing resource: " + resPath +
+                                        " (also checked FS: " + fsPath.toAbsolutePath() + ")");
+                            }
+                        } else {
+                            entry = loadDictionaryMaxlength(in);
+                        }
                     }
                 }
 
@@ -244,6 +262,7 @@ public class DictionaryMaxlength {
             }
         }
 
+        ensureOptionalHkPhraseEntries(r);
         return r;
     }
 
@@ -434,6 +453,8 @@ public class DictionaryMaxlength {
         if ("tw_variants_rev".equals(key)) return dict.tw_variants_rev;
         if ("tw_variants_rev_phrases".equals(key)) return dict.tw_variants_rev_phrases;
 
+        if ("hk_phrases".equals(key)) return dict.hk_phrases;
+        if ("hk_phrases_rev".equals(key)) return dict.hk_phrases_rev;
         if ("hk_variants".equals(key)) return dict.hk_variants;
         if ("hk_variants_phrases".equals(key)) return dict.hk_variants_phrases;
         if ("hk_variants_rev".equals(key)) return dict.hk_variants_rev;
@@ -586,6 +607,8 @@ public class DictionaryMaxlength {
         r.tw_variants_rev = copyEntry(this.tw_variants_rev);
         r.tw_variants_rev_phrases = copyEntry(this.tw_variants_rev_phrases);
 
+        r.hk_phrases = copyEntry(this.hk_phrases);
+        r.hk_phrases_rev = copyEntry(this.hk_phrases_rev);
         r.hk_variants = copyEntry(this.hk_variants);
         r.hk_variants_phrases = copyEntry(this.hk_variants_phrases);
         r.hk_variants_rev = copyEntry(this.hk_variants_rev);
@@ -648,6 +671,8 @@ public class DictionaryMaxlength {
         m.put("tw_variants_phrases", (o, e) -> o.tw_variants_phrases = e);
         m.put("tw_variants_rev", (o, e) -> o.tw_variants_rev = e);
         m.put("tw_variants_rev_phrases", (o, e) -> o.tw_variants_rev_phrases = e);
+        m.put("hk_phrases", (o, e) -> o.hk_phrases = e);
+        m.put("hk_phrases_rev", (o, e) -> o.hk_phrases_rev = e);
         m.put("hk_variants", (o, e) -> o.hk_variants = e);
         m.put("hk_variants_phrases", (o, e) -> o.hk_variants_phrases = e);
         m.put("hk_variants_rev", (o, e) -> o.hk_variants_rev = e);
@@ -671,6 +696,8 @@ public class DictionaryMaxlength {
         f.put("tw_variants_phrases", "TWVariantsPhrases.txt");
         f.put("tw_variants_rev", "TWVariantsRev.txt");
         f.put("tw_variants_rev_phrases", "TWVariantsRevPhrases.txt");
+        f.put("hk_phrases", "HKPhrases.txt");
+        f.put("hk_phrases_rev", "HKPhrasesRev.txt");
         f.put("hk_variants", "HKVariants.txt");
         f.put("hk_variants_phrases", "HKVariantsPhrases.txt");
         f.put("hk_variants_rev", "HKVariantsRev.txt");
@@ -694,6 +721,8 @@ public class DictionaryMaxlength {
         s.put(DictSlot.TWVariantsPhrases, "tw_variants_phrases");
         s.put(DictSlot.TWVariantsRev, "tw_variants_rev");
         s.put(DictSlot.TWVariantsRevPhrases, "tw_variants_rev_phrases");
+        s.put(DictSlot.HKPhrases, "hk_phrases");
+        s.put(DictSlot.HKPhrasesRev, "hk_phrases_rev");
         s.put(DictSlot.HKVariants, "hk_variants");
         s.put(DictSlot.HKVariantsPhrases, "hk_variants_phrases");
         s.put(DictSlot.HKVariantsRev, "hk_variants_rev");
@@ -703,6 +732,15 @@ public class DictionaryMaxlength {
         s.put(DictSlot.JPVariants, "jp_variants");
         s.put(DictSlot.JPVariantsRev, "jp_variants_rev");
         SLOT_KEYS = Collections.unmodifiableMap(s);
+    }
+
+    private static boolean isOptionalTextDictionary(String dictName) {
+        return "hk_phrases".equals(dictName) || "hk_phrases_rev".equals(dictName);
+    }
+
+    private static void ensureOptionalHkPhraseEntries(DictionaryMaxlength r) {
+        if (r.hk_phrases == null) r.hk_phrases = new DictEntry();
+        if (r.hk_phrases_rev == null) r.hk_phrases_rev = new DictEntry();
     }
 
     /**
@@ -944,6 +982,9 @@ public class DictionaryMaxlength {
                 System.err.println("Unknown dict key in JSON: " + kv.getKey());
             }
         }
+        // Older JSON snapshots do not contain the direct HK phrase fields.
+        // Initialize missing dictionaries as empty entries so all conversion plans are null-safe.
+        ensureOptionalHkPhraseEntries(r);
         return r;
     }
 
@@ -1147,6 +1188,8 @@ public class DictionaryMaxlength {
         firstField = writeField(w, "tw_variants_phrases", tw_variants_phrases, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "tw_variants_rev", tw_variants_rev, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "tw_variants_rev_phrases", tw_variants_rev_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "hk_phrases", hk_phrases, firstField, ind1, ind2, nl, sortKeys);
+        firstField = writeField(w, "hk_phrases_rev", hk_phrases_rev, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "hk_variants", hk_variants, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "hk_variants_phrases", hk_variants_phrases, firstField, ind1, ind2, nl, sortKeys);
         firstField = writeField(w, "hk_variants_rev", hk_variants_rev, firstField, ind1, ind2, nl, sortKeys);

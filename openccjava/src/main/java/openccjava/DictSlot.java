@@ -75,6 +75,16 @@ public enum DictSlot {
     TWVariantsRevPhrases,
 
     /**
+     * Traditional-to-Hong-Kong phrase dictionary ({@code HKPhrases.txt}).
+     */
+    HKPhrases,
+
+    /**
+     * Hong Kong phrase reverse dictionary ({@code HKPhrasesRev.txt}).
+     */
+    HKPhrasesRev,
+
+    /**
      * Traditional-to-Hong-Kong variant dictionary ({@code HKVariants.txt}).
      */
     HKVariants,

@@ -62,9 +62,15 @@ final class UnionCache {
             case HkVariantsPair:
                 return getOrInit(slots.hk_variants_pair,
                         () -> StarterUnion.build(Arrays.asList(d.hk_variants_phrases, d.hk_variants)));
+            case S2HkpR2HkTriple:
+                return getOrInit(slots.s2hkp_r2_hk_triple,
+                        () -> StarterUnion.build(Arrays.asList(d.hk_phrases, d.hk_variants_phrases, d.hk_variants)));
             case HkRevPair:
                 return getOrInit(slots.hk_rev_pair,
                         () -> StarterUnion.build(Arrays.asList(d.hk_variants_rev_phrases, d.hk_variants_rev)));
+            case Hk2SpR1HkRevTriple:
+                return getOrInit(slots.hk2sp_r1_hk_rev_triple,
+                        () -> StarterUnion.build(Arrays.asList(d.hk_phrases_rev, d.hk_variants_rev_phrases, d.hk_variants_rev)));
             case JpVariantsOnly:
                 return getOrInit(slots.jp_variants_only,
                         () -> StarterUnion.build(Collections.singletonList(d.jp_variants)));
@@ -100,7 +106,9 @@ final class UnionCache {
         final AtomicReference<StarterUnion> tw_rev_pair = new AtomicReference<>();
         final AtomicReference<StarterUnion> tw2sp_r1_tw_rev_triple = new AtomicReference<>();
         final AtomicReference<StarterUnion> hk_variants_pair = new AtomicReference<>();
+        final AtomicReference<StarterUnion> s2hkp_r2_hk_triple = new AtomicReference<>();
         final AtomicReference<StarterUnion> hk_rev_pair = new AtomicReference<>();
+        final AtomicReference<StarterUnion> hk2sp_r1_hk_rev_triple = new AtomicReference<>();
         final AtomicReference<StarterUnion> jp_variants_only = new AtomicReference<>();
         final AtomicReference<StarterUnion> jp_rev_triple = new AtomicReference<>();
     }

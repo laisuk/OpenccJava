@@ -129,7 +129,7 @@ public final class ConversionPlanCache {
      *   <li><b>S2T / T2S</b> – Simplified ↔ Traditional with optional punctuation dictionaries</li>
      *   <li><b>S2Tw / Tw2S / S2Twp / Tw2Sp</b> – Conversions involving Taiwan-specific
      *       phrase and variant dictionaries</li>
-     *   <li><b>S2Hk / Hk2S / T2Hk / Hk2T</b> – Conversions involving Hong Kong variants</li>
+     *   <li><b>S2Hk / S2Hkp / Hk2S / Hk2Sp / T2Hk / Hk2T</b> – Conversions involving Hong Kong variants</li>
      *   <li><b>T2Tw / T2Twp / Tw2T / Tw2Tp</b> – Traditional ↔ Taiwan conversions</li>
      *   <li><b>T2Jp / Jp2T</b> – Traditional ↔ Japanese conversions</li>
      * </ul>
@@ -197,6 +197,22 @@ public final class ConversionPlanCache {
                 r2 = new ArrayList<>(Arrays.asList(d.ts_phrases, d.ts_characters));
                 if (punctuation) r2.add(d.ts_punctuations);
                 refs = new DictRefs(r1, unionCache.unionFor(UnionKey.Tw2SpR1TwRevTriple))
+                        .withRound2(r2, unionCache.unionFor(punctuation ? UnionKey.T2S_PUNCT : UnionKey.T2S));
+                break;
+            }
+            case S2HKP: {
+                r1 = new ArrayList<>(Arrays.asList(d.st_phrases, d.st_characters));
+                if (punctuation) r1.add(d.st_punctuations);
+                r2 = Arrays.asList(d.hk_phrases, d.hk_variants_phrases, d.hk_variants);
+                refs = new DictRefs(r1, unionCache.unionFor(punctuation ? UnionKey.S2T_PUNCT : UnionKey.S2T))
+                        .withRound2(r2, unionCache.unionFor(UnionKey.S2HkpR2HkTriple));
+                break;
+            }
+            case HK2SP: {
+                r1 = Arrays.asList(d.hk_phrases_rev, d.hk_variants_rev_phrases, d.hk_variants_rev);
+                r2 = new ArrayList<>(Arrays.asList(d.ts_phrases, d.ts_characters));
+                if (punctuation) r2.add(d.ts_punctuations);
+                refs = new DictRefs(r1, unionCache.unionFor(UnionKey.Hk2SpR1HkRevTriple))
                         .withRound2(r2, unionCache.unionFor(punctuation ? UnionKey.T2S_PUNCT : UnionKey.T2S));
                 break;
             }

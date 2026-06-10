@@ -190,8 +190,23 @@ public class DictionaryMaxlengthNoDepsTest {
         expected.jps_characters.maxLength = 1;
         expected.jps_characters.minLength = 1;
 
+        expected.hk_phrases = new DictionaryMaxlength.DictEntry();
+        expected.hk_phrases_rev = new DictionaryMaxlength.DictEntry();
+
         // All other fields remain null in both expected and actual.
         assertDictionariesEqual(expected, actual);
+    }
+
+    @Test
+    void olderJsonMissingDirectHongKongPhraseFieldsUsesEmptyEntries() {
+        String olderJson = "{ \"st_characters\": [ { \"汉\": \"漢\" }, 1, 1 ] }";
+
+        DictionaryMaxlength d = DictionaryMaxlength.fromJsonStringNoDeps(olderJson);
+
+        assertNotNull(d.hk_phrases);
+        assertTrue(d.hk_phrases.dict.isEmpty());
+        assertNotNull(d.hk_phrases_rev);
+        assertTrue(d.hk_phrases_rev.dict.isEmpty());
     }
 
     @Test
@@ -232,6 +247,8 @@ public class DictionaryMaxlengthNoDepsTest {
         compare("tw_variants_rev", a.tw_variants_rev, b.tw_variants_rev);
         compare("tw_variants_rev_phrases", a.tw_variants_rev_phrases, b.tw_variants_rev_phrases);
 
+        compare("hk_phrases", a.hk_phrases, b.hk_phrases);
+        compare("hk_phrases_rev", a.hk_phrases_rev, b.hk_phrases_rev);
         compare("hk_variants", a.hk_variants, b.hk_variants);
         compare("hk_variants_phrases", a.hk_variants_phrases, b.hk_variants_phrases);
         compare("hk_variants_rev", a.hk_variants_rev, b.hk_variants_rev);

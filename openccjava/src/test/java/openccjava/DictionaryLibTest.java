@@ -3,6 +3,7 @@ package openccjava;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 //import java.io.File;
 import java.io.File;
@@ -31,6 +32,8 @@ class DictionaryLibTest {
         assertFalse(original.st_characters.dict.isEmpty(), "st_characters should be non-empty");
         assertFalse(original.ts_phrases.dict.isEmpty(), "ts_phrases should be non-empty");
         assertNotNull(original.tw_variants_phrases, "tw_variants_phrases should load strictly");
+        assertNotNull(original.hk_phrases, "hk_phrases should load when present");
+        assertNotNull(original.hk_phrases_rev, "hk_phrases_rev should load when present");
         assertNotNull(original.hk_variants_phrases, "hk_variants_phrases should load strictly");
         assertTrue(original.tw_variants_rev.maxLength > 0, "tw_variants_rev should have maxLength > 0");
 
@@ -39,7 +42,30 @@ class DictionaryLibTest {
     @Test
     void testNewVariantPhraseSlotsExist() {
         assertEquals(DictSlot.TWVariantsPhrases, DictSlot.valueOf("TWVariantsPhrases"));
+        assertEquals(DictSlot.HKPhrases, DictSlot.valueOf("HKPhrases"));
+        assertEquals(DictSlot.HKPhrasesRev, DictSlot.valueOf("HKPhrasesRev"));
         assertEquals(DictSlot.HKVariantsPhrases, DictSlot.valueOf("HKVariantsPhrases"));
+    }
+
+    @Test
+    void testMissingDirectHongKongPhraseTextDictsFallBackToEmpty(@TempDir Path tmp) throws IOException {
+        Path source = Paths.get("dicts");
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(source, "*.txt")) {
+            for (Path file : stream) {
+                String name = file.getFileName().toString();
+                if ("HKPhrases.txt".equals(name) || "HKPhrasesRev.txt".equals(name)) {
+                    continue;
+                }
+                Files.copy(file, tmp.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+
+        DictionaryMaxlength loaded = DictionaryMaxlength.fromDicts(tmp.toString());
+
+        assertNotNull(loaded.hk_phrases);
+        assertTrue(loaded.hk_phrases.dict.isEmpty());
+        assertNotNull(loaded.hk_phrases_rev);
+        assertTrue(loaded.hk_phrases_rev.dict.isEmpty());
     }
 
     @Test
