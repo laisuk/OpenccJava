@@ -404,6 +404,12 @@ public final class PdfBoxHelper {
         }
     }
 
+    /**
+     * Checks whether a file appears to be a PDF by extension and header bytes.
+     *
+     * @param file file to inspect
+     * @return {@code true} when the file exists and contains a PDF header marker
+     */
     public static boolean isPdf(File file) {
         if (file == null)
             return false;
