@@ -167,6 +167,20 @@ class OpenCCTest {
         assertEquals("汉字词", cc.hk2sp("港字詞", false));
     }
 
+    @Test
+    void testT2JPUsesShinjitaiCharactersRev() {
+        OpenCC cc = OpenCC.fromConfig(OpenccConfig.T2JP);
+
+        assertEquals("旧字体：広国，読売。", cc.t2jp("舊字體：廣國，讀賣。"));
+    }
+
+    @Test
+    void testJP2TUsesShinjitaiPhrasesAndCharacters() {
+        OpenCC cc = OpenCC.fromConfig(OpenccConfig.JP2T);
+
+        assertEquals("舊字體：廣國，讀賣。", cc.jp2t("旧字体：広国，読売。"));
+    }
+
     private static DictionaryMaxlength minimalDirectHongKongPhraseDictionary() {
         DictionaryMaxlength dict = new DictionaryMaxlength();
         Map<String, String> stCharacters = new HashMap<>();
@@ -194,9 +208,8 @@ class OpenCCTest {
         dict.hk_variants_rev = new DictionaryMaxlength.DictEntry();
         dict.hk_variants_rev_phrases = new DictionaryMaxlength.DictEntry();
         dict.jps_characters = new DictionaryMaxlength.DictEntry();
+        dict.jps_characters_rev = new DictionaryMaxlength.DictEntry();
         dict.jps_phrases = new DictionaryMaxlength.DictEntry();
-        dict.jp_variants = new DictionaryMaxlength.DictEntry();
-        dict.jp_variants_rev = new DictionaryMaxlength.DictEntry();
         return dict;
     }
 

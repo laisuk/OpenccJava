@@ -102,7 +102,7 @@ public class DictgenCommand implements Runnable {
                 "TWPhrases.txt", "TWPhrasesRev.txt", "TWVariants.txt", "TWVariantsPhrases.txt",
                 "TWVariantsRev.txt", "TWVariantsRevPhrases.txt",
                 "HKVariants.txt", "HKVariantsPhrases.txt", "HKVariantsRev.txt", "HKVariantsRevPhrases.txt",
-                "JPShinjitaiCharacters.txt", "JPShinjitaiPhrases.txt", "JPVariants.txt", "JPVariantsRev.txt"
+                "JPShinjitaiCharacters.txt", "JPShinjitaiCharactersRev.txt", "JPShinjitaiPhrases.txt"
         };
 
         String baseUrl = "https://raw.githubusercontent.com/laisuk/OpenccJava/master/dicts/";

@@ -76,7 +76,7 @@ public class DictionaryMaxlengthNoDepsTest {
 
         assertEquals("後台", d.st_phrases.dict.get("后台"));
         assertEquals(1, d.jps_characters.maxLength);
-        assertNull(d.jp_variants); // not provided in sample JSON
+        assertNull(d.jps_characters_rev); // not provided in sample JSON
     }
 
     @Test
@@ -255,9 +255,8 @@ public class DictionaryMaxlengthNoDepsTest {
         compare("hk_variants_rev_phrases", a.hk_variants_rev_phrases, b.hk_variants_rev_phrases);
 
         compare("jps_characters", a.jps_characters, b.jps_characters);
+        compare("jps_characters_rev", a.jps_characters_rev, b.jps_characters_rev);
         compare("jps_phrases", a.jps_phrases, b.jps_phrases);
-        compare("jp_variants", a.jp_variants, b.jp_variants);
-        compare("jp_variants_rev", a.jp_variants_rev, b.jp_variants_rev);
     }
 
     private static void compare(String name, DictionaryMaxlength.DictEntry x, DictionaryMaxlength.DictEntry y) {

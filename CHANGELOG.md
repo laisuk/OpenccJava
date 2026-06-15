@@ -59,6 +59,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   dictionary patching for `tw_variants_phrases` and `hk_variants_phrases`.
 * Updated `DictionaryMaxlength` text loading and JSON hydration so missing `HKPhrases.txt`, `HKPhrasesRev.txt`, or older
   JSON snapshots without `hk_phrases` / `hk_phrases_rev` initialize those slots as empty dictionaries.
+* Refactored JP conversion to follow the upstream OpenCC Shinjitai dictionary layout from commit `93ee7f78`.
+* Updated `t2jp` to use required `JPShinjitaiCharactersRev.txt` data only.
+* Updated `jp2t` to use `JPShinjitaiPhrases.txt` before `JPShinjitaiCharacters.txt`.
+* Removed custom dictionary slots `DictSlot.JPVariants` and `DictSlot.JPVariantsRev`.
+* Added custom dictionary slot `DictSlot.JPSCharactersRev` backed by `JPShinjitaiCharactersRev.txt`.
+* Users who maintain custom dictionary folders or generated `dictionary_maxlength.json` snapshots must regenerate them
+  after upgrading to the new JP dictionary layout. Required JP files are `JPShinjitaiCharacters.txt`,
+  `JPShinjitaiCharactersRev.txt`, and `JPShinjitaiPhrases.txt`.
 * Renamed internal forward TW/HK variant union keys from `TwVariantsOnly` / `HkVariantsOnly` to `TwVariantsPair` /
   `HkVariantsPair`.
 * Preserved reverse TW/HK variant ordering through existing reverse phrase + character dictionaries.

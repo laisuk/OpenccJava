@@ -45,6 +45,7 @@ class DictionaryLibTest {
         assertEquals(DictSlot.HKPhrases, DictSlot.valueOf("HKPhrases"));
         assertEquals(DictSlot.HKPhrasesRev, DictSlot.valueOf("HKPhrasesRev"));
         assertEquals(DictSlot.HKVariantsPhrases, DictSlot.valueOf("HKVariantsPhrases"));
+        assertEquals(DictSlot.JPSCharactersRev, DictSlot.valueOf("JPSCharactersRev"));
     }
 
     @Test
@@ -407,6 +408,60 @@ class DictionaryLibTest {
         OpenCC opencc = new OpenCC(OpenccConfig.T2HK, dict);
 
         assertEquals("喫茶小舖", opencc.convert("喫茶小舖", false));
+    }
+
+    @Test
+    void testCustomJPSCharactersRevOverrideAffectsT2JP() {
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.JPSCharactersRev,
+                                Collections.singletonMap("廣", "广"),
+                                CustomDictMode.Override
+                        )
+                )
+        );
+
+        OpenCC opencc = new OpenCC(OpenccConfig.T2JP, dict);
+
+        assertEquals("广", opencc.convert("廣", false));
+    }
+
+    @Test
+    void testCustomJPSCharactersOverrideAffectsJP2T() {
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(
+                Collections.singletonList(
+                        CustomDictSpec.fromPairs(
+                                DictSlot.JPSCharacters,
+                                Collections.singletonMap("広", "廣廣"),
+                                CustomDictMode.Override
+                        )
+                )
+        );
+
+        OpenCC opencc = new OpenCC(OpenccConfig.JP2T, dict);
+
+        assertEquals("廣廣", opencc.convert("広", false));
+    }
+
+    @Test
+    void testCustomJPSPhrasesOverrideHasPriorityInJP2T() {
+        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(Arrays.asList(
+                CustomDictSpec.fromPairs(
+                        DictSlot.JPSPhrases,
+                        Collections.singletonMap("広国字", "PHRASE"),
+                        CustomDictMode.Override
+                ),
+                CustomDictSpec.fromPairs(
+                        DictSlot.JPSCharacters,
+                        Collections.singletonMap("広", "CHAR"),
+                        CustomDictMode.Override
+                )
+        ));
+
+        OpenCC opencc = new OpenCC(OpenccConfig.JP2T, dict);
+
+        assertEquals("PHRASE", opencc.convert("広国字", false));
     }
 
     @Test

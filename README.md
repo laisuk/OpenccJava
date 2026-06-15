@@ -768,10 +768,9 @@ public class CustomDictFilesAndPairsExample {
 | HKVariantsPhrases    | HKVariantsPhrases.txt     | hk_variants_phrases     |
 | HKVariantsRev        | HKVariantsRev.txt         | hk_variants_rev         |
 | HKVariantsRevPhrases | HKVariantsRevPhrases.txt  | hk_variants_rev_phrases |
-| JPSCharacters        | JPShinjitaiCharacters.txt | jps_characters          |
-| JPSPhrases           | JPShinjitaiPhrases.txt    | jps_phrases             |
-| JPVariants           | JPVariants.txt            | jp_variants             |
-| JPVariantsRev        | JPVariantsRev.txt         | jp_variants_rev         |
+| JPSCharacters        | JPShinjitaiCharacters.txt    | jps_characters          |
+| JPSCharactersRev     | JPShinjitaiCharactersRev.txt | jps_characters_rev      |
+| JPSPhrases           | JPShinjitaiPhrases.txt       | jps_phrases             |
 
 #### Limitations / Notes
 
