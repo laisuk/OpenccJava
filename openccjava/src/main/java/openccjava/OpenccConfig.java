@@ -215,7 +215,7 @@ public enum OpenccConfig {
      * (for example {@code "s2t"}, {@code "t2twp"}) and enum-style names
      * (for example {@code "S2T"}, {@code "T2TWP"}).</p>
      *
-     * <p>This method performs no allocation beyond parsing and never throws.</p>
+     * <p>This method performs tolerant parsing and never throws.</p>
      *
      * @param value the configuration string to check; may be {@code null}
      * @return {@code true} if the configuration is valid; {@code false} otherwise

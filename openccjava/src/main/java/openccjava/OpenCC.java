@@ -22,8 +22,14 @@ import static openccjava.DictRefs.isDelimiter;
  * <p>This class supports multiple configurations such as s2t, t2s, s2tw, tw2s, etc.
  * It loads dictionaries from a bundled JSON file or falls back to raw dict text files.
  *
- * <p>Conversion is stateless and thread-safe, with thread-local StringBuilder optimization
- * for performance.
+ * <p>Instances are mutable because the active configuration and diagnostic
+ * error state can change. An {@code OpenCC} instance must not be shared across
+ * threads while that state may be modified unless callers provide external
+ * synchronization. For concurrent applications, prefer one configured instance
+ * per thread and treat its dictionary as immutable after construction.</p>
+ *
+ * <p>Conversion uses a thread-local {@link StringBuilder} to reduce temporary
+ * allocations.</p>
  */
 public class OpenCC {
     /**
@@ -71,6 +77,11 @@ public class OpenCC {
      * along with their maximum lengths.
      */
     private final DictionaryMaxlength dictionary;
+
+    /**
+     * Conversion plans shared for the lifetime of this converter and its dictionary.
+     */
+    private final ConversionPlanCache conversionPlanCache;
 
     /**
      * Stores the last error message encountered, if any.
@@ -384,6 +395,7 @@ public class OpenCC {
      */
     public OpenCC(OpenccConfig configId) {
         this.dictionary = DictionaryHolder.get(); // Lazy static, loaded on first access
+        this.conversionPlanCache = ConversionPlanCache.forDictionary(this.dictionary);
         setConfig(configId);
     }
 
@@ -425,6 +437,7 @@ public class OpenCC {
      */
     public OpenCC(OpenccConfig config, DictionaryMaxlength dictionary) {
         this.dictionary = Objects.requireNonNull(dictionary, "dictionary");
+        this.conversionPlanCache = ConversionPlanCache.forDictionary(this.dictionary);
         setConfig(config);
     }
 
@@ -448,6 +461,7 @@ public class OpenCC {
             throw new RuntimeException("Failed to load text dictionaries from: " + dictPath, e);
         }
 
+        this.conversionPlanCache = ConversionPlanCache.forDictionary(this.dictionary);
         setConfig(config);
     }
 
@@ -459,6 +473,10 @@ public class OpenCC {
      * configuration ({@code s2t}) is applied and {@link #getLastError()} is set.</p>
      *
      * <p>On success, {@link #getLastError()} is cleared.</p>
+     *
+     * <p>This method mutates the converter and must not run concurrently with
+     * conversion or state-access operations on the same instance unless callers
+     * provide external synchronization.</p>
      *
      * @param config configuration key (e.g. {@code "s2t"}, {@code "S2TWP"}); may be {@code null}
      */
@@ -473,6 +491,10 @@ public class OpenCC {
      * is applied and {@link #getLastError()} is set.</p>
      *
      * <p>On success, {@link #getLastError()} is cleared.</p>
+     *
+     * <p>This method mutates the converter and must not run concurrently with
+     * conversion or state-access operations on the same instance unless callers
+     * provide external synchronization.</p>
      *
      * @param cfg configuration ID, or {@code null} to use default
      */
@@ -528,7 +550,7 @@ public class OpenCC {
      * (for example {@code "s2t"}, {@code "t2twp"}) and enum-style names
      * (for example {@code "S2T"}, {@code "T2TWP"}).</p>
      *
-     * <p>This method performs no allocation beyond parsing and never throws.</p>
+     * <p>This method performs tolerant parsing and never throws.</p>
      *
      * @param value the configuration string to check; may be {@code null}
      * @return {@code true} if the configuration is supported; {@code false} otherwise
@@ -586,10 +608,9 @@ public class OpenCC {
      * nor does it imply that the {@code OpenCC} instance is in an invalid state.
      * All conversions proceed using a valid configuration.</p>
      *
-     * <p>The value is cleared automatically when a subsequent operation
-     * completes successfully (for example, a valid call to {@code setConfig(...)}
-     * with {@code setLastError = true}), or manually via
-     * {@link #clearLastError()}.</p>
+     * <p>The value is cleared by a successful call to {@code setConfig(...)} or
+     * manually via {@link #clearLastError()}. Successful conversion does not
+     * clear a previously recorded diagnostic.</p>
      *
      * @return the most recent error message, or {@code null} if no error
      * has been recorded
@@ -607,6 +628,9 @@ public class OpenCC {
      *
      * <p>This method is typically used by UI or CLI code after an error
      * has been displayed to the user.</p>
+     *
+     * <p>This method mutates diagnostic state and must not run concurrently with
+     * other operations on the same instance without external synchronization.</p>
      */
     public void clearLastError() {
         this.lastError = null;
@@ -763,7 +787,7 @@ public class OpenCC {
      * @return the prepared {@link DictRefs} for this configuration
      */
     private DictRefs getDictRefsUnionForConfigId(OpenccConfig cfg, boolean punctuation) {
-        return ConversionPlanCache.forDictionary(dictionary).getPlan(cfg, punctuation);
+        return conversionPlanCache.getPlan(cfg, punctuation);
     }
 
     /**
@@ -1198,6 +1222,7 @@ public class OpenCC {
      * @param input       the text in Simplified Chinese
      * @param punctuation whether to also convert punctuation marks
      * @return the converted text in phrase-normalized Hong Kong Traditional Chinese
+     * @since 1.4.0
      */
     public String s2hkp(String input, boolean punctuation) {
         DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.S2HKP, punctuation);
@@ -1216,6 +1241,7 @@ public class OpenCC {
      * @param input       the text in Hong Kong Traditional Chinese
      * @param punctuation whether to also convert punctuation marks
      * @return the converted text in Simplified Chinese
+     * @since 1.4.0
      */
     public String hk2sp(String input, boolean punctuation) {
         DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.HK2SP, punctuation);
@@ -1445,6 +1471,8 @@ public class OpenCC {
      * @param text  the input text; {@code null} is treated as empty text
      * @param level the threshold-based DeTofu extension level
      * @return text with mapped tofu-risk characters replaced and unmapped characters preserved
+     * @throws NullPointerException if {@code level} is {@code null}
+     * @since 1.4.0
      */
     public String deTofu(String text, DeTofu.Level level) {
         return DeTofu.convert(text, level);
@@ -1474,7 +1502,8 @@ public class OpenCC {
      * @param path  path to a UTF-8 custom DeTofu fallback file
      * @return text with mapped tofu-risk characters replaced and unmapped characters preserved
      * @throws IOException          if the custom fallback file cannot be read
-     * @throws NullPointerException if {@code path} is {@code null}
+     * @throws NullPointerException if {@code level} or {@code path} is {@code null}
+     * @since 1.4.0
      */
     public String deTofuWithCustomFile(String text, DeTofu.Level level, String path) throws IOException {
         return DeTofu
@@ -1497,7 +1526,8 @@ public class OpenCC {
      * @param level the threshold-based DeTofu extension level
      * @param pairs custom tofu-risk character mappings
      * @return text with mapped tofu-risk characters replaced and unmapped characters preserved
-     * @throws NullPointerException if {@code pairs} is {@code null}
+     * @throws NullPointerException if {@code level} or {@code pairs} is {@code null}
+     * @since 1.4.0
      */
     public String deTofuWithCustomPairs(
             String text,

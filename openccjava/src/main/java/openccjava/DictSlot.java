@@ -120,5 +120,23 @@ public enum DictSlot {
      * Japanese Shinjitai-to-Traditional Kyujitai phrase dictionary
      * ({@code JPShinjitaiPhrases.txt}).
      */
-    JPSPhrases
+    JPSPhrases,
+
+    /**
+     * Legacy alias for {@link #JPSCharactersRev}.
+     *
+     * @deprecated Use {@link #JPSCharactersRev}. This alias is retained for
+     * source and binary compatibility and may be removed in version 2.0.
+     */
+    @Deprecated
+    JPVariants,
+
+    /**
+     * Legacy alias for {@link #JPSCharacters}.
+     *
+     * @deprecated Use {@link #JPSCharacters}. This alias is retained for
+     * source and binary compatibility and may be removed in version 2.0.
+     */
+    @Deprecated
+    JPVariantsRev
 }

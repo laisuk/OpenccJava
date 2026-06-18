@@ -722,7 +722,15 @@ public class DictionaryMaxlength {
         s.put(DictSlot.JPSCharacters, "jps_characters");
         s.put(DictSlot.JPSCharactersRev, "jps_characters_rev");
         s.put(DictSlot.JPSPhrases, "jps_phrases");
+        addLegacyJpSlotAliases(s);
         SLOT_KEYS = Collections.unmodifiableMap(s);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void addLegacyJpSlotAliases(Map<DictSlot, String> slots) {
+        // Compatibility aliases retained until 2.0.
+        slots.put(DictSlot.JPVariants, "jps_characters_rev");
+        slots.put(DictSlot.JPVariantsRev, "jps_characters");
     }
 
     private static boolean isOptionalTextDictionary(String dictName) {
@@ -889,6 +897,8 @@ public class DictionaryMaxlength {
      * @param jsonFile the JSON file to read
      * @return a populated {@code DictionaryMaxlength} instance
      * @throws IOException if reading fails
+     * @throws NullPointerException if {@code jsonFile} is {@code null}
+     * @since 1.4.0
      */
     public static DictionaryMaxlength fromJson(File jsonFile) throws IOException {
         Objects.requireNonNull(jsonFile, "jsonFile");
@@ -903,6 +913,8 @@ public class DictionaryMaxlength {
      * @param path the JSON file path
      * @return a populated {@code DictionaryMaxlength} instance
      * @throws IOException if reading fails
+     * @throws NullPointerException if {@code path} is {@code null}
+     * @since 1.4.0
      */
     public static DictionaryMaxlength fromJson(String path) throws IOException {
         return fromJsonFileNoDeps(path);
@@ -916,6 +928,8 @@ public class DictionaryMaxlength {
      * @param in an input stream containing the JSON (UTF-8 encoded)
      * @return a populated {@code DictionaryMaxlength} instance
      * @throws IOException if reading fails
+     * @throws NullPointerException if {@code in} is {@code null}
+     * @since 1.4.0
      */
     public static DictionaryMaxlength fromJson(InputStream in) throws IOException {
         return fromJsonNoDeps(in);
@@ -1045,6 +1059,7 @@ public class DictionaryMaxlength {
      * @param sortKeys   if {@code true}, sort dictionary keys lexically for
      *                   deterministic output
      * @throws IOException if writing fails
+     * @since 1.4.0
      */
     public void serializeToJson(Path outputPath, boolean pretty, boolean sortKeys) throws IOException {
         try (Writer w = new BufferedWriter(
@@ -1074,6 +1089,7 @@ public class DictionaryMaxlength {
      * @param sortKeys   if {@code true}, sort dictionary keys lexically for
      *                   deterministic output
      * @throws IOException if writing fails
+     * @since 1.4.0
      */
     public void serializeToJson(String outputPath, boolean pretty, boolean sortKeys) throws IOException {
         serializeToJson(Paths.get(outputPath), pretty, sortKeys);
@@ -1102,6 +1118,7 @@ public class DictionaryMaxlength {
      *                 deterministic output
      * @return JSON text held as a Java {@code String}
      * @throws IOException if an I/O error occurs while generating the JSON
+     * @since 1.4.0
      */
     public String serializeToJsonString(boolean pretty, boolean sortKeys) throws IOException {
         StringWriter sw = new StringWriter(1 << 20);

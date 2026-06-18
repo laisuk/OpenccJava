@@ -27,6 +27,7 @@ import java.util.*;
  *
  * @see DeTofu.Level
  * @see DeTofu.Map
+ * @since 1.4.0
  */
 public final class DeTofu {
     private static final String BUILTIN_RESOURCE = "/dicts/TSCharactersTofu.txt";

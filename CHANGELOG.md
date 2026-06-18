@@ -62,7 +62,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 * Refactored JP conversion to follow the upstream OpenCC Shinjitai dictionary layout from commit `93ee7f78`.
 * Updated `t2jp` to use required `JPShinjitaiCharactersRev.txt` data only.
 * Updated `jp2t` to use `JPShinjitaiPhrases.txt` before `JPShinjitaiCharacters.txt`.
-* Removed custom dictionary slots `DictSlot.JPVariants` and `DictSlot.JPVariantsRev`.
+* Deprecated legacy custom dictionary slots `DictSlot.JPVariants` and `DictSlot.JPVariantsRev`; they remain as
+  compatibility aliases until version 2.0.
 * Added custom dictionary slot `DictSlot.JPSCharactersRev` backed by `JPShinjitaiCharactersRev.txt`.
 * Users who maintain custom dictionary folders or generated `dictionary_maxlength.json` snapshots must regenerate them
   after upgrading to the new JP dictionary layout. Required JP files are `JPShinjitaiCharacters.txt`,
