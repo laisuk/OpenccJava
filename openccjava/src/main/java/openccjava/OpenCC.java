@@ -445,12 +445,21 @@ public class OpenCC {
      * Constructs an OpenCC instance using plain text dictionaries from the given directory.
      * <p>
      * <strong>Deprecated:</strong> This constructor will be removed in the next major version.
-     * Use {@link #OpenCC(String)} instead.
+     * Prefer loading dictionaries explicitly through
+     * {@link DictionaryMaxlength#fromDicts(String)} and passing the resulting
+     * {@link DictionaryMaxlength} to
+     * {@link #OpenCC(OpenccConfig, DictionaryMaxlength)} or
+     * {@link #OpenCC(DictionaryMaxlength)}.
      * </p>
      *
      * @param config   the conversion configuration key to use
      * @param dictPath the path to the text dictionary directory
-     * @deprecated Use {@link #OpenCC(String)} instead. This overload will be removed in the next major version.
+     * @deprecated Prefer loading dictionaries explicitly through
+     * {@link DictionaryMaxlength#fromDicts(String)} and passing the resulting
+     * {@link DictionaryMaxlength} to
+     * {@link #OpenCC(OpenccConfig, DictionaryMaxlength)} or
+     * {@link #OpenCC(DictionaryMaxlength)}.
+     * This overload will be removed in the next major version.
      */
     @Deprecated
     public OpenCC(String config, Path dictPath) {
