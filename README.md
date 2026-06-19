@@ -29,6 +29,8 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 - ✅ **Accurate with non-BMP CJK** – correctly handles astral Chinese characters (CJK Ext. B–G, U+20000+), using
   surrogate-safe scanning and max-match across code points.
 - ✅ **Pure Java, no JNI** – easy to use on any JVM (JDK 1.8+), no native libraries required.
+- ✅ **Thread-safe convenience conversion** – use `OpenCC.convert(...)` for one-off conversions with shared,
+  lazy-loaded dictionaries that are loaded only once per JVM.
 - ✅ **Wide format support** – convert plain text and Office documents: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.epub`, etc.
 - ✅ **Optional font name preservation** – keep original fonts when processing Office documents.
 - ✅ **CLI tool included** (`OpenccJavaCli.bat`) – convert files or stdin with flexible encoding options.
@@ -193,6 +195,28 @@ public class Example {
     }
 }
 ```
+
+### ⚡ Static Convenience Conversion
+
+For thread-safe, one-off conversions, use either static convenience API:
+
+- `OpenCC.convert(String text, OpenccConfig config)`
+- `OpenCC.convert(String text, String config)`
+
+```java
+String result = OpenCC.convert(
+        "欢迎使用OpenCC",
+        OpenccConfig.S2T);
+```
+
+```java
+String result = OpenCC.convert(
+        "软件工程",
+        "s2t");
+```
+
+These methods use the shared lazy-loaded dictionary cache, so dictionaries are still loaded only once per JVM. For
+repeated conversions, custom dictionaries, or advanced usage, create and reuse an `OpenCC` instance as shown above.
 
 ### ⚙️ Configuration & Error Handling
 
@@ -748,26 +772,26 @@ public class CustomDictFilesAndPairsExample {
 
 #### DictSlot Mapping
 
-| DictSlot             | Dictionary file           | Serialized field        |
-|----------------------|---------------------------|-------------------------|
-| STCharacters         | STCharacters.txt          | st_characters           |
-| STPhrases            | STPhrases.txt             | st_phrases              |
-| STPunctuations       | STPunctuations.txt        | st_punctuations         |
-| TSCharacters         | TSCharacters.txt          | ts_characters           |
-| TSPhrases            | TSPhrases.txt             | ts_phrases              |
-| TSPunctuations       | TSPunctuations.txt        | ts_punctuations         |
-| TWPhrases            | TWPhrases.txt             | tw_phrases              |
-| TWPhrasesRev         | TWPhrasesRev.txt          | tw_phrases_rev          |
-| TWVariants           | TWVariants.txt            | tw_variants             |
-| TWVariantsPhrases    | TWVariantsPhrases.txt     | tw_variants_phrases     |
-| TWVariantsRev        | TWVariantsRev.txt         | tw_variants_rev         |
-| TWVariantsRevPhrases | TWVariantsRevPhrases.txt  | tw_variants_rev_phrases |
-| HKPhrases            | HKPhrases.txt             | hk_phrases              |
-| HKPhrasesRev         | HKPhrasesRev.txt          | hk_phrases_rev          |
-| HKVariants           | HKVariants.txt            | hk_variants             |
-| HKVariantsPhrases    | HKVariantsPhrases.txt     | hk_variants_phrases     |
-| HKVariantsRev        | HKVariantsRev.txt         | hk_variants_rev         |
-| HKVariantsRevPhrases | HKVariantsRevPhrases.txt  | hk_variants_rev_phrases |
+| DictSlot             | Dictionary file              | Serialized field        |
+|----------------------|------------------------------|-------------------------|
+| STCharacters         | STCharacters.txt             | st_characters           |
+| STPhrases            | STPhrases.txt                | st_phrases              |
+| STPunctuations       | STPunctuations.txt           | st_punctuations         |
+| TSCharacters         | TSCharacters.txt             | ts_characters           |
+| TSPhrases            | TSPhrases.txt                | ts_phrases              |
+| TSPunctuations       | TSPunctuations.txt           | ts_punctuations         |
+| TWPhrases            | TWPhrases.txt                | tw_phrases              |
+| TWPhrasesRev         | TWPhrasesRev.txt             | tw_phrases_rev          |
+| TWVariants           | TWVariants.txt               | tw_variants             |
+| TWVariantsPhrases    | TWVariantsPhrases.txt        | tw_variants_phrases     |
+| TWVariantsRev        | TWVariantsRev.txt            | tw_variants_rev         |
+| TWVariantsRevPhrases | TWVariantsRevPhrases.txt     | tw_variants_rev_phrases |
+| HKPhrases            | HKPhrases.txt                | hk_phrases              |
+| HKPhrasesRev         | HKPhrasesRev.txt             | hk_phrases_rev          |
+| HKVariants           | HKVariants.txt               | hk_variants             |
+| HKVariantsPhrases    | HKVariantsPhrases.txt        | hk_variants_phrases     |
+| HKVariantsRev        | HKVariantsRev.txt            | hk_variants_rev         |
+| HKVariantsRevPhrases | HKVariantsRevPhrases.txt     | hk_variants_rev_phrases |
 | JPSCharacters        | JPShinjitaiCharacters.txt    | jps_characters          |
 | JPSCharactersRev     | JPShinjitaiCharactersRev.txt | jps_characters_rev      |
 | JPSPhrases           | JPShinjitaiPhrases.txt       | jps_phrases             |
