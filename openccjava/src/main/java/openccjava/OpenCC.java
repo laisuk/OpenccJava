@@ -787,6 +787,77 @@ public class OpenCC {
         return result;
     }
 
+    // Static convenience methods
+
+    /**
+     * Converts text using the specified configuration.
+     *
+     * <p>This is a convenience API for one-off conversions. Internally it
+     * creates a temporary {@code OpenCC} instance backed by the shared
+     * dictionary cache provided by {@link DictionaryHolder}. Dictionaries
+     * are still loaded only once per JVM.</p>
+     *
+     * <p>For repeated conversions, custom dictionaries, or advanced usage,
+     * consider creating and reusing an {@code OpenCC} instance directly.</p>
+     *
+     * <p>If {@code config} is {@code null}, the default configuration
+     * ({@code s2t}) is used.</p>
+     *
+     * <b>Example:</b>
+     * <pre>{@code
+     * String result = OpenCC.convert(
+     *         "欢迎使用OpenCC",
+     *         OpenccConfig.S2T);
+     * }</pre>
+     *
+     * @param text   the text to convert; may be {@code null}
+     * @param config the configuration ID, or {@code null} to use the default
+     * @return the converted text, or {@code null} if {@code text} is {@code null}
+     * @since 1.4.1
+     */
+    public static String convert(
+            String text,
+            OpenccConfig config
+    ) {
+        return new OpenCC(config).convert(text);
+    }
+
+    /**
+     * Converts text using the specified configuration key.
+     *
+     * <p>This is a convenience API for one-off conversions. Internally it
+     * creates a temporary {@code OpenCC} instance backed by the shared
+     * dictionary cache provided by {@link DictionaryHolder}. Dictionaries
+     * are still loaded only once per JVM.</p>
+     *
+     * <p>The provided {@code config} string is parsed in a case-insensitive
+     * manner using {@link OpenccConfig#tryParse(String)}. If the string does
+     * not correspond to a supported configuration, the default configuration
+     * ({@code s2t}) is used instead.</p>
+     *
+     * <p>For repeated conversions, custom dictionaries, or advanced usage,
+     * consider creating and reusing an {@code OpenCC} instance directly.</p>
+     *
+     * <b>Example:</b>
+     * <pre>{@code
+     * String result = OpenCC.convert(
+     *         "欢迎使用OpenCC",
+     *         "s2t");
+     * }</pre>
+     *
+     * @param text   the text to convert; may be {@code null}
+     * @param config the configuration key (e.g. {@code "s2t"},
+     *               {@code "t2s"}, {@code "s2twp"}); may be {@code null}
+     * @return the converted text, or {@code null} if {@code text} is {@code null}
+     * @since 1.4.1
+     */
+    public static String convert(
+            String text,
+            String config
+    ) {
+        return new OpenCC(config).convert(text);
+    }
+
     /**
      * Retrieves the {@link DictRefs} for the given configuration and punctuation mode,
      * including attached {@link StarterUnion}s.

@@ -6,6 +6,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.1] - Unreleased
+
+### Added
+
+- Added thread-safe static convenience conversion methods:
+    - `OpenCC.convert(String, OpenccConfig)`
+    - `OpenCC.convert(String, String)`
+
+---
+
 ## [1.4.0] - 2029-06-19
 
 ### Added
