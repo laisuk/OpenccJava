@@ -343,6 +343,19 @@ public class PunctSets {
     }
 
     /**
+     * Checks whether the string ends with a dialog closer after trailing whitespace.
+     *
+     * @param s string to inspect
+     * @return {@code true} when the last non-whitespace character is a dialog closer
+     */
+    public static boolean endsWithDialogCloser(String s) {
+        CharRef lastRef = new CharRef();
+
+        return tryGetLastNonWhitespace(s, lastRef)
+                && isDialogCloser(lastRef.value);
+    }
+
+    /**
      * Detects unmatched or mismatched brackets in a string.
      *
      * @param s string to inspect
