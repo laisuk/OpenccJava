@@ -5,10 +5,41 @@ import openccjava.*;
 import java.nio.file.Paths;
 import java.util.*;
 
+/**
+ * Shared helpers for building OpenCC converters from command-line options.
+ *
+ * <p>This class keeps option parsing that is common to several CLI commands in
+ * one package-private place. In particular, it translates {@code --custom-dict}
+ * values from the CLI format {@code slot:append|override:path} into
+ * {@link CustomDictSpec} instances.</p>
+ *
+ * <p>The helpers are intentionally package-private because they are part of the
+ * CLI implementation rather than the public OpenCC Java API.</p>
+ */
 public final class CliUtils {
+    /**
+     * Utility class; not instantiable.
+     */
     private CliUtils() {
     }
 
+    /**
+     * Creates an {@link OpenCC} instance for a CLI command.
+     *
+     * <p>If {@code config} is not recognized, the library default config is
+     * used. When no custom dictionary specs are supplied, the converter uses the
+     * built-in dictionaries for the selected config. Otherwise, each
+     * {@code --custom-dict} value is parsed and combined into a custom
+     * {@link DictionaryMaxlength} before the converter is created.</p>
+     *
+     * @param config          CLI config name, such as {@code s2t}, {@code t2s},
+     *                        or {@code null} to use the default config
+     * @param customDictSpecs custom dictionary specs in
+     *                        {@code slot:append|override:path} form; may be
+     *                        {@code null} or empty
+     * @return an OpenCC converter configured for the command
+     * @throws IllegalArgumentException if any custom dictionary spec is invalid
+     */
     static OpenCC createOpenCC(
             String config,
             List<String> customDictSpecs
@@ -31,6 +62,21 @@ public final class CliUtils {
         return new OpenCC(typedConfig, dict);
     }
 
+    /**
+     * Parses one {@code --custom-dict} option value.
+     *
+     * <p>The expected format is {@code slot:append|override:path}. The slot name
+     * is matched by {@link #parseDictSlot(String)}, the mode by
+     * {@link #parseCustomDictMode(String)}, and the path is kept as the remaining
+     * third field so platform paths containing additional colon characters are
+     * preserved.</p>
+     *
+     * @param raw raw CLI option value
+     * @return a custom dictionary spec backed by the supplied file path
+     * @throws IllegalArgumentException if {@code raw} is {@code null}, blank, or
+     *                                  not in {@code slot:mode:path} form, or if
+     *                                  the slot or mode is invalid
+     */
     static CustomDictSpec parseCustomDictSpec(String raw) {
         if (raw == null || raw.trim().isEmpty()) {
             throw new IllegalArgumentException("Empty --custom-dict spec");
@@ -51,6 +97,11 @@ public final class CliUtils {
 
     private static final Map<String, DictSlot> SLOT_LOOKUP = createSlotLookup();
 
+    /**
+     * Builds the normalized lookup table used by {@link #parseDictSlot(String)}.
+     *
+     * @return an immutable map from CLI-friendly slot names to dictionary slots
+     */
     private static Map<String, DictSlot> createSlotLookup() {
         Map<String, DictSlot> map = new HashMap<>();
 
@@ -61,6 +112,16 @@ public final class CliUtils {
         return Collections.unmodifiableMap(map);
     }
 
+    /**
+     * Normalizes a slot token for forgiving command-line matching.
+     *
+     * <p>Users may type dictionary slots with different case, hyphens, or
+     * underscores, for example {@code hk-phrases-rev},
+     * {@code HK_Phrases_Rev}, or {@code hkphrasesrev}.</p>
+     *
+     * @param value slot token to normalize
+     * @return normalized slot token
+     */
     private static String normalize(String value) {
         return value
                 .trim()
@@ -69,6 +130,17 @@ public final class CliUtils {
                 .toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * Parses a custom dictionary slot name.
+     *
+     * <p>Matching ignores case, hyphens, and underscores so CLI users do not
+     * have to type enum names exactly.</p>
+     *
+     * @param value dictionary slot token from the command line
+     * @return the matching dictionary slot
+     * @throws IllegalArgumentException if {@code value} does not name a known
+     *                                  {@link DictSlot}
+     */
     static DictSlot parseDictSlot(String value) {
         DictSlot slot = SLOT_LOOKUP.get(normalize(value));
         if (slot == null) {
@@ -77,6 +149,15 @@ public final class CliUtils {
         return slot;
     }
 
+    /**
+     * Parses a custom dictionary application mode.
+     *
+     * @param value mode token from the command line; must be {@code append} or
+     *              {@code override}, ignoring case
+     * @return the matching custom dictionary mode
+     * @throws IllegalArgumentException if {@code value} is not {@code append} or
+     *                                  {@code override}
+     */
     static CustomDictMode parseCustomDictMode(String value) {
         String v = value.trim().toLowerCase(java.util.Locale.ROOT);
         if ("append".equals(v)) return CustomDictMode.Append;

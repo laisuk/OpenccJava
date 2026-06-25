@@ -1009,21 +1009,26 @@ bin/OpenccJavaCli.bat convert -c s2t -i input.txt -o output.txt
 
 ```bash
 bin/OpenccJavaCli convert --help                                                           
-Usage: openccjavacli convert [-hpV] -c=<conversion> [--con-enc=<encoding>]
+Usage: openccjavacli convert [-hpV] -c=<conversion> [--con-enc=<encoding>]                                                                                          
                              [--detofu=<level>] [--detofu-file=<file>]
                              [-i=<file>] [--in-enc=<encoding>] [-o=<file>]
-                             [--out-enc=<encoding>]
+                             [--out-enc=<encoding>] [--custom-dict=<slot:mode:
+                             path>[,<slot:mode:path>...]]...
 Convert plain text using OpenccJava
   -c, --config=<conversion>  Conversion configuration. Supported: s2t, t2s,
-                               s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp,
-                               s2hk, hk2s, t2tw, t2twp, tw2t, tw2tp,
-                               t2hk, hk2t, t2jp, jp2t
+                               s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk,
+                               hk2s, t2tw, t2twp, tw2t, tw2tp, t2hk, hk2t,
+                               t2jp, jp2t
       --con-enc=<encoding>   Console encoding for interactive mode. Ignored if
                                not attached to a terminal. Common <encoding>:
                                UTF-8, GBK, Big5
+      --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
+                             Apply custom dictionary file. Format: slot:
+                               append|override:path. Can be repeated or
+                               comma-separated.
       --detofu=<level>       Apply tofu-safe fallback after conversion: all,
-                               ext-b, ext-c, ext-d, ext-e, ext-f, ext-g,
-                               ext-h, ext-i
+                               ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h,
+                               ext-i
       --detofu-file=<file>   Load additional DeTofu fallback mappings from a
                                UTF-8 text file. Custom mappings override
                                built-in mappings (requires --detofu)
@@ -1054,6 +1059,23 @@ With a custom fallback file:
 openccjavacli convert -c t2s --detofu all --detofu-file custom-tofu.txt
 ```
 
+#### Custom Conversion Dictionary (Advanced)
+
+Example: append a custom Hong Kong phrase dictionary for `hk2sp`.
+
+`data/my_hk_dict.txt`:
+
+```text
+# Custom Dictionary
+
+細路哥	小男孩
+```
+
+```bash
+echo "這個細路哥很靈活" | ./openccjavacli convert -c hk2sp --custom-dict hkphrasesrev:append:data/my_hk_dict.txt
+这个小男孩很灵活
+```
+
 ### Office document conversion:
 
 ```bash
@@ -1062,17 +1084,21 @@ bin/OpenccJavaCli.bat office -c s2t -i book.docx -o book_converted.docx
 
 ```bash
 bin/OpenccJavaCli office --help 
-Usage: opencccli office [-hpV] [--auto-ext] [--[no-]keep-font] -c=<conversion>
-                        [--format=<format>] -i=<file> [-o=<file>]
+Usage: openccjavacli office [-hkpV] -c=<conversion> [-f=<format>] -i=<file>
+                            [-o=<file>] [--custom-dict=<slot:mode:path>[,<slot:
+                            mode:path>...]]...
 Convert Office documents using OpenccJava
-      --auto-ext          Auto-append extension to output file
   -c, --config=<conversion>
                           Conversion configuration
-      --format=<format>   Target Office format (e.g., docx, xlsx, pptx, odt,
+      --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
+                          Apply custom dictionary file. Format: slot:
+                            append|override:path. Can be repeated or
+                            comma-separated.
+  -f, --format=<format>   Target Office format (e.g., docx, xlsx, pptx, odt,
                             epub)
   -h, --help              Show this help message and exit.
   -i, --input=<file>      Input Office file
-      --[no-]keep-font    Preserve font-family info (default: false)
+  -k, --[no-]keep-font    Preserve font-family info (default: false)
   -o, --output=<file>     Output Office file
   -p, --punct             Punctuation conversion (default: false)
   -V, --version           Print version information and exit.
@@ -1096,14 +1122,20 @@ bin/OpenccJavaCli.bat pdf -c s2t -p -i sample.pdf -o converted.txt --reflow
 ```
 
 ```
-Usage: openccjavacli pdf [-ehHprV] [--compact] [-c=<conversion>] -i=<file>
-                         [-o=<file>]
-Extract PDF text, optionally reflow CJK paragraphs, then convert with OpenccJava
+Usage: openccjavacli pdf [-ehHprV] [--compact] [-c=<conversion>] -i=<file>                                                                                          
+                         [-o=<file>] [--custom-dict=<slot:mode:path>[,<slot:
+                         mode:path>...]]...
+Extract PDF text, optionally reflow CJK paragraphs, then convert with
+OpenccJava                                                                                                                                                          
   -c, --config=<conversion>
                         OpenCC conversion configuration (e.g. s2t, t2s, s2tw,
                           t2hk, t2jp, ...)
       --compact         Compact / tighten paragraph gaps after reflow (default:
                           false)
+      --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
+                        Apply custom dictionary file. Format: slot:
+                          append|override:path. Can be repeated or
+                          comma-separated.
   -e, --extract         Extract text from PDF document only (default: false)
   -h, --help            Show this help message and exit.
   -H, --header          Insert per-page header markers into extracted text
