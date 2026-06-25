@@ -1,13 +1,15 @@
 package openccjavacli;
 
-import openccjava.OpenCC;
-import openccjava.DeTofu;
+import openccjava.*;
 import picocli.CommandLine.*;
 import picocli.CommandLine.Model.CommandSpec;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.*;
 
@@ -51,6 +53,14 @@ public class ConvertCommand implements Callable<Integer> {
             description = "Load additional DeTofu fallback mappings from a UTF-8 text file. Custom mappings override built-in mappings (requires --detofu)"
     )
     private File detofuFile;
+
+    @Option(
+            names = "--custom-dict",
+            paramLabel = "<slot:mode:path>",
+            split = ",",
+            description = "Apply custom dictionary file. Format: slot:append|override:path. Can be repeated or comma-separated."
+    )
+    private List<String> customDictSpecs;
 
     @Option(names = {"--in-enc"}, paramLabel = "<encoding>", defaultValue = "UTF-8", description = "Input encoding")
     private String inEncoding;
@@ -97,7 +107,8 @@ public class ConvertCommand implements Callable<Integer> {
 
     private int handleTextConversion() {
         try {
-            OpenCC opencc = new OpenCC(config);
+//            OpenCC opencc = new OpenCC(config);
+            OpenCC opencc = CliUtils.createOpenCC(config, customDictSpecs);
             String inputText;
 
             if (input != null) {
@@ -189,4 +200,5 @@ public class ConvertCommand implements Callable<Integer> {
         }
         return buffer.toByteArray();
     }
+
 }
