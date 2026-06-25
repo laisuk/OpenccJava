@@ -13,6 +13,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Added thread-safe static convenience conversion methods:
     - `OpenCC.convert(String, OpenccConfig)`
     - `OpenCC.convert(String, String)`
+- Added construction-time custom dictionary convenience constructors:
+    - `OpenCC(String, List<CustomDictSpec>)`
+    - `OpenCC(OpenccConfig, List<CustomDictSpec>)`
 - CLI: Added custom dictionary feature `--custom-dict` for subcommand `convert`, `office` and `pdf`
 
 ---

@@ -175,6 +175,8 @@ OpenCC cc = OpenCC.fromConfig(OpenccConfig.TW2SP);  // Typed config helper
 OpenCC cc = new OpenCC();                           // Default config "s2t"
 OpenCC cc = new OpenCC("tw2sp");                  // String config
 OpenCC cc = new OpenCC(OpenccConfig.S2HK);         // Typed config
+OpenCC cc = new OpenCC("s2t", customSpecs);      // String config + custom dictionary specs
+OpenCC cc = new OpenCC(OpenccConfig.S2T, customSpecs); // Typed config + custom dictionary specs
 // @deprecated
 OpenCC cc = new OpenCC("s2t", java.nio.file.Paths.get("dicts")); // Custom plain-text dicts (@deprecated)
 ```
@@ -522,6 +524,40 @@ public class RegionalVariantPhraseExample {
 
 #### File-Level Preload Customization
 
+Use the `OpenCC` custom dictionary constructors when you want a concise construction-time override for one converter.
+These constructors copy the shared dictionary first, apply the specs to that copy, and leave the shared
+`DictionaryHolder` singleton unchanged.
+
+```java
+import openccjava.*;
+
+import java.nio.file.Paths;
+import java.util.Collections;
+
+public class OpenCCCustomDictConstructorExample {
+    static void main(String[] args) {
+        OpenCC cc = new OpenCC(
+                OpenccConfig.S2T,
+                Collections.singletonList(
+                        CustomDictSpec.fromFile(
+                                DictSlot.STPhrases,
+                                Paths.get("custom_st_phrases.txt"),
+                                CustomDictMode.Override
+                        )
+                )
+        );
+
+        System.out.println(cc.convert("测试词"));
+    }
+}
+```
+
+Use the string-config overload when your config comes from CLI options, config files, or other user input:
+
+```java
+OpenCC cc = new OpenCC("s2t", customSpecs);
+```
+
 Use `OpenCC.fromDicts(...)` or `DictionaryMaxlength.fromDicts(..., specs)` when you want to load official dictionary
 text files and apply custom entries before constructing the converter.
 
@@ -767,6 +803,8 @@ public class CustomDictFilesAndPairsExample {
 - `DictionaryMaxlength.withCustomDicts(...)` returns a customized copy using specs with files, pairs, or both.
 - `DictionaryMaxlength.withCustomDictFiles(...)` returns a customized copy of an already loaded dictionary.
 - `OpenCC.fromDicts(...)` creates a converter from a caller-owned custom dictionary.
+- `OpenCC(String config, List<CustomDictSpec>)` creates a converter with custom specs and a string config key.
+- `OpenCC(OpenccConfig config, List<CustomDictSpec>)` creates a converter with custom specs and a typed config.
 - `OpenCC(OpenccConfig config, DictionaryMaxlength dictionary)` creates a converter from a caller-supplied dictionary.
 - `OpenCC(DictionaryMaxlength dictionary)` uses the default `s2t` config with a caller-supplied dictionary.
 

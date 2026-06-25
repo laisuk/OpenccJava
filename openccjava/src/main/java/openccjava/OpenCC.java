@@ -442,6 +442,55 @@ public class OpenCC {
     }
 
     /**
+     * Constructs an {@code OpenCC} instance using a configuration string and
+     * custom dictionary specifications.
+     *
+     * <p>The provided {@code config} string is parsed via
+     * {@link OpenccConfig#tryParse(String)}. If the string is {@code null},
+     * empty, or invalid, the default configuration ({@code s2t}) is used.</p>
+     *
+     * <p>The shared dictionary from {@link DictionaryHolder} is copied first,
+     * then {@code customSpecs} are applied to the copy. The shared dictionary
+     * itself is never modified.</p>
+     *
+     * @param config      the configuration key (for example {@code "s2t"} or
+     *                    {@code "hk2sp"}); may be {@code null}
+     * @param customSpecs custom dictionary specs to apply; may be {@code null}
+     *                    or empty
+     * @throws RuntimeException     if a custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code customSpecs} contains a {@code null}
+     *                              spec
+     */
+    public OpenCC(String config, List<CustomDictSpec> customSpecs) {
+        this(OpenccConfig.tryParse(config), customSpecs);
+    }
+
+    /**
+     * Constructs an {@code OpenCC} instance using a typed configuration and
+     * custom dictionary specifications.
+     *
+     * <p>The shared dictionary from {@link DictionaryHolder} is copied first,
+     * then {@code customSpecs} are applied to the copy. The shared dictionary
+     * itself is never modified.</p>
+     *
+     * <p>If {@code config} is {@code null}, the default configuration
+     * ({@code s2t}) is used.</p>
+     *
+     * @param config      the configuration ID, or {@code null} to use the default
+     * @param customSpecs custom dictionary specs to apply; may be {@code null}
+     *                    or empty
+     * @throws RuntimeException     if a custom dictionary file cannot be loaded
+     * @throws NullPointerException if {@code customSpecs} contains a {@code null}
+     *                              spec
+     */
+    public OpenCC(OpenccConfig config, List<CustomDictSpec> customSpecs) {
+        this(
+                config,
+                DictionaryHolder.get().withCustomDictFiles(customSpecs)
+        );
+    }
+
+    /**
      * Constructs an OpenCC instance using plain text dictionaries from the given directory.
      * <p>
      * <strong>Deprecated:</strong> This constructor will be removed in the next major version.

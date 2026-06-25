@@ -28,9 +28,10 @@ public final class CliUtils {
      *
      * <p>If {@code config} is not recognized, the library default config is
      * used. When no custom dictionary specs are supplied, the converter uses the
-     * built-in dictionaries for the selected config. Otherwise, each
-     * {@code --custom-dict} value is parsed and combined into a custom
-     * {@link DictionaryMaxlength} before the converter is created.</p>
+     * shared built-in dictionaries for the selected config. Otherwise, each
+     * {@code --custom-dict} value is parsed and passed to {@link OpenCC}, which
+     * creates a customized copy of the shared dictionary without modifying the
+     * singleton dictionary.</p>
      *
      * @param config          CLI config name, such as {@code s2t}, {@code t2s},
      *                        or {@code null} to use the default config
@@ -39,6 +40,7 @@ public final class CliUtils {
      *                        {@code null} or empty
      * @return an OpenCC converter configured for the command
      * @throws IllegalArgumentException if any custom dictionary spec is invalid
+     * @throws RuntimeException         if a custom dictionary file cannot be loaded
      */
     static OpenCC createOpenCC(
             String config,
@@ -58,8 +60,7 @@ public final class CliUtils {
             specs.add(parseCustomDictSpec(raw));
         }
 
-        DictionaryMaxlength dict = DictionaryMaxlength.fromDicts(specs);
-        return new OpenCC(typedConfig, dict);
+        return new OpenCC(typedConfig, specs);
     }
 
     /**
