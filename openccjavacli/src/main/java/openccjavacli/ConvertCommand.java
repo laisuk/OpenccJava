@@ -38,6 +38,9 @@ public class ConvertCommand implements Callable<Integer> {
     @Option(names = {"-p", "--punct"}, description = "Punctuation conversion (default: false)")
     private boolean punct;
 
+    @Option(names = {"--norm-compat"}, description = "Normalize CJK Compatibility Ideographs before conversion.")
+    private boolean normCompat;
+
     @Option(
             names = "--detofu",
             paramLabel = "<level>",
@@ -125,6 +128,10 @@ public class ConvertCommand implements Callable<Integer> {
                     System.err.println(BLUE + "Input text to convert, <Ctrl+D> (Unix) <Ctrl-Z> (Windows) to submit:" + RESET);
                 }
                 inputText = new String(inputStreamReadAllBytes(), inputCharset);
+            }
+
+            if (normCompat) {
+                inputText = opencc.normalizeCompat(inputText);
             }
 
             String outputText = opencc.convert(inputText, punct);

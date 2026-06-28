@@ -98,6 +98,9 @@ public class PdfCommand implements Runnable {
     )
     private boolean extract;
 
+    @Option(names = {"--norm-compat"}, description = "Normalize CJK Compatibility Ideographs before conversion.")
+    private boolean normCompat;
+
     @Option(
             names = "--custom-dict",
             paramLabel = "<slot:mode:path>",
@@ -165,6 +168,9 @@ public class PdfCommand implements Runnable {
 //                OpenCC opencc = new OpenCC(config);
                 OpenCC opencc = CliUtils.createOpenCC(config, customDictSpecs);
                 System.err.println("🔁 Converting with OpenccJava...");
+                if (normCompat) {
+                    processed = opencc.normalizeCompat(processed);
+                }
                 String converted = opencc.convert(processed, punct);
                 Files.write(output.toPath(), converted.getBytes(StandardCharsets.UTF_8));
             }
