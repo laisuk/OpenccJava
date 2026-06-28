@@ -306,18 +306,18 @@ import openccjava.CompatIdeographs;
 
 public class CompatIdeographsExample {
     static void main(String[] args) {
-        System.out.println(CompatIdeographs.normalize("金庸"));
-        // 金庸
+        System.out.println(CompatIdeographs.normalize("天龍八部書裡的喬峰是契丹人"));
+        // 天龍八部書裡的喬峰是契丹人
 
-        System.out.println(CompatIdeographs.normalize("abc金庸123"));
-        // abc金庸123
+        System.out.println(CompatIdeographs.normalize("abc天龍八部書裡的喬峰是契丹人123"));
+        // abc天龍八部書裡的喬峰是契丹人123
 
         System.out.println(CompatIdeographs.normalize("鼖鼻𪘀"));
         // 鼖鼻𪘀
 
         OpenCC cc = new OpenCC();
-        System.out.println(cc.normalizeCompat("金庸"));
-        // 金庸
+        System.out.println(cc.normalizeCompat("天龍八部書裡的喬峰是契丹人"));
+        // 天龍八部書裡的喬峰是契丹人
     }
 }
 ```
@@ -330,13 +330,13 @@ import openccjava.OpenccConfig;
 
 public class CompatBeforeConvertExample {
     static void main(String[] args) {
-        OpenCC cc = new OpenCC(OpenccConfig.S2T);
+        OpenCC cc = new OpenCC(OpenccConfig.T2S);
 
-        String normalized = cc.normalizeCompat("金庸小說");
+        String normalized = cc.normalizeCompat("天龍八部書裡的喬峰是契丹人");
         String converted = cc.convert(normalized);
 
         System.out.println(converted);
-        // 金庸小說
+        // 天龙八部书里的乔峰是契丹人
     }
 }
 ```

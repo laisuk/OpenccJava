@@ -532,4 +532,26 @@ class OpenCCTest {
         assertEquals("鼖鼻𪘀",
                 cc.normalizeCompat("鼖鼻𪘀"));
     }
+
+    @Test
+    public void normalizeCompatGolden() {
+        assertEquals(
+                "天龍八部書裡的喬峰是契丹人",
+                CompatIdeographs.normalize("天龍八部書裡的喬峰是契丹人"));
+    }
+
+    @Test
+    public void openccNormalizeCompatThenConvertGolden() {
+        OpenCC cc = new OpenCC(OpenccConfig.T2S);
+
+        String normalized = cc.normalizeCompat("天龍八部書裡的喬峰是契丹人");
+
+        assertEquals(
+                "天龍八部書裡的喬峰是契丹人",
+                normalized);
+
+        assertEquals(
+                "天龙八部书里的乔峰是契丹人",
+                cc.convert(normalized));
+    }
 }
