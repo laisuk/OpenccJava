@@ -1587,6 +1587,36 @@ public class OpenCC {
     }
 
     /**
+     * Normalizes CJK Compatibility Ideographs using the built-in Unicode
+     * compatibility mapping table.
+     *
+     * <p>This is a convenience wrapper around
+     * {@link CompatIdeographs#normalize(String)}.
+     * It performs an optional Unicode compatibility normalization pre-pass and
+     * does not modify this {@code OpenCC} instance, its selected configuration,
+     * conversion dictionaries, segmentation behavior, script detection, or
+     * punctuation conversion.</p>
+     *
+     * <p>Use this before {@link #convert(String)} when input may contain
+     * CJK Compatibility Ideographs such as {@code 金} and you want
+     * upstream OpenCC-compatible behavior. Unmapped compatibility ideographs
+     * remain unchanged.</p>
+     *
+     * <p>DeToFu is the opposite side of the pipeline: compatibility ideograph
+     * normalization is a pre-processing step, while
+     * {@link #deTofu(String, DeTofu.Level)} is an optional post-processing
+     * display fallback.</p>
+     *
+     * @param input the input text; {@code null} and empty strings return {@code ""}
+     * @return normalized text with mapped compatibility ideographs replaced
+     * by their unified forms
+     * @since 1.4.1
+     */
+    public String normalizeCompat(String input) {
+        return CompatIdeographs.normalize(input);
+    }
+
+    /**
      * Applies DeTofu display-compatible fallbacks to mapped rare CJK extension characters.
      *
      * <p>This is a convenience wrapper around {@link DeTofu#convert(String, DeTofu.Level)}.</p>

@@ -283,6 +283,72 @@ Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `j
 Use `s2hkp` / `hk2sp` when Hong Kong phrase-level mappings from `HKPhrases.txt` / `HKPhrasesRev.txt`
 should be applied in addition to HK variant normalization.
 
+## CJK Compatibility Ideograph normalization
+
+`CompatIdeographs` is an optional Unicode compatibility pre-processing helper. It maps CJK Compatibility Ideographs to
+their Unicode decomposition targets before OpenCC segmentation and dictionary conversion. This is useful when input text
+contains compatibility forms such as `金` but you want conversion to behave as if the canonical ideograph `金` had been
+provided.
+
+Compatibility ideograph normalization is not part of OpenCC dictionary conversion logic. It does not affect phrase
+matching, regional variants, punctuation conversion, script detection, or dictionary data. For converted text, the
+recommended order is:
+
+1. Normalize compatibility ideographs with `CompatIdeographs.normalize(...)` or `OpenCC.normalizeCompat(...)`.
+2. Run normal OpenCC conversion with `convert(...)`.
+3. Optionally run DeTofu on the converted result for display fallback.
+
+### Java API usage
+
+```java
+import openccjava.OpenCC;
+import openccjava.CompatIdeographs;
+
+public class CompatIdeographsExample {
+    static void main(String[] args) {
+        System.out.println(CompatIdeographs.normalize("金庸"));
+        // 金庸
+
+        System.out.println(CompatIdeographs.normalize("abc金庸123"));
+        // abc金庸123
+
+        System.out.println(CompatIdeographs.normalize("鼖鼻𪘀"));
+        // 鼖鼻𪘀
+
+        OpenCC cc = new OpenCC();
+        System.out.println(cc.normalizeCompat("金庸"));
+        // 金庸
+    }
+}
+```
+
+Normalize before conversion:
+
+```java
+import openccjava.OpenCC;
+import openccjava.OpenccConfig;
+
+public class CompatBeforeConvertExample {
+    static void main(String[] args) {
+        OpenCC cc = new OpenCC(OpenccConfig.S2T);
+
+        String normalized = cc.normalizeCompat("金庸小說");
+        String converted = cc.convert(normalized);
+
+        System.out.println(converted);
+        // 金庸小說
+    }
+}
+```
+
+### Compatibility ideograph API
+
+- `CompatIdeographs.normalize(...)`
+- `OpenCC.normalizeCompat(...)`
+
+Built-in mappings are embedded under `dicts/CJK_Compatibility_Ideographs.txt`. Characters outside the CJK Compatibility
+Ideograph ranges, and compatibility ideographs without a decomposition mapping, are preserved unchanged.
+
 ## DeTofu display-compatible fallback
 
 DeTofu is an optional post-conversion display compatibility pass. It replaces only mapped tofu-risk rare CJK extension
@@ -292,6 +358,9 @@ browsers, document viewers, e-book readers, or mobile platforms.
 
 For example, `驂騑` converted by `t2s` may become `骖𬴂`. Applying DeTofu can turn it into `骖騑` for safer display.
 Unknown or unmapped characters are preserved unchanged.
+
+If input may contain CJK Compatibility Ideographs, normalize them before conversion. DeTofu remains the opposite side of
+the pipeline and runs after conversion.
 
 DeTofu is not part of OpenCC dictionary conversion logic. It does not affect phrase matching, regional variants,
 punctuation conversion, script detection, or dictionary data. Apply it after normal OpenCC conversion when display

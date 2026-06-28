@@ -499,4 +499,37 @@ class OpenCCTest {
 
         assertEquals("氂毛", output);
     }
+
+    @Test
+    public void normalizeCompat() {
+        assertEquals("金庸", CompatIdeographs.normalize("金庸"));
+    }
+
+    @Test
+    public void normalizeCompatNonBmp() {
+        assertEquals("鼖鼻𪘀",
+                CompatIdeographs.normalize("鼖鼻𪘀"));
+    }
+
+    @Test
+    public void normalizeCompatPreservesUnmapped() {
+        assertEquals("abc金庸123",
+                CompatIdeographs.normalize("abc金庸123"));
+    }
+
+    @Test
+    public void openccNormalizeCompat() {
+        OpenCC cc = new OpenCC();
+
+        assertEquals("金庸",
+                cc.normalizeCompat("金庸"));
+    }
+
+    @Test
+    public void openccNormalizeCompatNonBmp() {
+        OpenCC cc = new OpenCC();
+
+        assertEquals("鼖鼻𪘀",
+                cc.normalizeCompat("鼖鼻𪘀"));
+    }
 }

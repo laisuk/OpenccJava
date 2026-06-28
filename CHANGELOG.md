@@ -10,6 +10,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added CJK Compatibility Ideograph normalization support.
+    - New `CompatIdeographs.normalize(...)` utility API.
+    - New `OpenCC.normalizeCompat(...)` convenience API for normalizing compatibility ideographs before OpenCC
+      conversion.
+    - New built-in mapping data embedded in `dicts/CJK_Compatibility_Ideographs.txt`.
+    - Compatibility ideograph normalization is an optional pre-processing pass; DeTofu remains the optional
+      post-processing display fallback.
 - Added thread-safe static convenience conversion methods:
     - `OpenCC.convert(String, OpenccConfig)`
     - `OpenCC.convert(String, String)`
