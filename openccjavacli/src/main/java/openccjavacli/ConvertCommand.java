@@ -38,7 +38,7 @@ public class ConvertCommand implements Callable<Integer> {
     @Option(names = {"-p", "--punct"}, description = "Punctuation conversion (default: false)")
     private boolean punct;
 
-    @Option(names = {"--norm-compat"}, description = "Normalize CJK Compatibility Ideographs before conversion.")
+    @Option(names = {"-n", "--norm-compat"}, description = "Normalize CJK Compatibility Ideographs before conversion.")
     private boolean normCompat;
 
     @Option(
@@ -56,7 +56,7 @@ public class ConvertCommand implements Callable<Integer> {
     private File detofuFile;
 
     @Option(
-            names = "--custom-dict",
+            names = {"-D", "--custom-dict"},
             paramLabel = "<slot:mode:path>",
             split = ",",
             description = "Apply custom dictionary file. Format: slot:append|override:path. Can be repeated or comma-separated."

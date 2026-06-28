@@ -87,7 +87,7 @@ public class PdfCommand implements Runnable {
     private boolean reflow;
 
     @Option(
-            names = {"--compact"},
+            names = {"-C", "--compact"},
             description = "Compact / tighten paragraph gaps after reflow (default: false)"
     )
     private boolean compact;
@@ -98,11 +98,11 @@ public class PdfCommand implements Runnable {
     )
     private boolean extract;
 
-    @Option(names = {"--norm-compat"}, description = "Normalize CJK Compatibility Ideographs before conversion.")
+    @Option(names = {"-n", "--norm-compat"}, description = "Normalize CJK Compatibility Ideographs before conversion.")
     private boolean normCompat;
 
     @Option(
-            names = "--custom-dict",
+            names = {"-D", "--custom-dict"},
             paramLabel = "<slot:mode:path>",
             split = ",",
             description = "Apply custom dictionary file. Format: slot:append|override:path. Can be repeated or comma-separated."
