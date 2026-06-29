@@ -25,6 +25,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     - `OpenCC(OpenccConfig, List<CustomDictSpec>)`
 - CLI: Added custom dictionary feature `--custom-dict` for subcommand `convert`, `office` and `pdf`
 
+### Changed
+
+- Optimized Reflow standalone line finalizer when buffer text is empty.
+
 ---
 
 ## [1.4.0] - 2029-06-19
