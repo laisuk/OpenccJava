@@ -359,7 +359,7 @@ public final class PdfReflowHelper {
                     && !strippedHasUnclosedBracket
                     && strippedEndsWithStrongSentenceEnd) {
                 segments.add(stripped);
-                dialogState.reset();
+//                dialogState.reset();
                 continue;
             }
 
