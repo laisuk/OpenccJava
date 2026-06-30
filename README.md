@@ -1342,10 +1342,15 @@ when compact output should also have deterministic lexical key ordering.
 
 ```bash
 OpenccJavaCli dictgen --help
-Usage: opencccli dictgen [-chV] [-s] [-f=<format>] [-o=<filename>]
-Generate dictionary for OpenccJava
+sage: openccjavacli dictgen [-chsV] [-f=<format>] [-o=<filename>] [-D=<slot:
+                             mode:path>[,<slot:mode:path>...]]...
+Generate base dictionary for OpenccJava
   -c, --compact             Enable non-indented JSON output (default: false)
-  -f, --format=<format>     Dictionary format: [json]
+  -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
+                            Apply custom dictionary file. Format: slot:
+                              append|override:path. Can be repeated or
+                              comma-separated.
+  -f, --format=<format>     Dictionary output format: [json]
   -h, --help                Show this help message and exit.
   -o, --output=<filename>   Output filename
   -s, --sort                Sort JSON dictionary keys for deterministic output

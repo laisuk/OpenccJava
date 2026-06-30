@@ -23,7 +23,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Added construction-time custom dictionary convenience constructors:
     - `OpenCC(String, List<CustomDictSpec>)`
     - `OpenCC(OpenccConfig, List<CustomDictSpec>)`
-- CLI: Added custom dictionary feature `--custom-dict` for subcommand `convert`, `office` and `pdf`
+- CLI: Added custom dictionary feature `--custom-dict` for subcommand `convert`, `office`, `pdf` and `dictgen`.
 
 ### Changed
 

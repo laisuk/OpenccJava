@@ -64,6 +64,39 @@ public final class CliUtils {
     }
 
     /**
+     * Applies CLI custom dictionary specifications to an existing dictionary.
+     *
+     * <p>When no custom dictionary specs are supplied, the original dictionary is
+     * returned unchanged. Otherwise, each {@code --custom-dict} value is parsed
+     * and applied to the supplied dictionary, producing a customized copy while
+     * leaving the original dictionary unmodified.</p>
+     *
+     * @param dict            base dictionary to customize
+     * @param customDictSpecs custom dictionary specs in
+     *                        {@code slot:append|override:path} form; may be
+     *                        {@code null} or empty
+     * @return the original dictionary if no custom dictionary specs are supplied;
+     * otherwise a customized copy with the requested custom dictionaries applied
+     * @throws IllegalArgumentException if any custom dictionary spec is invalid
+     * @throws RuntimeException         if a custom dictionary file cannot be loaded
+     */
+    static DictionaryMaxlength applyCustomDictionary(
+            DictionaryMaxlength dict,
+            List<String> customDictSpecs
+    ) {
+        if (customDictSpecs == null || customDictSpecs.isEmpty()) {
+            return dict;
+        }
+
+        List<CustomDictSpec> specs = new ArrayList<>();
+        for (String raw : customDictSpecs) {
+            specs.add(parseCustomDictSpec(raw));
+        }
+
+        return dict.withCustomDictFiles(specs);
+    }
+
+    /**
      * Parses one {@code --custom-dict} option value.
      *
      * <p>The expected format is {@code slot:append|override:path}. The slot name
