@@ -27,7 +27,7 @@ import static openccjava.Utils.readUtf8;
  *
  * <p>This class cannot be instantiated.</p>
  *
- * @since 1.5.0
+ * @since 1.4.1
  */
 public final class CompatIdeographs {
     private static final String BUILTIN_RESOURCE = "/dicts/CJK_Compatibility_Ideographs.txt";

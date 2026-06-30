@@ -34,7 +34,7 @@ public class OfficeCommand implements Runnable {
     private boolean keepFont;
 
     @Option(
-            names = "--custom-dict",
+            names = {"-D", "--custom-dict"},
             paramLabel = "<slot:mode:path>",
             split = ",",
             description = "Apply custom dictionary file. Format: slot:append|override:path. Can be repeated or comma-separated."
