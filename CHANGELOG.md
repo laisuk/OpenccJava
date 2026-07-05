@@ -28,6 +28,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Optimized Reflow standalone line finalizer when buffer text is empty.
+- Handling standalone dialog closer in line.
 
 ---
 
