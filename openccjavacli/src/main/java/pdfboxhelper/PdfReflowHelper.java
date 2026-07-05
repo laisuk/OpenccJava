@@ -411,8 +411,9 @@ public final class PdfReflowHelper {
             //   missing opening quotes or cross-page broken quoted text
             if (strippedEndsWithDialogCloser) {
                 boolean punctBeforeCloserIsStrong =
-                        PunctSets.tryGetPrevNonWhitespace(stripped, lastIdxRef.index, prevRef) &&
-                                PunctSets.isClauseOrEndPunct(prevRef.value);
+                        (PunctSets.tryGetPrevNonWhitespace(stripped, lastIdxRef.index, prevRef)
+                                || PunctSets.tryGetLastNonWhitespace(bufferText, prevRef))
+                                && PunctSets.isClauseOrEndPunct(prevRef.value);
 
                 buffer.append(stripped);
                 dialogState.update(stripped);
