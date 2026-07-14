@@ -28,6 +28,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Optimized Reflow standalone line finalizer when buffer text is empty.
+- Flattened direct `t2twp()` and `tw2tp()` conversion plans from two rounds to one shared Taiwan phrase/variant round.
+- Generalized internal Taiwan and Hong Kong triple union keys so their cached unions can be reused across conversion plans.
 - Handling standalone dialog closer in line.
 
 ---

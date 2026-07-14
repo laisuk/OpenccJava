@@ -554,4 +554,23 @@ class OpenCCTest {
                 "天龙八部书里的乔峰是契丹人",
                 cc.convert(normalized));
     }
+
+    @Test
+    public void taiwanPhrasePlansUseSingleSharedTripleRound() {
+        ConversionPlanCache cache = ConversionPlanCache.forDictionary(OpenCC.DictionaryHolder.get());
+
+        DictRefs t2twp = cache.getPlan(OpenccConfig.T2TWP, false);
+        DictRefs s2twp = cache.getPlan(OpenccConfig.S2TWP, false);
+        assertNotNull(t2twp.u1);
+        assertNull(t2twp.u2);
+        assertNull(t2twp.u3);
+        assertSame(t2twp.u1, s2twp.u2);
+
+        DictRefs tw2tp = cache.getPlan(OpenccConfig.TW2TP, false);
+        DictRefs tw2sp = cache.getPlan(OpenccConfig.TW2SP, false);
+        assertNotNull(tw2tp.u1);
+        assertNull(tw2tp.u2);
+        assertNull(tw2tp.u3);
+        assertSame(tw2tp.u1, tw2sp.u1);
+    }
 }

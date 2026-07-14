@@ -1413,7 +1413,8 @@ public class OpenCC {
     }
 
     /**
-     * Converts Traditional Chinese to Taiwan Traditional with phrases and variants.
+     * Converts Traditional Chinese to Taiwan Traditional by applying Taiwan phrase,
+     * phrase-variant, and character-variant dictionaries in one conversion round.
      *
      * @param input the Traditional Chinese input
      * @return the converted Taiwan Traditional Chinese with phrases and variants
@@ -1435,7 +1436,9 @@ public class OpenCC {
     }
 
     /**
-     * Converts Taiwan Traditional Chinese to base Traditional Chinese, including phrase reversal.
+     * Converts Taiwan Traditional Chinese to base Traditional Chinese by applying
+     * reverse Taiwan phrase, phrase-variant, and character-variant dictionaries in
+     * one conversion round.
      *
      * @param input the Taiwan Traditional input
      * @return the fully reverted Traditional Chinese text
