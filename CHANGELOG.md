@@ -23,6 +23,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Added construction-time custom dictionary convenience constructors:
     - `OpenCC(String, List<CustomDictSpec>)`
     - `OpenCC(OpenccConfig, List<CustomDictSpec>)`
+- Added direct Hong Kong phrase-level conversion configs and APIs:
+    - `OpenccConfig.T2HKP` / config key `t2hkp` with `OpenCC.t2hkp(String)`.
+    - `OpenccConfig.HK2TP` / config key `hk2tp` with `OpenCC.hk2tp(String)`.
+    - Both configs are available through the CLI and use the shared single-round HK phrase/variant unions.
 - CLI: Added custom dictionary feature `--custom-dict` for subcommand `convert`, `office`, `pdf` and `dictgen`.
 
 ### Changed

@@ -273,15 +273,18 @@ public class Example {
         cc.tw2sp("臺灣計程車", false); // 台湾出租车 - Taiwan Traditional → Simplified with idioms
         cc.s2hkp("香港鼠标", false); // 香港滑鼠 - Simplified → Hong Kong Traditional with phrases
         cc.hk2sp("香港滑鼠", false); // 香港鼠标 - Hong Kong Traditional with phrases → Simplified
+        cc.t2hkp("光標");          // 游標 - Traditional → Hong Kong Traditional with phrases
+        cc.hk2tp("游標");          // 光標 - Hong Kong Traditional with phrases → Traditional
         cc.t2jp("傳統");             // 伝統 - Traditional → Japanese Kanji
     }
 }
 ```
 
 Most directional conversion methods support a boolean punctuation flag as a second parameter.
-Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, and `jp2t` are single-argument methods.
-Use `s2hkp` / `hk2sp` when Hong Kong phrase-level mappings from `HKPhrases.txt` / `HKPhrasesRev.txt`
-should be applied in addition to HK variant normalization.
+Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`, `hk2t`, `hk2tp`, `t2jp`, and `jp2t`
+are single-argument methods. Use `s2hkp` / `hk2sp` for phrase-aware Hong Kong conversions to or from Simplified
+Chinese. Use `t2hkp` / `hk2tp` when `HKPhrases.txt` / `HKPhrasesRev.txt` should be applied directly between
+general Traditional and Hong Kong Traditional Chinese.
 
 ## CJK Compatibility Ideograph normalization
 
@@ -938,9 +941,11 @@ The following configuration keys correspond to OpenCC conversion modes:
 | **t2tw**   | Traditional → Traditional (Taiwan)             | Normalizes Traditional Chinese to Taiwan variant.                                |
 | **t2twp**  | Traditional → Traditional (Taiwan + phrases)   | Includes Taiwan-specific phrase-level normalization.                             |
 | **t2hk**   | Traditional → Traditional (Hong Kong)          | Normalizes Traditional Chinese to Hong Kong variant.                             |
+| **t2hkp**  | Traditional → Traditional (Hong Kong + phrases) | Applies HK phrase mappings, HK phrase variants, and HK character variants.      |
 | **tw2t**   | Traditional (Taiwan) → Traditional             | Converts Taiwan variant back to general Traditional Chinese.                     |
 | **tw2tp**  | Traditional (Taiwan + phrases) → Traditional   | Converts Taiwan phrased Traditional Chinese to general Traditional.              |
 | **hk2t**   | Traditional (Hong Kong) → Traditional          | Converts Hong Kong variant back to general Traditional Chinese.                  |
+| **hk2tp**  | Traditional (Hong Kong + phrases) → Traditional | Reverses HK phrase and variant mappings to general Traditional Chinese.          |
 | **t2jp**   | Traditional → Japanese Shinjitai               | Converts Traditional Japanese Kyujitai to Japanese Shinjitai (simplified kanji). |
 | **jp2t**   | Japanese Shinjitai → Traditional               | Converts Japanese Shinjitai characters back to Traditional Japanese Kyujitai.    |
 
@@ -1124,8 +1129,8 @@ Usage: openccjavacli convert [-hpV] -c=<conversion> [--con-enc=<encoding>]
 Convert plain text using OpenccJava
   -c, --config=<conversion>  Conversion configuration. Supported: s2t, t2s,
                                s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk,
-                               hk2s, t2tw, t2twp, tw2t, tw2tp, t2hk, hk2t,
-                               t2jp, jp2t
+                               hk2s, t2tw, t2twp, tw2t, tw2tp, t2hk, t2hkp,
+                               hk2t, hk2tp, t2jp, jp2t
       --con-enc=<encoding>   Console encoding for interactive mode. Ignored if
                                not attached to a terminal. Common <encoding>:
                                UTF-8, GBK, Big5
@@ -1192,12 +1197,15 @@ bin/OpenccJavaCli.bat office -c s2t -i book.docx -o book_converted.docx
 ```bash
 bin/OpenccJavaCli office --help 
 Usage: openccjavacli office [-hkpV] -c=<conversion> [-f=<format>] -i=<file>
-                            [-o=<file>] [--custom-dict=<slot:mode:path>[,<slot:
-                            mode:path>...]]...
+                            [-o=<file>] [-D=<slot:mode:path>[,<slot:mode:
+                            path>...]]...
 Convert Office documents using OpenccJava
   -c, --config=<conversion>
-                          Conversion configuration
-      --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
+                          Conversion configuration. Supported: s2t, t2s, s2tw,
+                            tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk, hk2s, t2tw,
+                            t2twp, tw2t, tw2tp, t2hk, t2hkp, hk2t, hk2tp, t2jp,
+                            jp2t
+  -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
                           Apply custom dictionary file. Format: slot:
                             append|override:path. Can be repeated or
                             comma-separated.
@@ -1229,17 +1237,18 @@ bin/OpenccJavaCli.bat pdf -c s2t -p -i sample.pdf -o converted.txt --reflow
 ```
 
 ```
-Usage: openccjavacli pdf [-ehHprV] [--compact] [-c=<conversion>] -i=<file>                                                                                          
-                         [-o=<file>] [--custom-dict=<slot:mode:path>[,<slot:
-                         mode:path>...]]...
+Usage: openccjavacli pdf [-CehHnprV] [-c=<conversion>] -i=<file> [-o=<file>]
+                         [-D=<slot:mode:path>[,<slot:mode:path>...]]...
 Extract PDF text, optionally reflow CJK paragraphs, then convert with
 OpenccJava                                                                                                                                                          
   -c, --config=<conversion>
-                        OpenCC conversion configuration (e.g. s2t, t2s, s2tw,
-                          t2hk, t2jp, ...)
-      --compact         Compact / tighten paragraph gaps after reflow (default:
+                        Conversion configuration. Supported: s2t, t2s, s2tw,
+                          tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk, hk2s, t2tw,
+                          t2twp, tw2t, tw2tp, t2hk, t2hkp, hk2t, hk2tp, t2jp,
+                          jp2t
+  -C, --compact         Compact / tighten paragraph gaps after reflow (default:
                           false)
-      --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
+  -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
                         Apply custom dictionary file. Format: slot:
                           append|override:path. Can be repeated or
                           comma-separated.
@@ -1247,6 +1256,8 @@ OpenccJava
   -h, --help            Show this help message and exit.
   -H, --header          Insert per-page header markers into extracted text
   -i, --input=<file>    Input PDF file
+  -n, --norm-compat     Normalize CJK Compatibility Ideographs before
+                          conversion.
   -o, --output=<file>   Output text file (UTF-8). If omitted, '<name>_converted.
                           txt' is used next to input.
   -p, --punct           Enable punctuation conversion (default: false)

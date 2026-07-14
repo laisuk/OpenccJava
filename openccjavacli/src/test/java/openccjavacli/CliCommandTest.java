@@ -42,6 +42,8 @@ class CliCommandTest {
         assertTrue(result.stderr.contains("Invalid config: not-a-config"), result.stderr);
         assertTrue(result.stderr.contains("Supported configs:"), result.stderr);
         assertTrue(result.stderr.contains("t2s"), result.stderr);
+        assertTrue(result.stderr.contains("t2hkp"), result.stderr);
+        assertTrue(result.stderr.contains("hk2tp"), result.stderr);
     }
 
     @Test
@@ -53,6 +55,42 @@ class CliCommandTest {
         assertEquals(CommandLine.ExitCode.USAGE, result.exitCode);
         assertTrue(result.stderr.contains("Missing or invalid config: not-a-config"), result.stderr);
         assertTrue(result.stderr.contains("Supported configs:"), result.stderr);
+    }
+
+    @Test
+    void pdfHelpListsSupportedConfigs() {
+        CommandResult result = execute("pdf", "--help");
+
+        assertEquals(CommandLine.ExitCode.OK, result.exitCode, result.stderr);
+        assertTrue(result.stdout.contains("t2hkp"), result.stdout);
+        assertTrue(result.stdout.contains("hk2tp"), result.stdout);
+    }
+
+    @Test
+    void officeHelpListsSupportedConfigs() {
+        CommandResult result = execute("office", "--help");
+
+        assertEquals(CommandLine.ExitCode.OK, result.exitCode, result.stderr);
+        assertTrue(result.stdout.contains("t2hkp"), result.stdout);
+        assertTrue(result.stdout.contains("hk2tp"), result.stdout);
+    }
+
+    @Test
+    void convertSupportsDirectHongKongPhraseConfigs() throws Exception {
+        Path input = tempDir.resolve("traditional.txt");
+        Path hongKong = tempDir.resolve("hong-kong.txt");
+        Files.write(input, "光標".getBytes(StandardCharsets.UTF_8));
+
+        CommandResult forward = execute("convert", "-c", "t2hkp", "-i", input.toString(), "-o", hongKong.toString());
+        assertEquals(CommandLine.ExitCode.OK, forward.exitCode, forward.stderr);
+        assertEquals("游標", new String(Files.readAllBytes(hongKong), StandardCharsets.UTF_8));
+
+        Path traditional = tempDir.resolve("traditional-roundtrip.txt");
+        CommandResult reverse = execute(
+                "convert", "-c", "hk2tp", "-i", hongKong.toString(), "-o", traditional.toString()
+        );
+        assertEquals(CommandLine.ExitCode.OK, reverse.exitCode, reverse.stderr);
+        assertEquals("光標", new String(Files.readAllBytes(traditional), StandardCharsets.UTF_8));
     }
 
     @Test

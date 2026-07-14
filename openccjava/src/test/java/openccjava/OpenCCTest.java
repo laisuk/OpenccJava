@@ -95,6 +95,8 @@ class OpenCCTest {
         assertEquals(OpenccConfig.S2TWP, OpenccConfig.tryParse("S2TWP"));
         assertEquals(OpenccConfig.S2HKP, OpenccConfig.tryParse("s2hkp"));
         assertEquals(OpenccConfig.HK2SP, OpenccConfig.tryParse("hk2sp"));
+        assertEquals(OpenccConfig.T2HKP, OpenccConfig.tryParse("t2hkp"));
+        assertEquals(OpenccConfig.HK2TP, OpenccConfig.tryParse("hk2tp"));
         // ✅ Round-trip consistency
         for (OpenccConfig cfg : OpenccConfig.values()) {
             assertEquals(cfg, OpenccConfig.tryParse(cfg.toCanonicalName()));
@@ -106,6 +108,8 @@ class OpenCCTest {
     void testSupportedConfigsIncludeDirectHongKongPhraseConfigs() {
         assertTrue(OpenCC.getSupportedConfigs().contains("s2hkp"));
         assertTrue(OpenCC.getSupportedConfigs().contains("hk2sp"));
+        assertTrue(OpenCC.getSupportedConfigs().contains("t2hkp"));
+        assertTrue(OpenCC.getSupportedConfigs().contains("hk2tp"));
     }
 
     @Test
@@ -157,6 +161,11 @@ class OpenCCTest {
 
         OpenCC hk2sp = new OpenCC(OpenccConfig.HK2SP, dict);
         assertEquals("汉字词", hk2sp.convert("港字詞"));
+
+        OpenCC t2hkp = new OpenCC(OpenccConfig.T2HKP, dict);
+        assertEquals("港字詞", t2hkp.convert("漢字詞"));
+        OpenCC hk2tp = new OpenCC(OpenccConfig.HK2TP, dict);
+        assertEquals("漢字詞", hk2tp.convert("港字詞"));
     }
 
     @Test
@@ -165,6 +174,9 @@ class OpenCCTest {
 
         assertEquals("港字詞", cc.s2hkp("汉字词", false));
         assertEquals("汉字词", cc.hk2sp("港字詞", false));
+
+        assertEquals("港字詞", cc.t2hkp("漢字詞"));
+        assertEquals("漢字詞", cc.hk2tp("港字詞"));
     }
 
     @Test
@@ -556,7 +568,7 @@ class OpenCCTest {
     }
 
     @Test
-    public void taiwanPhrasePlansUseSingleSharedTripleRound() {
+    public void regionalPhrasePlansUseSingleSharedTripleRound() {
         ConversionPlanCache cache = ConversionPlanCache.forDictionary(OpenCC.DictionaryHolder.get());
 
         DictRefs t2twp = cache.getPlan(OpenccConfig.T2TWP, false);
@@ -572,5 +584,19 @@ class OpenCCTest {
         assertNull(tw2tp.u2);
         assertNull(tw2tp.u3);
         assertSame(tw2tp.u1, tw2sp.u1);
+
+        DictRefs t2hkp = cache.getPlan(OpenccConfig.T2HKP, false);
+        DictRefs s2hkp = cache.getPlan(OpenccConfig.S2HKP, false);
+        assertNotNull(t2hkp.u1);
+        assertNull(t2hkp.u2);
+        assertNull(t2hkp.u3);
+        assertSame(t2hkp.u1, s2hkp.u2);
+
+        DictRefs hk2tp = cache.getPlan(OpenccConfig.HK2TP, false);
+        DictRefs hk2sp = cache.getPlan(OpenccConfig.HK2SP, false);
+        assertNotNull(hk2tp.u1);
+        assertNull(hk2tp.u2);
+        assertNull(hk2tp.u3);
+        assertSame(hk2tp.u1, hk2sp.u1);
     }
 }

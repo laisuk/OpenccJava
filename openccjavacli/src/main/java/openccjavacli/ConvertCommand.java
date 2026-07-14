@@ -30,7 +30,7 @@ public class ConvertCommand implements Callable<Integer> {
             names = {"-c", "--config"},
             paramLabel = "<conversion>",
             required = true,
-            completionCandidates = ConfigCandidates.class,
+            completionCandidates = CliUtils.ConfigCandidates.class,
             description = "Conversion configuration. Supported: ${COMPLETION-CANDIDATES}"
     )
     private String config;
@@ -80,14 +80,6 @@ public class ConvertCommand implements Callable<Integer> {
     private static final Logger LOGGER = Logger.getLogger(ConvertCommand.class.getName());
     private static final String BLUE = "\033[1;34m";
     private static final String RESET = "\033[0m";
-
-    @SuppressWarnings("NullableProblems")
-    static final class ConfigCandidates implements Iterable<String> {
-        @Override
-        public java.util.Iterator<String> iterator() {
-            return OpenCC.getSupportedConfigs().iterator();
-        }
-    }
 
     @Override
     public Integer call() {
