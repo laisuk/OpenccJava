@@ -6,14 +6,15 @@ import java.util.*;
 /**
  * Describes one custom dictionary patch operation.
  *
- * <p>A spec selects one {@link DictSlot}, one or more UTF-8 OpenCC dictionary
- * text files, and a {@link CustomDictMode}. The files are parsed with the same
- * parser used for built-in OpenCC text dictionaries: one entry per line,
- * source, a tab, then target text; blank lines and comment lines follow the
- * existing parser behavior, and only the first target token is used.</p>
+ * <p>A spec selects one {@link DictSlot}, a {@link CustomDictMode}, and custom
+ * mappings supplied by one or more UTF-8 OpenCC dictionary text files or an
+ * in-memory map. Files are parsed with the same parser used for built-in
+ * OpenCC text dictionaries: one entry per line, source, a tab, then target
+ * text; blank lines and comment lines follow the existing parser behavior,
+ * and only the first target token is used.</p>
  *
- * <p>Instances are immutable. The {@link #paths} list is defensively copied and
- * exposed as an unmodifiable list.</p>
+ * <p>Instances are immutable. The {@link #paths} list and {@link #pairs} map
+ * are defensively copied and exposed as unmodifiable collections.</p>
  *
  * @see DictionaryMaxlength#fromDicts(java.util.List)
  * @see DictionaryMaxlength#withCustomDictFiles(java.util.List)

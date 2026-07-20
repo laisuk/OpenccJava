@@ -80,6 +80,17 @@ class OpenCCTest {
     }
 
     @Test
+    void staticConvertTypedNullConfigsUseDefault() {
+        String stringConfig = null;
+        OpenccConfig typedConfig = null;
+        String input = "汉字";
+        String expected = OpenCC.convert(input, OpenccConfig.defaultConfig());
+
+        assertEquals(expected, OpenCC.convert(input, stringConfig));
+        assertEquals(expected, OpenCC.convert(input, typedConfig));
+    }
+
+    @Test
     void testConfigEnum() {
         OpenccConfig configEnum = OpenccConfig.tryParse("s2twp");
         String ConfigStr = configEnum.toCanonicalName();
@@ -521,6 +532,33 @@ class OpenCCTest {
     public void normalizeCompatNonBmp() {
         assertEquals("鼖鼻𪘀",
                 CompatIdeographs.normalize("鼖鼻𪘀"));
+    }
+
+    @Test
+    public void normalizeCompatScalarRejectsIsolatedSurrogates() {
+        assertThrows(IllegalArgumentException.class,
+                () -> CompatIdeographs.normalizeScalar("\uD800"));
+        assertThrows(IllegalArgumentException.class,
+                () -> CompatIdeographs.normalizeScalar("\uDC00"));
+    }
+
+    @Test
+    public void normalizeCompatScalarReturnsMappedAndUnmappedValues() {
+        assertEquals("金", CompatIdeographs.normalizeScalar("金"));
+        assertEquals("A", CompatIdeographs.normalizeScalar("A"));
+    }
+
+    @Test
+    public void normalizeCompatCustomPairsIgnoreIsolatedSurrogates() {
+        Map<String, String> pairs = new HashMap<>();
+        pairs.put("\uD800", "A");
+        pairs.put("A", "\uDC00");
+
+        CompatIdeographs.Map map = CompatIdeographs.fromText("A\tB")
+                .withCustomPairs(pairs);
+
+        assertEquals("B", map.normalizeScalar("A"));
+        assertEquals("\uD800", map.normalize("\uD800"));
     }
 
     @Test

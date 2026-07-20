@@ -367,8 +367,9 @@ public class OpenCC {
      * <p><b>Important:</b> Because the dictionary is a shared singleton,
      * any modification to its contents (for example, adding or removing entries)
      * will affect <em>all</em> {@code OpenCC} instances within the same JVM.</p>
-     * <p>
-     * is thrown before the instance can be created.
+     *
+     * <p>If no dictionary source can be loaded or parsed, a
+     * {@link RuntimeException} is thrown before the instance can be created.</p>
      *
      * @param config the configuration key (for example {@code "s2t"},
      *               {@code "S2TWP"}, {@code "tw2sp"}); may be {@code null}
@@ -858,6 +859,11 @@ public class OpenCC {
      * <p>If {@code config} is {@code null}, the default configuration
      * ({@code s2t}) is used.</p>
      *
+     * <p>Because this method is overloaded with a {@link String} configuration
+     * variant, an untyped {@code null} argument is ambiguous in Java source.
+     * Use {@link OpenccConfig#defaultConfig()} when explicitly requesting the
+     * default, or pass a variable typed as {@code OpenccConfig}.</p>
+     *
      * <b>Example:</b>
      * <pre>{@code
      * String result = OpenCC.convert(
@@ -865,9 +871,14 @@ public class OpenCC {
      *         OpenccConfig.S2T);
      * }</pre>
      *
-     * @param text   the text to convert; may be {@code null}
+     * <p>If {@code text} is {@code null} or empty, the conversion is not
+     * performed and the diagnostic string {@code "Input text is null or empty"}
+     * is returned, consistent with {@link #convert(String)}.</p>
+     *
+     * @param text   the text to convert; may be {@code null} or empty
      * @param config the configuration ID, or {@code null} to use the default
-     * @return the converted text, or {@code null} if {@code text} is {@code null}
+     * @return the converted text, or a diagnostic string if {@code text} is
+     * {@code null} or empty
      * @since 1.4.1
      */
     public static String convert(
@@ -890,6 +901,11 @@ public class OpenCC {
      * not correspond to a supported configuration, the default configuration
      * ({@code s2t}) is used instead.</p>
      *
+     * <p>Because this method is overloaded with an {@link OpenccConfig}
+     * variant, an untyped {@code null} argument is ambiguous in Java source.
+     * Pass {@code "s2t"} when explicitly requesting the default through this
+     * overload, or pass a variable typed as {@code String}.</p>
+     *
      * <p>For repeated conversions, custom dictionaries, or advanced usage,
      * consider creating and reusing an {@code OpenCC} instance directly.</p>
      *
@@ -900,10 +916,15 @@ public class OpenCC {
      *         "s2t");
      * }</pre>
      *
-     * @param text   the text to convert; may be {@code null}
+     * <p>If {@code text} is {@code null} or empty, the conversion is not
+     * performed and the diagnostic string {@code "Input text is null or empty"}
+     * is returned, consistent with {@link #convert(String)}.</p>
+     *
+     * @param text   the text to convert; may be {@code null} or empty
      * @param config the configuration key (e.g. {@code "s2t"},
      *               {@code "t2s"}, {@code "s2twp"}); may be {@code null}
-     * @return the converted text, or {@code null} if {@code text} is {@code null}
+     * @return the converted text, or a diagnostic string if {@code text} is
+     * {@code null} or empty
      * @since 1.4.1
      */
     public static String convert(

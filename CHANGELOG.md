@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.4.1] - Unreleased
+## [1.4.1] - 2026-07-21
 
 ### Added
 
@@ -34,7 +34,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Optimized Reflow standalone line finalizer when buffer text is empty.
 - Flattened direct `t2twp()` and `tw2tp()` conversion plans from two rounds to one shared Taiwan phrase/variant round.
 - Generalized internal Taiwan and Hong Kong triple union keys so their cached unions can be reused across conversion plans.
+- Hardened `OfficeHelper` public result values: `OFFICE_FORMATS` is unmodifiable, result messages reject `null`, and
+  `MemoryResult` defensively copies input bytes.
 - Handling standalone dialog closer in line.
+- Update conversion dictionary data.
 
 ---
 

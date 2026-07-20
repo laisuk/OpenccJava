@@ -182,7 +182,8 @@ public final class CompatIdeographs {
         int first = value.codePointAt(0);
         int charCount = Character.charCount(first);
 
-        if (charCount != value.length())
+        if (charCount != value.length()
+                || (first >= Character.MIN_SURROGATE && first <= Character.MAX_SURROGATE))
             return null;
 
         return first;
