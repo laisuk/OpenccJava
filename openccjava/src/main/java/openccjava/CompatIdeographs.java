@@ -144,8 +144,9 @@ public final class CompatIdeographs {
                 if (line.isEmpty() || line.startsWith("#"))
                     continue;
 
-                String[] parts = line.split("\t");
-                if (parts.length < 2) {
+                String[] parts = line.split("\t", -1);
+
+                if (parts.length != 2) {
                     if (strict)
                         throw malformed(lineNumber, line);
                     continue;
@@ -176,15 +177,19 @@ public final class CompatIdeographs {
     }
 
     private static Integer tryReadSingleCodePoint(String value) {
-        if (value == null || value.isEmpty())
+        if (value == null || value.isEmpty()) {
             return null;
+        }
 
         int first = value.codePointAt(0);
         int charCount = Character.charCount(first);
 
+        // Unicode scalar values exclude isolated UTF-16 surrogates.
         if (charCount != value.length()
-                || (first >= Character.MIN_SURROGATE && first <= Character.MAX_SURROGATE))
+                || (first >= Character.MIN_SURROGATE
+                && first <= Character.MAX_SURROGATE)) {
             return null;
+        }
 
         return first;
     }
