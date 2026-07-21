@@ -1,14 +1,44 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-JRE=java
-# Pick the newest JAR from build/libs
-JAR=$(ls -t openccjavacli/build/libs/openccjavacli-*.jar | head -n 1)
+JRE="${JRE:-java}"
 LIB="lib/*"
 
-if [[ ! -f "$JAR" ]]; then
-  echo "Error: no JAR found in openccjavacli/build/libs/"
-  exit 1
+case "$(uname -s)" in
+    MINGW* | MSYS* | CYGWIN*)
+        CP_SEPARATOR=";"
+        ;;
+    *)
+        CP_SEPARATOR=":"
+        ;;
+esac
+
+shopt -s nullglob
+all_jars=(openccjavacli/build/libs/openccjavacli-*.jar)
+shopt -u nullglob
+
+jars=()
+for jar in "${all_jars[@]}"; do
+    case "$jar" in
+        *-sources.jar | *-javadoc.jar | *-tests.jar)
+            continue
+            ;;
+    esac
+    jars+=("$jar")
+done
+
+if (( ${#jars[@]} == 0 )); then
+    echo "Error: no runnable JAR found in openccjavacli/build/libs/" >&2
+    exit 1
 fi
 
-"$JRE" -cp "$JAR:$LIB" openccjavacli.Main "$@"
+JAR="${jars[0]}"
+for candidate in "${jars[@]:1}"; do
+    if [[ "$candidate" -nt "$JAR" ]]; then
+        JAR="$candidate"
+    fi
+done
+
+exec "$JRE" \
+    -cp "${JAR}${CP_SEPARATOR}${LIB}" \
+    openccjavacli.Main "$@"
