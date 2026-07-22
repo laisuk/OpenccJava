@@ -184,6 +184,9 @@ public class PdfCommand implements Runnable {
                     (addHeader ? ", header" : "") +
                     (reflow ? ", reflow" : "") +
                     (compact ? ", compact" : ""));
+        } catch (IllegalArgumentException e) {
+            System.err.println("❌ " + e.getMessage());
+            System.exit(1);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Error during PDF conversion", ex);
             System.err.println("❌ Exception occurred: " + ex.getMessage());

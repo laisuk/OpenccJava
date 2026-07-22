@@ -2,8 +2,12 @@ package openccjavacli;
 
 import openccjava.*;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Shared helpers for building OpenCC converters from command-line options.
@@ -46,6 +50,9 @@ public final class CliUtils {
      * {@code --custom-dict} value is parsed and passed to {@link OpenCC}, which
      * creates a customized copy of the shared dictionary without modifying the
      * singleton dictionary.</p>
+     *
+     * <p>The caller owns the returned converter and must close it, preferably
+     * with try-with-resources.</p>
      *
      * @param config          CLI config name, such as {@code s2t}, {@code t2s},
      *                        or {@code null} to use the default config
@@ -120,10 +127,11 @@ public final class CliUtils {
      * preserved.</p>
      *
      * @param raw raw CLI option value
-     * @return a custom dictionary spec backed by the supplied file path
+     * @return a custom dictionary spec backed by the supplied regular file
      * @throws IllegalArgumentException if {@code raw} is {@code null}, blank, or
-     *                                  not in {@code slot:mode:path} form, or if
-     *                                  the slot or mode is invalid
+     *                                  not in {@code slot:mode:path} form; if the
+     *                                  slot or mode is invalid; or if the dictionary
+     *                                  path does not exist or is not a regular file
      */
     static CustomDictSpec parseCustomDictSpec(String raw) {
         if (raw == null || raw.trim().isEmpty()) {
@@ -131,16 +139,32 @@ public final class CliUtils {
         }
 
         String[] parts = raw.split(":", 3);
-        if (parts.length != 3) {
+        if (parts.length != 3 || parts[2].trim().isEmpty()) {
             throw new IllegalArgumentException(
-                    "Invalid --custom-dict spec: " + raw +
-                            " (expected slot:append|override:path)"
+                    "Invalid --custom-dict spec: " + raw
+                            + " (expected slot:append|override:path)"
             );
         }
 
-        DictSlot slot = parseDictSlot(parts[0]);
-        CustomDictMode mode = parseCustomDictMode(parts[1]);
-        return CustomDictSpec.fromFile(slot, Paths.get(parts[2]), mode);
+        Path path = Paths.get(parts[2].trim());
+
+        if (Files.notExists(path)) {
+            throw new IllegalArgumentException(
+                    "Custom dictionary file not found: " + path
+            );
+        }
+
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalArgumentException(
+                    "Custom dictionary path is not a file: " + path
+            );
+        }
+
+        return CustomDictSpec.fromFile(
+                parseDictSlot(parts[0]),
+                path,
+                parseCustomDictMode(parts[1])
+        );
     }
 
     private static final Map<String, DictSlot> SLOT_LOOKUP = createSlotLookup();
@@ -154,7 +178,9 @@ public final class CliUtils {
         Map<String, DictSlot> map = new HashMap<>();
 
         for (DictSlot slot : DictSlot.values()) {
-            map.put(normalize(slot.name()), slot);
+            if (isNotDeprecated(slot)) {
+                map.put(normalize(slot.name()), slot);
+            }
         }
 
         return Collections.unmodifiableMap(map);
@@ -190,11 +216,49 @@ public final class CliUtils {
      *                                  {@link DictSlot}
      */
     static DictSlot parseDictSlot(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Custom dict slot must not be null");
+        }
+
         DictSlot slot = SLOT_LOOKUP.get(normalize(value));
         if (slot == null) {
-            throw new IllegalArgumentException("Invalid custom dict slot: " + value);
+            throw new IllegalArgumentException(
+                    "Invalid custom dict slot: " + value
+                            + System.lineSeparator()
+                            + "Available slots: "
+                            + availableDictSlots()
+            );
         }
+
         return slot;
+    }
+
+    /**
+     * Lists the non-deprecated dictionary slots accepted by the CLI.
+     *
+     * @return comma-separated dictionary slot names in declaration order
+     */
+    static String availableDictSlots() {
+        return Arrays.stream(DictSlot.values())
+                .filter(CliUtils::isNotDeprecated)
+                .map(Enum::name)
+                .collect(Collectors.joining(", "));
+    }
+
+    /**
+     * Reports whether a dictionary slot is available for new CLI input.
+     *
+     * @param slot dictionary slot to inspect
+     * @return {@code true} when the enum constant is not deprecated
+     */
+    private static boolean isNotDeprecated(DictSlot slot) {
+        try {
+            return !DictSlot.class
+                    .getField(slot.name())
+                    .isAnnotationPresent(Deprecated.class);
+        } catch (NoSuchFieldException e) {
+            throw new AssertionError(e);
+        }
     }
 
     /**
@@ -207,9 +271,41 @@ public final class CliUtils {
      *                                  {@code override}
      */
     static CustomDictMode parseCustomDictMode(String value) {
-        String v = value.trim().toLowerCase(java.util.Locale.ROOT);
-        if ("append".equals(v)) return CustomDictMode.Append;
-        if ("override".equals(v)) return CustomDictMode.Override;
-        throw new IllegalArgumentException("Invalid custom dict mode: " + value);
+        if (value == null) {
+            throw new IllegalArgumentException("Custom dict mode must not be null");
+        }
+
+        switch (value.trim().toLowerCase(Locale.ROOT)) {
+            case "append":
+                return CustomDictMode.Append;
+            case "override":
+                return CustomDictMode.Override;
+            default:
+                throw new IllegalArgumentException(
+                        "Invalid custom dict mode: " + value
+                                + " (expected append or override)"
+                );
+        }
+    }
+
+    /**
+     * Validates that a CLI input path exists and is a regular file.
+     *
+     * @param input input file supplied by the user
+     * @throws IllegalArgumentException if {@code input} is {@code null}, does not
+     *                                  exist, or is not a regular file
+     */
+    static void validateInputFile(File input) {
+        if (input == null) {
+            throw new IllegalArgumentException("Input file must not be null");
+        }
+
+        if (!input.exists()) {
+            throw new IllegalArgumentException("Input file not found: " + input);
+        }
+
+        if (!input.isFile()) {
+            throw new IllegalArgumentException("Input path is not a file: " + input);
+        }
     }
 }

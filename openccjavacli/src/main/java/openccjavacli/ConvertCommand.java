@@ -153,7 +153,9 @@ public class ConvertCommand implements Callable<Integer> {
                 System.err.println(BLUE + "Conversion completed (" + config + "): " + inFrom + " → " + outTo + RESET);
             }
             return ExitCode.OK;
-
+        } catch (IllegalArgumentException e) {
+            System.err.println("❌ " + e.getMessage());
+            return ExitCode.SOFTWARE;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error during text conversion", e);
             System.err.println("❌ Exception occurred: " + e.getMessage());
