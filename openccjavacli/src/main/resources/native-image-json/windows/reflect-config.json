@@ -93,6 +93,10 @@
   "fields":[{"name":"aux"}, {"name":"status"}]
 },
 {
+  "name":"java.util.concurrent.atomic.AtomicBoolean",
+  "fields":[{"name":"value"}]
+},
+{
   "name":"java.util.concurrent.atomic.AtomicReference",
   "fields":[{"name":"value"}]
 },
@@ -100,9 +104,14 @@
   "name":"jdk.internal.misc.Unsafe"
 },
 {
+  "name":"openccjavacli.CliUtils$ConfigCandidates",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"openccjavacli.ConvertCommand",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"openccjavacli.DictgenCommand",

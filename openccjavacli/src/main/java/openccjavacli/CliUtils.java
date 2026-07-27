@@ -178,7 +178,7 @@ public final class CliUtils {
         Map<String, DictSlot> map = new HashMap<>();
 
         for (DictSlot slot : DictSlot.values()) {
-            if (isNotDeprecated(slot)) {
+            if (isSupportedCliSlot(slot)) {
                 map.put(normalize(slot.name()), slot);
             }
         }
@@ -234,31 +234,32 @@ public final class CliUtils {
     }
 
     /**
-     * Lists the non-deprecated dictionary slots accepted by the CLI.
+     * Lists the dictionary slots accepted by the CLI.
+     *
+     * <p>Deprecated compatibility aliases are omitted.</p>
      *
      * @return comma-separated dictionary slot names in declaration order
      */
     static String availableDictSlots() {
         return Arrays.stream(DictSlot.values())
-                .filter(CliUtils::isNotDeprecated)
+                .filter(CliUtils::isSupportedCliSlot)
                 .map(Enum::name)
                 .collect(Collectors.joining(", "));
     }
 
     /**
-     * Reports whether a dictionary slot is available for new CLI input.
+     * Reports whether a dictionary slot is supported for CLI input.
+     *
+     * <p>The legacy {@link DictSlot#JPVariants} and
+     * {@link DictSlot#JPVariantsRev} compatibility aliases remain in the enum
+     * for source and binary compatibility, but are not accepted by the CLI.</p>
      *
      * @param slot dictionary slot to inspect
-     * @return {@code true} when the enum constant is not deprecated
+     * @return {@code true} unless the slot is a deprecated compatibility alias
      */
-    private static boolean isNotDeprecated(DictSlot slot) {
-        try {
-            return !DictSlot.class
-                    .getField(slot.name())
-                    .isAnnotationPresent(Deprecated.class);
-        } catch (NoSuchFieldException e) {
-            throw new AssertionError(e);
-        }
+    @SuppressWarnings("deprecation")
+    private static boolean isSupportedCliSlot(DictSlot slot) {
+        return slot != DictSlot.JPVariants && slot != DictSlot.JPVariantsRev;
     }
 
     /**

@@ -3,11 +3,11 @@ plugins {
     application
     // --- GraalVM Native Build Tools (AOT compile to a single exe) ---
     // Must use Oracle GraalVM JDK to build
-//    id("org.graalvm.buildtools.native") version "0.11.5"
+    id("org.graalvm.buildtools.native") version "0.11.5"
 }
 
 group = "io.github.laisuk"
-version = "1.4.1"
+version = "1.4.2"
 
 repositories {
     mavenCentral()
@@ -21,7 +21,7 @@ dependencies {
     // Generate GraalVM reflection config for picocli automatically
     annotationProcessor("info.picocli:picocli-codegen:4.7.7")
     //PDFBox
-    implementation("org.apache.pdfbox:pdfbox:3.0.7")
+    implementation("org.apache.pdfbox:pdfbox:3.0.8")
 
     testImplementation(platform("org.junit:junit-bom:5.10.5"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -155,7 +155,6 @@ tasks.register<Exec>("verifyFatJarSig") {
 
 // --- Uncomment these if using GraalVM native image ---
 // Must use Oracle GraalVM JDK to build
-/*
 
 val osKey = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem().run {
     when {
@@ -265,4 +264,46 @@ if (currentJava != null && currentJava.isJava11Compatible) {
         from("../dicts") { into("dicts") }
     }
 }
-*/
+
+// Generate GraalVM reachability metadata using a representative large PDF.
+// Run with a GraalVM JDK:
+//   ./gradlew :openccjavacli:generateNativeImageJson
+val generateNativeImageJson by tasks.registering(JavaExec::class) {
+    group = "graalvm native"
+    description =
+        "Generates GraalVM reachability metadata using JiaMian.pdf."
+
+    dependsOn(tasks.named("classes"))
+
+    mainClass.set(application.mainClass)
+    classpath = sourceSets.main.get().runtimeClasspath
+    workingDir = projectDir
+
+    val tracingPdf = layout.projectDirectory.file("JiaMian.pdf")
+    val outputDir = layout.buildDirectory.dir(
+        "native/agent-output/manual"
+    )
+
+    doFirst {
+        require(tracingPdf.asFile.isFile) {
+            "Tracing PDF not found: ${tracingPdf.asFile.absolutePath}"
+        }
+
+        // Avoid retaining metadata from an older tracing run.
+        delete(outputDir.get().asFile)
+        outputDir.get().asFile.mkdirs()
+
+        jvmArgs(
+            "-agentlib:native-image-agent=" +
+                    "config-output-dir=${outputDir.get().asFile.absolutePath}"
+        )
+    }
+
+    args(
+        "pdf",
+        "-i", tracingPdf.asFile.absolutePath,
+        "-c", "s2t",
+        "-p",
+        "-r"
+    )
+}
