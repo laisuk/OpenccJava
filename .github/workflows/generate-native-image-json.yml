@@ -1,0 +1,78 @@
+name: Generate GraalVM native-image metadata
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-metadata:
+    name: Generate metadata (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+            gradle: ./gradlew.bat
+
+          - platform: linux
+            os: ubuntu-latest
+            gradle: ./gradlew
+
+          - platform: macos
+            os: macos-latest
+            gradle: ./gradlew
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm-community
+          java-version: "21"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        shell: bash
+        run: chmod +x ./gradlew
+
+      - name: Check tracing PDF
+        shell: bash
+        run: test -f openccjavacli/JiaMian.pdf
+
+      - name: Generate native-image metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          ${{ matrix.gradle }} \
+            :openccjavacli:generateNativeImageJson
+
+      - name: Collect generated JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SOURCE_DIR="openccjavacli/build/native/agent-output/generateNativeImageJson"
+          mkdir -p out
+
+          test -d "$SOURCE_DIR"
+          cp -v "$SOURCE_DIR"/*.json out/
+
+          COUNT="$(find out -maxdepth 1 -name '*.json' | wc -l | tr -d ' ')"
+          echo "Collected JSON count: $COUNT"
+          test "$COUNT" -gt 0
+
+          echo "Collected JSON files:"
+          find out -maxdepth 1 -name '*.json' -print
+
+      - name: Upload metadata artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-image-json-${{ matrix.platform }}
+          path: out/*.json
+          if-no-files-found: error
