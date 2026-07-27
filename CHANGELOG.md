@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.2] - Unreleased
+
+- Updated dictionary data.
+- Optimized batch scripts.
+- CLI: Optimized error handling.
+
+---
+
 ## [1.4.1] - 2026-07-21
 
 ### Added
