@@ -281,7 +281,7 @@ val generateNativeImageJson by tasks.registering(JavaExec::class) {
 
     val tracingPdf = layout.projectDirectory.file("JiaMian.pdf")
     val outputDir = layout.buildDirectory.dir(
-        "native/agent-output/manual"
+        "native/agent-output/generateNativeImageJson"
     )
 
     doFirst {
