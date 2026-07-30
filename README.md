@@ -543,6 +543,53 @@ copies in memory. This is intentional and avoids global mutable state.
   slots
   in the same conversion chain may still run afterward; for example, `STCharacters` may still apply after `STPhrases`.
 
+#### Portable Custom-Dictionary Specifications
+
+A portable custom-dictionary token has this grammar:
+
+```text
+<slot>:<append|override>:<path>
+```
+
+Use `CustomDictSpec.parse(...)` for tokens from a command line, configuration file, or another textual source. Slot and
+mode matching is case-insensitive. Slot matching is otherwise strict: numeric values, unknown names, deprecated names,
+and hyphen/underscore aliases are rejected. The parser splits into at most three fields, preserving Windows
+drive-letter paths and any additional colons allowed by the host platform's `Path` implementation. Parsing validates
+syntax but does not test whether the file exists; file access occurs when a `DictionaryMaxlength` API applies the spec.
+
+```java
+CustomDictSpec parsed = CustomDictSpec.parse(
+        "hkphrasesrev:append:C:\\data\\my_hk_dict.txt"
+);
+
+DictionaryMaxlength parsedDictionary = DictionaryMaxlength
+        .fromDicts()
+        .withCustomDicts(Collections.singletonList(parsed));
+```
+
+Use `CustomDictSpec.fromFile(...)` when the slot, path, and mode are already strongly typed:
+
+```java
+CustomDictSpec typed = CustomDictSpec.fromFile(
+        DictSlot.HKPhrasesRev,
+        Paths.get("data", "my_hk_dict.txt"),
+        CustomDictMode.Append
+);
+```
+
+`parse(...)` and `fromFile(...)` construct specifications only. Apply them with
+`DictionaryMaxlength.withCustomDicts(...)`, or pass them to a `DictionaryMaxlength.fromDicts(...)` or `OpenCC`
+construction API that accepts specs.
+
+`DictSlot.activeSlots()`, `DictSlot.supportedCanonicalNames()`, and `DictSlot.supportedSlotDisplay()` expose the active
+contract. `DictSlot.parse(...)` parses a canonical name and `toCanonicalName()` formats one. Canonical names—not enum
+ordinals—are the stable external contract. `JPVariants` and `JPVariantsRev` remain deprecated enum constants so legacy
+Java source compiles, but they are inactive and are rejected by parsing, typed spec factories, and dictionary application.
+
+The token format is intentionally unified across the C#, Java, Rust, and Python OpenCC ecosystem. This section documents
+the Java public parser and Java CLI delegation; it does not claim equivalent public APIs in another language where that
+language's own documentation does not expose them.
+
 #### Dictionary File Format
 
 Custom dictionary files use the same parser as OpenCC text dictionaries:
@@ -722,10 +769,8 @@ public class OpenCCFromPairsExample {
 
 #### Post-Load Customization
 
-Use `DictionaryMaxlength.withCustomDicts(...)` or `DictionaryMaxlength.withCustomDictFiles(...)` when you already have a
-loaded dictionary, such as one loaded from a serialized `dictionary_maxlength.json`. Both methods return a customized
-copy
-and do not mutate the original dictionary.
+Use `DictionaryMaxlength.withCustomDicts(...)` when you already have a loaded dictionary, such as one loaded from a
+serialized `dictionary_maxlength.json`. It returns a customized copy and does not mutate the original dictionary.
 
 `withCustomDicts(...)` accepts specs created from files, pairs, or both sources:
 
@@ -761,7 +806,8 @@ public class PostLoadCustomPairsExample {
 }
 ```
 
-`withCustomDictFiles(...)` is a convenience method for file-based specs:
+`withCustomDictFiles(...)` remains as a deprecated source/binary-compatible forwarding method. New code should use
+`withCustomDicts(...)`, including for file-based specs:
 
 ```java
 import openccjava.*;
@@ -773,7 +819,7 @@ public class PostLoadCustomDictExample {
     static void main(String[] args) throws Exception {
         DictionaryMaxlength dict = DictionaryMaxlength
                 .fromJsonFileNoDeps("dicts/dictionary_maxlength.json")
-                .withCustomDictFiles(
+                .withCustomDicts(
                         Collections.singletonList(
                                 CustomDictSpec.fromFile(
                                         DictSlot.STPhrases,
@@ -864,16 +910,19 @@ public class CustomDictFilesAndPairsExample {
 
 #### Public API
 
-- `DictSlot` selects the OpenCC dictionary slot to patch.
+- `DictSlot.activeSlots()` and `DictSlot.supportedCanonicalNames()` expose active slots and stable external names.
+- `DictSlot.parse(...)` strictly parses a case-insensitive canonical active-slot name.
+- `DictSlot.toCanonicalName()` formats an active slot without relying on its ordinal.
 - `CustomDictMode` selects append or override behavior.
-- `CustomDictSpec.fromFile(...)` creates a spec for one custom dictionary file.
+- `CustomDictSpec.parse(...)` parses a portable `<slot>:<append|override>:<path>` token without checking file existence.
+- `CustomDictSpec.fromFile(...)` creates a strongly typed spec for one custom dictionary file.
 - `CustomDictSpec.fromFiles(...)` creates a spec for multiple custom dictionary files.
 - `CustomDictSpec.fromPairs(...)` creates a spec for in-memory custom dictionary pairs.
 - `DictionaryMaxlength.fromDicts(List<CustomDictSpec>)` loads default text dictionaries and applies custom specs.
 - `DictionaryMaxlength.fromDicts(String, List<CustomDictSpec>)` loads text dictionaries from a base path and applies
   custom specs.
 - `DictionaryMaxlength.withCustomDicts(...)` returns a customized copy using specs with files, pairs, or both.
-- `DictionaryMaxlength.withCustomDictFiles(...)` returns a customized copy of an already loaded dictionary.
+- Deprecated `DictionaryMaxlength.withCustomDictFiles(...)` forwards to `withCustomDicts(...)` for compatibility.
 - `OpenCC.fromDicts(...)` creates a converter from a caller-owned custom dictionary.
 - `OpenCC(String config, List<CustomDictSpec>)` creates a converter with custom specs and a string config key.
 - `OpenCC(OpenccConfig config, List<CustomDictSpec>)` creates a converter with custom specs and a typed config.
@@ -905,6 +954,9 @@ public class CustomDictFilesAndPairsExample {
 | JPSCharacters        | JPShinjitaiCharacters.txt    | jps_characters          |
 | JPSCharactersRev     | JPShinjitaiCharactersRev.txt | jps_characters_rev      |
 | JPSPhrases           | JPShinjitaiPhrases.txt       | jps_phrases             |
+
+The deprecated `JPVariants` and `JPVariantsRev` constants are intentionally absent from this active mapping. They remain
+compilable compatibility constants but cannot be parsed or used for new dictionary operations.
 
 #### Limitations / Notes
 

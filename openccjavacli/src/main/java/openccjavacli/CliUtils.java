@@ -3,20 +3,15 @@ package openccjavacli;
 import openccjava.*;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Shared helpers for building OpenCC converters from command-line options.
  *
  * <p>This class keeps option infrastructure shared by several CLI commands in
- * one place. It supplies canonical conversion-config candidates and translates
- * {@code --custom-dict} values from the CLI format
- * {@code slot:append|override:path} into {@link CustomDictSpec}
- * instances.</p>
+ * one place. It supplies canonical conversion-config candidates and delegates
+ * {@code --custom-dict} token parsing to the public
+ * {@link CustomDictSpec#parse(String)} core API.</p>
  *
  * <p>The helpers are intentionally package-private because they are part of the
  * CLI implementation rather than the public OpenCC Java API.</p>
@@ -76,12 +71,7 @@ public final class CliUtils {
             return new OpenCC(typedConfig);
         }
 
-        List<CustomDictSpec> specs = new ArrayList<>();
-        for (String raw : customDictSpecs) {
-            specs.add(parseCustomDictSpec(raw));
-        }
-
-        return new OpenCC(typedConfig, specs);
+        return new OpenCC(typedConfig, parseCustomDictSpecs(customDictSpecs));
     }
 
     /**
@@ -109,184 +99,15 @@ public final class CliUtils {
             return dict;
         }
 
-        List<CustomDictSpec> specs = new ArrayList<>();
-        for (String raw : customDictSpecs) {
-            specs.add(parseCustomDictSpec(raw));
-        }
-
-        return dict.withCustomDictFiles(specs);
+        return dict.withCustomDicts(parseCustomDictSpecs(customDictSpecs));
     }
 
-    /**
-     * Parses one {@code --custom-dict} option value.
-     *
-     * <p>The expected format is {@code slot:append|override:path}. The slot name
-     * is matched by {@link #parseDictSlot(String)}, the mode by
-     * {@link #parseCustomDictMode(String)}, and the path is kept as the remaining
-     * third field so platform paths containing additional colon characters are
-     * preserved.</p>
-     *
-     * @param raw raw CLI option value
-     * @return a custom dictionary spec backed by the supplied regular file
-     * @throws IllegalArgumentException if {@code raw} is {@code null}, blank, or
-     *                                  not in {@code slot:mode:path} form; if the
-     *                                  slot or mode is invalid; or if the dictionary
-     *                                  path does not exist or is not a regular file
-     */
-    static CustomDictSpec parseCustomDictSpec(String raw) {
-        if (raw == null || raw.trim().isEmpty()) {
-            throw new IllegalArgumentException("Empty --custom-dict spec");
+    private static List<CustomDictSpec> parseCustomDictSpecs(List<String> values) {
+        List<CustomDictSpec> specs = new ArrayList<>(values.size());
+        for (String value : values) {
+            specs.add(CustomDictSpec.parse(value));
         }
-
-        String[] parts = raw.split(":", 3);
-        if (parts.length != 3 || parts[2].trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Invalid --custom-dict spec: " + raw
-                            + " (expected slot:append|override:path)"
-            );
-        }
-
-        Path path = Paths.get(parts[2].trim());
-
-        if (Files.notExists(path)) {
-            throw new IllegalArgumentException(
-                    "Custom dictionary file not found: " + path
-            );
-        }
-
-        if (!Files.isRegularFile(path)) {
-            throw new IllegalArgumentException(
-                    "Custom dictionary path is not a file: " + path
-            );
-        }
-
-        return CustomDictSpec.fromFile(
-                parseDictSlot(parts[0]),
-                path,
-                parseCustomDictMode(parts[1])
-        );
-    }
-
-    private static final Map<String, DictSlot> SLOT_LOOKUP = createSlotLookup();
-
-    /**
-     * Builds the normalized lookup table used by {@link #parseDictSlot(String)}.
-     *
-     * @return an immutable map from CLI-friendly slot names to dictionary slots
-     */
-    private static Map<String, DictSlot> createSlotLookup() {
-        Map<String, DictSlot> map = new HashMap<>();
-
-        for (DictSlot slot : DictSlot.values()) {
-            if (isSupportedCliSlot(slot)) {
-                map.put(normalize(slot.name()), slot);
-            }
-        }
-
-        return Collections.unmodifiableMap(map);
-    }
-
-    /**
-     * Normalizes a slot token for forgiving command-line matching.
-     *
-     * <p>Users may type dictionary slots with different case, hyphens, or
-     * underscores, for example {@code hk-phrases-rev},
-     * {@code HK_Phrases_Rev}, or {@code hkphrasesrev}.</p>
-     *
-     * @param value slot token to normalize
-     * @return normalized slot token
-     */
-    private static String normalize(String value) {
-        return value
-                .trim()
-                .replace("-", "")
-                .replace("_", "")
-                .toLowerCase(Locale.ROOT);
-    }
-
-    /**
-     * Parses a custom dictionary slot name.
-     *
-     * <p>Matching ignores case, hyphens, and underscores so CLI users do not
-     * have to type enum names exactly.</p>
-     *
-     * @param value dictionary slot token from the command line
-     * @return the matching dictionary slot
-     * @throws IllegalArgumentException if {@code value} does not name a known
-     *                                  {@link DictSlot}
-     */
-    static DictSlot parseDictSlot(String value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Custom dict slot must not be null");
-        }
-
-        DictSlot slot = SLOT_LOOKUP.get(normalize(value));
-        if (slot == null) {
-            throw new IllegalArgumentException(
-                    "Invalid custom dict slot: " + value
-                            + System.lineSeparator()
-                            + "Available slots: "
-                            + availableDictSlots()
-            );
-        }
-
-        return slot;
-    }
-
-    /**
-     * Lists the dictionary slots accepted by the CLI.
-     *
-     * <p>Deprecated compatibility aliases are omitted.</p>
-     *
-     * @return comma-separated dictionary slot names in declaration order
-     */
-    static String availableDictSlots() {
-        return Arrays.stream(DictSlot.values())
-                .filter(CliUtils::isSupportedCliSlot)
-                .map(Enum::name)
-                .collect(Collectors.joining(", "));
-    }
-
-    /**
-     * Reports whether a dictionary slot is supported for CLI input.
-     *
-     * <p>The legacy {@link DictSlot#JPVariants} and
-     * {@link DictSlot#JPVariantsRev} compatibility aliases remain in the enum
-     * for source and binary compatibility, but are not accepted by the CLI.</p>
-     *
-     * @param slot dictionary slot to inspect
-     * @return {@code true} unless the slot is a deprecated compatibility alias
-     */
-    @SuppressWarnings("deprecation")
-    private static boolean isSupportedCliSlot(DictSlot slot) {
-        return slot != DictSlot.JPVariants && slot != DictSlot.JPVariantsRev;
-    }
-
-    /**
-     * Parses a custom dictionary application mode.
-     *
-     * @param value mode token from the command line; must be {@code append} or
-     *              {@code override}, ignoring case
-     * @return the matching custom dictionary mode
-     * @throws IllegalArgumentException if {@code value} is not {@code append} or
-     *                                  {@code override}
-     */
-    static CustomDictMode parseCustomDictMode(String value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Custom dict mode must not be null");
-        }
-
-        switch (value.trim().toLowerCase(Locale.ROOT)) {
-            case "append":
-                return CustomDictMode.Append;
-            case "override":
-                return CustomDictMode.Override;
-            default:
-                throw new IllegalArgumentException(
-                        "Invalid custom dict mode: " + value
-                                + " (expected append or override)"
-                );
-        }
+        return specs;
     }
 
     /**

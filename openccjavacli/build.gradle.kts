@@ -28,6 +28,12 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    if (JavaVersion.current().isJava9Compatible) {
+        options.release.set(8)
+    }
+}
+
 // Application entrypoint (used by `run`, Jar manifest, etc.)
 application {
     mainClass.set("openccjavacli.Main")

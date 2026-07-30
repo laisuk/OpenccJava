@@ -210,6 +210,7 @@ class DictionaryLibTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void testWithCustomDictFilesAppendReturnsCustomizedCopy() throws IOException {
         Path custom = Files.createTempFile("openccjava-postload-append-", ".txt");
@@ -241,6 +242,7 @@ class DictionaryLibTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void testWithCustomDictFilesOverrideReturnsCustomizedCopy() throws IOException {
         Path custom = Files.createTempFile("openccjava-postload-override-", ".txt");
@@ -486,27 +488,22 @@ class DictionaryLibTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    void testLegacyJPVariantSlotsRemainFunctionalAliases() {
-        DictionaryMaxlength t2jp = DictionaryMaxlength.fromDicts(
-                Collections.singletonList(
-                        CustomDictSpec.fromPairs(
-                                DictSlot.JPVariants,
-                                Collections.singletonMap("廣", "T2JP_ALIAS"),
-                                CustomDictMode.Override
-                        )
+    void testLegacyJPVariantSlotsRemainDefinedButAreRejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CustomDictSpec.fromPairs(
+                        DictSlot.JPVariants,
+                        Collections.singletonMap("廣", "広"),
+                        CustomDictMode.Override
                 )
         );
-        DictionaryMaxlength jp2t = DictionaryMaxlength.fromDicts(
-                Collections.singletonList(
-                        CustomDictSpec.fromPairs(
-                                DictSlot.JPVariantsRev,
-                                Collections.singletonMap("広", "JP2T_ALIAS"),
-                                CustomDictMode.Override
-                        )
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CustomDictSpec.fromPairs(
+                        DictSlot.JPVariantsRev,
+                        Collections.singletonMap("広", "廣"),
+                        CustomDictMode.Override
                 )
         );
-
-        assertEquals("T2JP_ALIAS", new OpenCC(OpenccConfig.T2JP, t2jp).convert("廣", false));
-        assertEquals("JP2T_ALIAS", new OpenCC(OpenccConfig.JP2T, jp2t).convert("広", false));
     }
 }

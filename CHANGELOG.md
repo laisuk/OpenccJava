@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [1.4.2] - Unreleased
 
 - Updated dictionary data.
+- Refactored Java custom dictionaries around a shared portable `<slot>:<append|override>:<path>` parser: `DictSlot`
+  now owns active canonical slot metadata and strict parsing, the CLI delegates to `CustomDictSpec.parse(...)`, retired
+  compatibility slots are rejected during application, and deprecated `withCustomDictFiles(...)` forwards to
+  `withCustomDicts(...)`.
 - Optimized batch scripts.
 - CLI: Optimized error handling.
 
@@ -41,7 +45,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - Optimized Reflow standalone line finalizer when buffer text is empty.
 - Flattened direct `t2twp()` and `tw2tp()` conversion plans from two rounds to one shared Taiwan phrase/variant round.
-- Generalized internal Taiwan and Hong Kong triple union keys so their cached unions can be reused across conversion plans.
+- Generalized internal Taiwan and Hong Kong triple union keys so their cached unions can be reused across conversion
+  plans.
 - Hardened `OfficeHelper` public result values: `OFFICE_FORMATS` is unmodifiable, result messages reject `null`, and
   `MemoryResult` defensively copies input bytes.
 - Handling standalone dialog closer in line.

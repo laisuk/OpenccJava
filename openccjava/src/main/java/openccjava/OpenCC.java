@@ -487,7 +487,7 @@ public class OpenCC {
     public OpenCC(OpenccConfig config, List<CustomDictSpec> customSpecs) {
         this(
                 config,
-                DictionaryHolder.get().withCustomDictFiles(customSpecs)
+                DictionaryHolder.get().withCustomDicts(customSpecs)
         );
     }
 

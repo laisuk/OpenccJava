@@ -94,6 +94,27 @@ class CliCommandTest {
     }
 
     @Test
+    void convertPreservesMultipleCustomDictionaryOptionOrder() throws Exception {
+        Path input = tempDir.resolve("input.txt");
+        Path firstDictionary = tempDir.resolve("first.txt");
+        Path secondDictionary = tempDir.resolve("second.txt");
+        Path output = tempDir.resolve("output.txt");
+
+        Files.write(input, "甲乙".getBytes(StandardCharsets.UTF_8));
+        Files.write(firstDictionary, "甲\t一\n乙\t二\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(secondDictionary, "甲\t三\n".getBytes(StandardCharsets.UTF_8));
+
+        CommandResult result = execute(
+                "convert", "-c", "s2t", "-i", input.toString(), "-o", output.toString(),
+                "-D", "STPhrases:override:" + firstDictionary,
+                "-D", "STPhrases:append:" + secondDictionary
+        );
+
+        assertEquals(CommandLine.ExitCode.OK, result.exitCode, result.stderr);
+        assertEquals("三二", new String(Files.readAllBytes(output), StandardCharsets.UTF_8));
+    }
+
+    @Test
     void pdfExtractWritesTextFileFromSamplePdf() throws Exception {
         Path samplePdf = Paths.get("sample.pdf").toAbsolutePath().normalize();
         Path output = tempDir.resolve("sample_extracted.txt");
