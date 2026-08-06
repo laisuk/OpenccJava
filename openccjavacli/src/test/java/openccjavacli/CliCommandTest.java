@@ -48,7 +48,7 @@ class CliCommandTest {
 
     @Test
     void pdfInvalidConfigReturnsUsage() {
-        Path samplePdf = Paths.get("sample.pdf").toAbsolutePath().normalize();
+        Path samplePdf = Paths.get("SanWenHans.pdf").toAbsolutePath().normalize();
 
         CommandResult result = execute("pdf", "-i", samplePdf.toString(), "-c", "not-a-config");
 
@@ -116,7 +116,7 @@ class CliCommandTest {
 
     @Test
     void pdfExtractWritesTextFileFromSamplePdf() throws Exception {
-        Path samplePdf = Paths.get("sample.pdf").toAbsolutePath().normalize();
+        Path samplePdf = Paths.get("SanWenHans.pdf").toAbsolutePath().normalize();
         Path output = tempDir.resolve("sample_extracted.txt");
 
         CommandResult result = execute("pdf", "-i", samplePdf.toString(), "-e", "-o", output.toString());

@@ -43,7 +43,7 @@ jobs:
 
       - name: Check tracing PDF
         shell: bash
-        run: test -f openccjavacli/JiaMian.pdf
+        run: test -f openccjavacli/SanWen.pdf
 
       - name: Generate native-image metadata
         shell: bash

@@ -25,13 +25,13 @@ jobs:
 
       - name: Check sample PDF
         shell: bash
-        run: test -f openccjavacli/JiaMian.pdf
+        run: test -f openccjavacli/SanWenHans.pdf
 
       - name: Run agent
         shell: bash
         run: |
           set -euo pipefail
-          ./gradlew -Pagent :openccjavacli:run --args="pdf -i JiaMian.pdf -c s2t -p -r"
+          ./gradlew -Pagent :openccjavacli:run --args="pdf -i SanWenHans.pdf -c s2t -p -r"
 
       - name: Collect JSON
         shell: bash

@@ -278,7 +278,7 @@ if (currentJava != null && currentJava.isJava11Compatible) {
 val generateNativeImageJson by tasks.registering(JavaExec::class) {
     group = "graalvm native"
     description =
-        "Generates GraalVM reachability metadata using JiaMian.pdf."
+        "Generates GraalVM reachability metadata using SanWenHans.pdf."
 
     dependsOn(tasks.named("classes"))
 
@@ -286,7 +286,7 @@ val generateNativeImageJson by tasks.registering(JavaExec::class) {
     classpath = sourceSets.main.get().runtimeClasspath
     workingDir = projectDir
 
-    val tracingPdf = layout.projectDirectory.file("JiaMian.pdf")
+    val tracingPdf = layout.projectDirectory.file("SanWenHans.pdf")
     val outputDir = layout.buildDirectory.dir(
         "native/agent-output/generateNativeImageJson"
     )
