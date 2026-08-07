@@ -16,11 +16,14 @@ public final class PdfReflowHelper {
     // ======================================================================
 
     /**
-     * Chapter / heading detection
+     * Chapter / heading patterns (short line + 第N章/卷/节/部, 前言/序章/终章/尾声/番外).
+     * <p>
+     * Reject commas only in the latter part (>20 characters), since early commas
+     * are common in subtitles while later commas are usually narrative prose.
      */
     private static final Pattern TITLE_HEADING_REGEX = Pattern.compile(
             "(?x)^" +
-                    "(?!.*[,，])" +
+                    "(?!.{20,}[,，])" +
                     "(?=.{0,50}$)" +
                     "(" +
                     "目录|目錄|前言|序章|楔子|终章|尾声|尾聲|后记|後記" +
