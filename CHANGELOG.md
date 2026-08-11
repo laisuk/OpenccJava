@@ -8,13 +8,37 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.4.2] - Unreleased
 
+### Added
+
+- Added the `:openccjavacli:generateNativeImageJson` Gradle task and a GitHub Actions workflow for generating GraalVM
+  native-image reachability metadata; refreshed the checked-in Linux, macOS, and Windows metadata.
+- Added a GitHub Actions workflow that builds and tests the Java 8-compatible `openccjava` library on Ubuntu with JDK
+    21.
+
+### Changed
+
 - Updated dictionary data.
 - Refactored Java custom dictionaries around a shared portable `<slot>:<append|override>:<path>` parser: `DictSlot`
   now owns active canonical slot metadata and strict parsing, the CLI delegates to `CustomDictSpec.parse(...)`, retired
   compatibility slots are rejected during application, and deprecated `withCustomDictFiles(...)` forwards to
   `withCustomDicts(...)`.
-- Optimized batch scripts.
-- CLI: Optimized error handling.
+- Improved the Unix and Windows CLI launch scripts with platform-correct classpaths, runnable-JAR selection, UTF-8
+  Windows execution, and reliable process exit-code propagation.
+- Improved CLI input validation and error reporting for missing files, non-file paths, malformed custom dictionary
+  specifications, invalid modes, and unsupported dictionary slots.
+- Improved PDF reflow title detection to recognize `目录` / `目錄` headings and allow commas in short heading prefixes
+  while continuing to reject likely narrative lines.
+- Updated PDFBox to 3.0.8 and Commons Logging to 1.4.0.
+- Deprecated the low-level `OpenCC.segmentReplace(...)` API. Standard configured conversions should use
+  `convert(...)`; callers with custom mappings should migrate them to `DictionaryMaxlength` or `CustomDictSpec`.
+- Clarified JavaDoc for caller-supplied dictionary immutability, cached conversion plans, configuration fallback
+  diagnostics, and low-level conversion APIs.
+
+### Fixed
+
+- Hardened compatibility-ideograph mapping parsing to require exactly two tab-separated scalar values and reject
+  isolated UTF-16 surrogates.
+- Made `OfficeHelper.convert(File, File, ...)` reject a `null` output target before reading or converting the input.
 
 ---
 

@@ -117,7 +117,7 @@ class CliCommandTest {
     @Test
     void pdfExtractWritesTextFileFromSamplePdf() throws Exception {
         Path samplePdf = Paths.get("SanWenHans.pdf").toAbsolutePath().normalize();
-        Path output = tempDir.resolve("sample_extracted.txt");
+        Path output = tempDir.resolve("SanWenHans_extracted.txt");
 
         CommandResult result = execute("pdf", "-i", samplePdf.toString(), "-e", "-o", output.toString());
 

@@ -269,31 +269,25 @@ class OpenCCTest {
     }
 
     @Test
-    public void testSegmentReplace_s2t_100kChars() {
-        // Sample repeated simplified Chinese text (e.g., "汉字转换")
+    public void testConvert_s2t_100kChars() {
         String base = "“数大”便是美，碧绿的山坡前几千只绵羊，挨成一片的雪绒，是美；";
-        // Java 8 replacement for String.repeat()
+
         StringBuilder sb = new StringBuilder(100_000);
         while (sb.length() < 100_000) {
             sb.append(base);
         }
-        String input = sb.substring(0, 100_000); // trim to exactly 100k chars
-        // Setup OpenCC
-        DictionaryMaxlength d = DictionaryMaxlength.fromDicts(); // assume your preloaded dictionary method
-        OpenCC cc = new OpenCC(); // your wrapper class
 
-        // Time the conversion
+        String input = sb.substring(0, 100_000);
+
+        OpenCC cc = new OpenCC(OpenccConfig.S2T);
+
         long start = System.nanoTime();
-        String output = cc.segmentReplace(
-                input,
-                Arrays.asList(d.st_phrases, d.st_characters), // Java 8 replacement for List.of(...)
-                16
-        );
+        String output = cc.convert(input);
         long durationMs = (System.nanoTime() - start) / 1_000_000;
 
-        // Assertions and output
         assertNotNull(output);
-        assertEquals(input.length(), output.length()); // Simplified-to-Traditional is 1:1 in this test
+        assertEquals(input.length(), output.length());
+
         System.out.println("Converted 100K chars in " + durationMs + " ms");
     }
 

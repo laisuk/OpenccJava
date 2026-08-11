@@ -63,7 +63,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.3.0")
+    implementation("io.github.laisuk:openccjava:1.4.2")
 }
 ```
 
@@ -71,7 +71,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.3.0'
+    implementation 'io.github.laisuk:openccjava:1.4.2'
 }
 ```
 
@@ -82,7 +82,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.2</version>
 </dependency>
 ```
 
@@ -98,7 +98,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.3.0' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.4.2' // replace with latest tag
 }
 ```
 
@@ -107,16 +107,16 @@ dependencies {
 ```xml
 
 <repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
 </repositories>
 
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.3.0</version>
+<version>v1.4.2</version>
 </dependency>
 ```
 
@@ -170,15 +170,17 @@ your classpath.
 ### 🔧 Constructor Overloads
 
 ```java
-OpenCC cc = OpenCC.fromConfig("s2t");              // Static helper, autoloads shared dictionaries
-OpenCC cc = OpenCC.fromConfig(OpenccConfig.TW2SP);  // Typed config helper
-OpenCC cc = new OpenCC();                           // Default config "s2t"
-OpenCC cc = new OpenCC("tw2sp");                  // String config
-OpenCC cc = new OpenCC(OpenccConfig.S2HK);         // Typed config
-OpenCC cc = new OpenCC("s2t", customSpecs);      // String config + custom dictionary specs
-OpenCC cc = new OpenCC(OpenccConfig.S2T, customSpecs); // Typed config + custom dictionary specs
+java.util.List<CustomDictSpec> customSpecs = java.util.Collections.emptyList();
+
+OpenCC fromStringConfig = OpenCC.fromConfig("s2t");
+OpenCC fromTypedConfig = OpenCC.fromConfig(OpenccConfig.TW2SP);
+OpenCC defaultConverter = new OpenCC();
+OpenCC stringConverter = new OpenCC("tw2sp");
+OpenCC typedConverter = new OpenCC(OpenccConfig.S2HK);
+OpenCC stringCustomConverter = new OpenCC("s2t", customSpecs);
+OpenCC typedCustomConverter = new OpenCC(OpenccConfig.S2T, customSpecs);
 // @deprecated
-OpenCC cc = new OpenCC("s2t", java.nio.file.Paths.get("dicts")); // Custom plain-text dicts (@deprecated)
+OpenCC legacyPathConverter = new OpenCC("s2t", java.nio.file.Paths.get("dicts"));
 ```
 
 ### 🔤 Basic Conversion
@@ -528,8 +530,9 @@ load errors, the same as other official dictionary files.
 Normal `OpenCC` usage still uses the lazy default `DictionaryHolder` singleton. Custom dictionary usage does not touch
 `DictionaryHolder`: file-level custom dictionaries build a caller-owned `DictionaryMaxlength`, and post-load
 customization returns a customized copy without mutating the original `DictionaryMaxlength`. After an `OpenCC` instance
-is
-constructed, runtime conversion remains immutable and fast.
+is constructed, treat its attached dictionary as immutable because conversion-plan metadata may be cached from its
+contents. The `OpenCC` instance itself remains mutable through configuration and diagnostic-state APIs; do not modify
+that state concurrently with conversion or state access unless callers provide external synchronization.
 
 Only users who intentionally use both the default singleton path and custom dictionary paths may hold two dictionary
 copies in memory. This is intentional and avoids global mutable state.
@@ -998,8 +1001,8 @@ The following configuration keys correspond to OpenCC conversion modes:
 | **tw2tp**  | Traditional (Taiwan + phrases) → Traditional    | Converts Taiwan phrased Traditional Chinese to general Traditional.              |
 | **hk2t**   | Traditional (Hong Kong) → Traditional           | Converts Hong Kong variant back to general Traditional Chinese.                  |
 | **hk2tp**  | Traditional (Hong Kong + phrases) → Traditional | Reverses HK phrase and variant mappings to general Traditional Chinese.          |
-| **t2jp**   | Traditional → Japanese Shinjitai                | Converts Traditional Japanese Kyujitai to Japanese Shinjitai (simplified kanji). |
-| **jp2t**   | Japanese Shinjitai → Traditional                | Converts Japanese Shinjitai characters back to Traditional Japanese Kyujitai.    |
+| **t2jp**   | Traditional → Japanese Shinjitai                | Converts Traditional Chinese characters to Japanese Shinjitai-style kanji.       |
+| **jp2t**   | Japanese Shinjitai → Traditional                | Converts Japanese Shinjitai-style kanji back to Traditional Chinese.             |
 
 ---
 

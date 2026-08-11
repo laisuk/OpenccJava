@@ -7,23 +7,35 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 /**
- * Represents a container for all OpenCC dictionary mappings,
- * including phrase-level and character-level dictionaries.
+ * Represents a container for all OpenCC dictionary mappings, including
+ * phrase-level, character-level, and punctuation dictionaries.
  *
- * <p>This class supports loading from:</p>
+ * <p>This class supports loading dictionaries from:</p>
  * <ul>
- *     <li>JSON-serialized form (used in deployments)</li>
- *     <li>Individual dictionary text files (used during development or as fallback)</li>
+ *     <li>JSON-serialized dictionary snapshots</li>
+ *     <li>Individual OpenCC dictionary text files</li>
  * </ul>
  *
- * <p>Each dictionary is stored as a {@link DictEntry} with:</p>
+ * <p>Each dictionary is stored as a {@link DictEntry} containing:</p>
  * <ul>
- *     <li>{@code dict}: key-value pairs of source→target</li>
- *     <li>{@code maxLength}: the longest phrase/key length</li>
- *     <li>{@code minLength}: the shortest phrase/key length</li>
+ *     <li>{@code dict}: source-to-target key-value mappings</li>
+ *     <li>{@code maxLength}: the longest source key length</li>
+ *     <li>{@code minLength}: the shortest source key length</li>
  * </ul>
- * Holds multiple dictionary entries, each with defined minimum and maximum key lengths.
- * Used for efficient longest-match text conversion.
+ *
+ * <p>The length metadata is used by the conversion engine to perform efficient
+ * longest-match dictionary lookup.</p>
+ *
+ * <p>Advanced callers may preload, deserialize, or customize a
+ * {@code DictionaryMaxlength} and pass it to {@link OpenCC}. Once attached to
+ * an {@code OpenCC} instance, the dictionary should be treated as immutable
+ * for the lifetime of that converter because conversion metadata may be cached
+ * from its contents.</p>
+ *
+ * <p>Mutating an attached dictionary is unsupported and may produce conversion
+ * results that are inconsistent with the cached conversion plan. To use
+ * different dictionary contents, create or customize another
+ * {@code DictionaryMaxlength} and construct a new {@link OpenCC} instance.</p>
  */
 public class DictionaryMaxlength {
     /**
@@ -35,7 +47,7 @@ public class DictionaryMaxlength {
     }
 
     /**
-     * Represents a dictionary entry with mapping data and max phrase length.
+     * Represents a dictionary entry with mapping data and phrase-length bounds.
      */
 //    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
     public static class DictEntry {

@@ -210,9 +210,8 @@ class DictionaryLibTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
-    void testWithCustomDictFilesAppendReturnsCustomizedCopy() throws IOException {
+    void testWithCustomDictsAppendReturnsCustomizedCopy() throws IOException {
         Path custom = Files.createTempFile("openccjava-postload-append-", ".txt");
 
         try {
@@ -224,7 +223,7 @@ class DictionaryLibTest {
 
             DictionaryMaxlength base = DictionaryMaxlength.fromDicts();
 
-            DictionaryMaxlength customized = base.withCustomDictFiles(
+            DictionaryMaxlength customized = base.withCustomDicts(
                     Collections.singletonList(
                             CustomDictSpec.fromFile(
                                     DictSlot.STPhrases,
@@ -242,9 +241,8 @@ class DictionaryLibTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
-    void testWithCustomDictFilesOverrideReturnsCustomizedCopy() throws IOException {
+    void testWithCustomDictsOverrideReturnsCustomizedCopy() throws IOException {
         Path custom = Files.createTempFile("openccjava-postload-override-", ".txt");
 
         try {
@@ -259,7 +257,7 @@ class DictionaryLibTest {
 
             DictionaryMaxlength base = DictionaryMaxlength.fromDicts();
 
-            DictionaryMaxlength customized = base.withCustomDictFiles(
+            DictionaryMaxlength customized = base.withCustomDicts(
                     Collections.singletonList(
                             CustomDictSpec.fromFile(
                                     DictSlot.STPhrases,
@@ -284,8 +282,19 @@ class DictionaryLibTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
-    void testWithCustomDictsOverrideReturnsCustomizedCopy() {
+    void testWithCustomDictFilesDelegatesToWithCustomDicts() {
+        DictionaryMaxlength base = DictionaryMaxlength.fromDicts();
+
+        DictionaryMaxlength customized =
+                base.withCustomDictFiles(Collections.emptyList());
+
+        assertNotSame(base, customized);
+    }
+
+    @Test
+    void testWithCustomDictsOverrideReturnsCustomizedCopy2() {
         Map<String, String> pairs = new LinkedHashMap<>();
         pairs.put("测试词", "專用詞");
         pairs.put("测试鼠标", "測試滑鼠");

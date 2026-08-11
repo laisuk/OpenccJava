@@ -198,7 +198,11 @@ public class OpenCC {
      * ({@code s2t}) is used instead.</p>
      *
      * <p>This method never throws due to an invalid configuration string.
-     * The effective configuration can be queried via {@link #getConfig()}
+     * If {@code config} is {@code null}, empty, or invalid, the default
+     * configuration ({@code s2t}) is used and a diagnostic message is
+     * available through {@link #getLastError()}.</p>
+     *
+     * <p>The effective configuration can be queried via {@link #getConfig()}
      * or {@link #getConfigId()}.</p>
      *
      * @param config the configuration key (e.g. {@code "s2t"}, {@code "S2TWP"}, {@code "tw2s"});
@@ -236,8 +240,9 @@ public class OpenCC {
      * custom patches.</p>
      *
      * <p>Custom dictionary files are parsed with the same parser used for
-     * built-in OpenCC text dictionaries. After construction, the converter is
-     * immutable for normal conversion use and does not hot-reload custom files.</p>
+     * built-in OpenCC text dictionaries.
+     * After construction, custom dictionary files are not hot-reloaded.
+     * For normal use, the resulting dictionary should be treated as immutable.</p>
      *
      * @param specs custom dictionary specs to apply; may be {@code null} or empty
      * @return a new converter using a caller-owned dictionary
@@ -260,9 +265,9 @@ public class OpenCC {
      *
      * <p>If {@code config} is {@code null}, the default configuration
      * ({@code s2t}) is used. Custom dictionary files are parsed with the same
-     * parser used for built-in OpenCC text dictionaries. After construction,
-     * the converter is immutable for normal conversion use and does not
-     * hot-reload custom files.</p>
+     * parser used for built-in OpenCC text dictionaries.
+     * After construction, custom dictionary files are not hot-reloaded.
+     * For normal use, the resulting dictionary should be treated as immutable.</p>
      *
      * @param config the configuration ID, or {@code null} to use the default
      * @param specs  custom dictionary specs to apply; may be {@code null} or empty
@@ -292,9 +297,9 @@ public class OpenCC {
      *
      * <p>If {@code config} is {@code null}, the default configuration
      * ({@code s2t}) is used. Custom dictionary files are parsed with the same
-     * parser used for built-in OpenCC text dictionaries. After construction,
-     * the converter is immutable for normal conversion use and does not
-     * hot-reload custom files.</p>
+     * parser used for built-in OpenCC text dictionaries.
+     * After construction, custom dictionary files are not hot-reloaded.
+     * For normal use, the resulting dictionary should be treated as immutable.</p>
      *
      * @param config   the configuration ID, or {@code null} to use the default
      * @param basePath the path to the directory containing official dictionary
@@ -408,9 +413,11 @@ public class OpenCC {
      * constructor does not use or modify {@link DictionaryHolder}. It is
      * intended for dictionaries built with custom files or loaded by the caller.</p>
      *
-     * <p>After construction, normal conversion is immutable and fast. To change
-     * custom dictionary contents, build a new {@link DictionaryMaxlength} and
-     * create a new {@code OpenCC} instance.</p>
+     * <p>The supplied dictionary should be treated as immutable after this
+     * converter is constructed. Mutating it afterward is unsupported because
+     * conversion metadata may be cached from its contents. To change dictionary
+     * contents, build a new {@link DictionaryMaxlength} and create a new
+     * {@code OpenCC} instance.</p>
      *
      * @param dictionary the dictionary to use; must not be {@code null}
      * @throws NullPointerException if {@code dictionary} is {@code null}
@@ -428,9 +435,13 @@ public class OpenCC {
      * intended for dictionaries built with custom files or loaded by the caller.</p>
      *
      * <p>If {@code config} is {@code null}, the default configuration
-     * ({@code s2t}) is used. After construction, normal conversion is immutable
-     * and fast. To change custom dictionary contents, build a new
-     * {@link DictionaryMaxlength} and create a new {@code OpenCC} instance.</p>
+     * ({@code s2t}) is used.</p>
+     *
+     * <p>The supplied dictionary should be treated as immutable after this
+     * converter is constructed. Mutating it afterward is unsupported because
+     * conversion metadata may be cached from its contents. To change dictionary
+     * contents, build a new {@link DictionaryMaxlength} and create a new
+     * {@code OpenCC} instance.</p>
      *
      * @param config     the configuration ID, or {@code null} to use the default
      * @param dictionary the dictionary to use; must not be {@code null}
@@ -956,7 +967,14 @@ public class OpenCC {
      * @param dicts     the list of dictionaries (in order of priority) to apply
      * @param maxLength the maximum phrase length to match in the dictionaries
      * @return the converted text
+     * @deprecated For standard configured conversion, use {@link #convert(String)}
+     * or {@link #convert(String, boolean)}. There is no direct replacement for
+     * callers that supply an arbitrary dictionary list and maximum match length;
+     * migrate custom mappings to {@link DictionaryMaxlength} or
+     * {@link CustomDictSpec} and construct a suitably configured {@code OpenCC}
+     * instance. This method may be removed in version 2.0.
      */
+    @Deprecated
     public String segmentReplace(String text, List<DictEntry> dicts, int maxLength) {
         if (text == null || text.isEmpty()) return text;
 
@@ -1000,16 +1018,23 @@ public class OpenCC {
     }
 
     /**
-     * Converts a single segment using the specified dictionaries with longest-match-first strategy.
+     * Converts a single segment using the specified dictionaries with a
+     * longest-match-first strategy.
      *
-     * <p>If the segment is a single delimiter character, it is returned as-is.
-     * Otherwise, the method performs greedy matching from left to right,
-     * trying to match the longest possible substrings found in the dictionaries.
+     * <p>If the segment is a single delimiter character, it is returned unchanged.
+     * Otherwise, this method performs greedy matching from left to right, trying
+     * longer dictionary keys before shorter ones.</p>
      *
-     * <p>This method reuses a thread-local {@code StringBuilder} to reduce allocations.
+     * <p>This method reuses a thread-local {@code StringBuilder} to reduce
+     * allocations.</p>
+     *
+     * <p><strong>API note:</strong> This is a low-level conversion primitive used
+     * internally by the direct {@code st()} and {@code ts()} fast paths. Although
+     * currently public for compatibility, it is not intended as a general-purpose
+     * application API and is planned to become private in the next major version.</p>
      *
      * @param segment   the text segment to convert
-     * @param dicts     the list of dictionaries to apply (highest priority first)
+     * @param dicts     the dictionaries to apply, in priority order
      * @param maxLength the maximum phrase length to consider
      * @return the converted segment
      */
