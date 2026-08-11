@@ -39,7 +39,7 @@ jobs:
       - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
-          distribution: graalvm-community
+          distribution: graalvm
           java-version: '21'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: gradle
