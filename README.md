@@ -29,8 +29,8 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 - ✅ **Accurate with non-BMP CJK** – correctly handles astral Chinese characters (CJK Ext. B–G, U+20000+), using
   surrogate-safe scanning and max-match across code points.
 - ✅ **Pure Java, no JNI** – easy to use on any JVM (JDK 1.8+), no native libraries required.
-- ✅ **Thread-safe convenience conversion** – use `OpenCC.convert(...)` for one-off conversions with shared,
-  lazy-loaded dictionaries that are loaded only once per JVM.
+- ✅ **Thread-safe convenience conversion** – use `OpenCC.convert(...)` for one-off conversions with shared, lazy-loaded
+  dictionaries that are loaded only once per JVM.
 - ✅ **Wide format support** – convert plain text and Office documents: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.epub`, etc.
 - ✅ **Optional font name preservation** – keep original fonts when processing Office documents.
 - ✅ **CLI tool included** (`OpenccJavaCli.bat`) – convert files or stdin with flexible encoding options.
@@ -107,10 +107,10 @@ dependencies {
 ```xml
 
 <repositories>
-  <repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-  </repository>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
 </repositories>
 
 <dependency>
@@ -282,11 +282,11 @@ public class Example {
 }
 ```
 
-Most directional conversion methods support a boolean punctuation flag as a second parameter.
-Methods such as `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`, `hk2t`, `hk2tp`, `t2jp`, and `jp2t`
-are single-argument methods. Use `s2hkp` / `hk2sp` for phrase-aware Hong Kong conversions to or from Simplified
-Chinese. Use `t2hkp` / `hk2tp` when `HKPhrases.txt` / `HKPhrasesRev.txt` should be applied directly between
-general Traditional and Hong Kong Traditional Chinese.
+Most directional conversion methods support a boolean punctuation flag as a second parameter. Methods such as `t2tw`,
+`t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`, `hk2t`, `hk2tp`, `t2jp`, and `jp2t`
+are single-argument methods. Use `s2hkp` / `hk2sp` for phrase-aware Hong Kong conversions to or from Simplified Chinese.
+Use `t2hkp` / `hk2tp` when `HKPhrases.txt` / `HKPhrasesRev.txt` should be applied directly between general Traditional
+and Hong Kong Traditional Chinese.
 
 ## CJK Compatibility Ideograph normalization
 
@@ -456,8 +456,8 @@ Custom DeTofu fallback files use UTF-8 text with one mapping per line:
 ```
 
 Blank lines and lines beginning with `#` are ignored. The extension column accepts compact `B`-`I` or legacy
-`ExtB`-`ExtI`. Custom mappings are applied after built-in mappings and override built-in mappings for the same
-tofu-risk character.
+`ExtB`-`ExtI`. Custom mappings are applied after built-in mappings and override built-in mappings for the same tofu-risk
+character.
 
 ### Custom in-memory fallback mappings
 
@@ -540,11 +540,10 @@ copies in memory. This is intentional and avoids global mutable state.
 #### CustomDictMode
 
 - `CustomDictMode.Append` merges custom entries into the existing slot. Custom entries win if keys already exist. This
-  is
-  the recommended/default mode for most users.
+  is the recommended/default mode for most users.
 - `CustomDictMode.Override` replaces the selected slot before applying custom entries. This is advanced mode. Other
-  slots
-  in the same conversion chain may still run afterward; for example, `STCharacters` may still apply after `STPhrases`.
+  slots in the same conversion chain may still run afterward; for example, `STCharacters` may still apply after
+  `STPhrases`.
 
 #### Portable Custom-Dictionary Specifications
 
@@ -556,9 +555,9 @@ A portable custom-dictionary token has this grammar:
 
 Use `CustomDictSpec.parse(...)` for tokens from a command line, configuration file, or another textual source. Slot and
 mode matching is case-insensitive. Slot matching is otherwise strict: numeric values, unknown names, deprecated names,
-and hyphen/underscore aliases are rejected. The parser splits into at most three fields, preserving Windows
-drive-letter paths and any additional colons allowed by the host platform's `Path` implementation. Parsing validates
-syntax but does not test whether the file exists; file access occurs when a `DictionaryMaxlength` API applies the spec.
+and hyphen/underscore aliases are rejected. The parser splits into at most three fields, preserving Windows drive-letter
+paths and any additional colons allowed by the host platform's `Path` implementation. Parsing validates syntax but does
+not test whether the file exists; file access occurs when a `DictionaryMaxlength` API applies the spec.
 
 ```java
 CustomDictSpec parsed = CustomDictSpec.parse(
@@ -587,7 +586,8 @@ construction API that accepts specs.
 `DictSlot.activeSlots()`, `DictSlot.supportedCanonicalNames()`, and `DictSlot.supportedSlotDisplay()` expose the active
 contract. `DictSlot.parse(...)` parses a canonical name and `toCanonicalName()` formats one. Canonical names—not enum
 ordinals—are the stable external contract. `JPVariants` and `JPVariantsRev` remain deprecated enum constants so legacy
-Java source compiles, but they are inactive and are rejected by parsing, typed spec factories, and dictionary application.
+Java source compiles, but they are inactive and are rejected by parsing, typed spec factories, and dictionary
+application.
 
 The token format is intentionally unified across the C#, Java, Rust, and Python OpenCC ecosystem. This section documents
 the Java public parser and Java CLI delegation; it does not claim equivalent public APIs in another language where that
@@ -610,8 +610,8 @@ Custom dictionary files use the same parser as OpenCC text dictionaries:
 - In-memory custom dictionaries use `CustomDictSpec.fromPairs(...)` and apply a `Map<String, String>` directly, which is
   useful for runtime terms or application-provided user dictionaries.
 - When custom specs for the same slot include both file paths and pairs, apply file specs first and pair specs
-  afterward.
-  Pair entries override file entries when the same source key exists; internally, `pairs` are applied after `paths`.
+  afterward. Pair entries override file entries when the same source key exists; internally, `pairs` are applied after
+  `paths`.
 - Insertion order is preserved for in-memory pairs. Use `LinkedHashMap` when order matters.
 
 Forward Taiwan/Hong Kong regional variant phrase slots can also be patched with append or override specs:
@@ -981,28 +981,28 @@ List<String> configs = OpenCC.getSupportedConfigs();
 
 The following configuration keys correspond to OpenCC conversion modes:
 
-| Config Key | Direction                                       | Description                                                                      |
-|------------|-------------------------------------------------|----------------------------------------------------------------------------------|
-| **s2t**    | Simplified → Traditional                        | General conversion from Simplified Chinese to Traditional Chinese.               |
-| **t2s**    | Traditional → Simplified                        | Converts Traditional Chinese text to Simplified Chinese.                         |
-| **s2tw**   | Simplified → Traditional (Taiwan)               | Uses Taiwan-specific vocabulary and character preferences.                       |
-| **tw2s**   | Traditional (Taiwan) → Simplified               | Converts Taiwan Traditional Chinese to Simplified Chinese.                       |
-| **s2twp**  | Simplified → Traditional (Taiwan + phrases)     | Applies Taiwan-specific character and phrase mappings.                           |
-| **tw2sp**  | Traditional (Taiwan + phrases) → Simplified     | Converts Taiwan-phrased Traditional Chinese to Simplified Chinese.               |
-| **s2hk**   | Simplified → Traditional (Hong Kong)            | Uses Hong Kong variant characters and word choices.                              |
-| **hk2s**   | Traditional (Hong Kong) → Simplified            | Converts Hong Kong Traditional Chinese to Simplified Chinese.                    |
-| **s2hkp**  | Simplified → Traditional (Hong Kong + phrases)  | Applies HK phrase mappings, HK phrase variants, and HK character variants.       |
-| **hk2sp**  | Traditional (Hong Kong + phrases) → Simplified  | Applies HK phrase/variant reverse normalization before Simplified conversion.    |
-| **t2tw**   | Traditional → Traditional (Taiwan)              | Normalizes Traditional Chinese to Taiwan variant.                                |
-| **t2twp**  | Traditional → Traditional (Taiwan + phrases)    | Includes Taiwan-specific phrase-level normalization.                             |
-| **t2hk**   | Traditional → Traditional (Hong Kong)           | Normalizes Traditional Chinese to Hong Kong variant.                             |
-| **t2hkp**  | Traditional → Traditional (Hong Kong + phrases) | Applies HK phrase mappings, HK phrase variants, and HK character variants.       |
-| **tw2t**   | Traditional (Taiwan) → Traditional              | Converts Taiwan variant back to general Traditional Chinese.                     |
-| **tw2tp**  | Traditional (Taiwan + phrases) → Traditional    | Converts Taiwan phrased Traditional Chinese to general Traditional.              |
-| **hk2t**   | Traditional (Hong Kong) → Traditional           | Converts Hong Kong variant back to general Traditional Chinese.                  |
-| **hk2tp**  | Traditional (Hong Kong + phrases) → Traditional | Reverses HK phrase and variant mappings to general Traditional Chinese.          |
-| **t2jp**   | Traditional → Japanese Shinjitai                | Converts Traditional Chinese characters to Japanese Shinjitai-style kanji.       |
-| **jp2t**   | Japanese Shinjitai → Traditional                | Converts Japanese Shinjitai-style kanji back to Traditional Chinese.             |
+| Config Key | Direction                                       | Description                                                                   |
+|------------|-------------------------------------------------|-------------------------------------------------------------------------------|
+| **s2t**    | Simplified → Traditional                        | General conversion from Simplified Chinese to Traditional Chinese.            |
+| **t2s**    | Traditional → Simplified                        | Converts Traditional Chinese text to Simplified Chinese.                      |
+| **s2tw**   | Simplified → Traditional (Taiwan)               | Uses Taiwan-specific vocabulary and character preferences.                    |
+| **tw2s**   | Traditional (Taiwan) → Simplified               | Converts Taiwan Traditional Chinese to Simplified Chinese.                    |
+| **s2twp**  | Simplified → Traditional (Taiwan + phrases)     | Applies Taiwan-specific character and phrase mappings.                        |
+| **tw2sp**  | Traditional (Taiwan + phrases) → Simplified     | Converts Taiwan-phrased Traditional Chinese to Simplified Chinese.            |
+| **s2hk**   | Simplified → Traditional (Hong Kong)            | Uses Hong Kong variant characters and word choices.                           |
+| **hk2s**   | Traditional (Hong Kong) → Simplified            | Converts Hong Kong Traditional Chinese to Simplified Chinese.                 |
+| **s2hkp**  | Simplified → Traditional (Hong Kong + phrases)  | Applies HK phrase mappings, HK phrase variants, and HK character variants.    |
+| **hk2sp**  | Traditional (Hong Kong + phrases) → Simplified  | Applies HK phrase/variant reverse normalization before Simplified conversion. |
+| **t2tw**   | Traditional → Traditional (Taiwan)              | Normalizes Traditional Chinese to Taiwan variant.                             |
+| **t2twp**  | Traditional → Traditional (Taiwan + phrases)    | Includes Taiwan-specific phrase-level normalization.                          |
+| **t2hk**   | Traditional → Traditional (Hong Kong)           | Normalizes Traditional Chinese to Hong Kong variant.                          |
+| **t2hkp**  | Traditional → Traditional (Hong Kong + phrases) | Applies HK phrase mappings, HK phrase variants, and HK character variants.    |
+| **tw2t**   | Traditional (Taiwan) → Traditional              | Converts Taiwan variant back to general Traditional Chinese.                  |
+| **tw2tp**  | Traditional (Taiwan + phrases) → Traditional    | Converts Taiwan phrased Traditional Chinese to general Traditional.           |
+| **hk2t**   | Traditional (Hong Kong) → Traditional           | Converts Hong Kong variant back to general Traditional Chinese.               |
+| **hk2tp**  | Traditional (Hong Kong + phrases) → Traditional | Reverses HK phrase and variant mappings to general Traditional Chinese.       |
+| **t2jp**   | Traditional → Japanese Shinjitai                | Converts Traditional Chinese characters to Japanese Shinjitai-style kanji.    |
+| **jp2t**   | Japanese Shinjitai → Traditional                | Converts Japanese Shinjitai-style kanji back to Traditional Chinese.          |
 
 ---
 
@@ -1046,7 +1046,7 @@ public class Example {
         FileResult result = OfficeHelper.convert(
                 input,
                 output,
-                "docx",      // Supported: docx, xlsx, pptx, odt, epub
+                "docx",      // Supported: docx, xlsx, pptx, odt, ods, odp, epub
                 converter,
                 true,        // Convert punctuation
                 true         // Preserve font names
@@ -1063,7 +1063,7 @@ public class Example {
 
 ```
 
-### 🧩 Example – Converting a `.docx` Using `byte[]` → `MemoryResult`
+### 🧩 Example – Pure In-Memory `.docx` Conversion (`byte[]` → `MemoryResult`)
 
 ```java
 import openccjava.OpenCC;
@@ -1085,7 +1085,7 @@ public class ExampleBytes {
         // Perform in-memory conversion
         MemoryResult result = OfficeHelper.convert(
                 inputBytes,
-                "docx",      // Supported: docx, xlsx, pptx, odt, epub
+                "docx",      // Supported: docx, xlsx, pptx, odt, ods, odp, epub
                 converter,
                 true,        // Convert punctuation
                 true         // Keep font names
@@ -1102,6 +1102,16 @@ public class ExampleBytes {
 }
 
 ```
+
+The `byte[]` overload is a pure in-memory conversion path. It does not create a temporary extraction directory or
+temporary output archive. The input ZIP container is read directly from memory and rebuilt into a new in-memory ZIP.
+
+Only text-bearing XML/XHTML entries selected for conversion are materialized temporarily as text. Unchanged package
+entries such as images, media, embedded files, relationships, and other binary resources are streamed directly from the
+input archive to the output archive.
+
+For large filesystem-backed documents, prefer the `File` overload. It uses a separate streaming file-I/O path and avoids
+keeping the complete input and output packages in memory at the same time.
 
 ### ✔ Notes
 
@@ -1129,6 +1139,10 @@ OfficeHelper.convert(
     boolean keepFont
 )
 ```
+
+> The file-to-file overload does not delegate through the `byte[]` API. It reads the source package as a ZIP stream and
+> writes the rebuilt package through file I/O, materializing only the selected text-bearing entries that require OpenCC
+> conversion.
 
 - You may still use `Result` (the abstract base class) as the return type in legacy code.  
   it remains **fully valid** since both `MemoryResult` and `FileResult` extend it.
@@ -1325,8 +1339,7 @@ OpenccJava
 #### PDF extraction engine
 
 `openccjavacli pdf` uses a **text-based PDF extraction engine** (PdfBox) and is intended for **digitally generated PDFs
-** (
-e-books, research papers, reports).
+** (e-books, research papers, reports).
 
 - ✅ Works best with selectable text
 - ❌ Does **not** perform OCR on scanned/image-only PDFs
@@ -1358,9 +1371,9 @@ Reflow attempts to:
 
 #### Dictionary JSON Serialization
 
-`DictionaryMaxlength` can write dictionary JSON without any external JSON dependency. File output is UTF-8.
-Use `pretty=true` for indentation and newlines, or `pretty=false` for compact output with no indentation/newlines.
-Use `sortKeys=true` for deterministic lexical key ordering when you want reproducible output, stable diffs, or easier
+`DictionaryMaxlength` can write dictionary JSON without any external JSON dependency. File output is UTF-8. Use
+`pretty=true` for indentation and newlines, or `pretty=false` for compact output with no indentation/newlines. Use
+`sortKeys=true` for deterministic lexical key ordering when you want reproducible output, stable diffs, or easier
 debugging. Sorting is for output reproducibility and readability, not deserialization speed.
 
 ```java
@@ -1432,8 +1445,8 @@ Generate base dictionary for OpenccJava
   the CLI flags below.
 
 > 💡 Tip for Windows users:  
-> If you have enabled “**Beta: Use Unicode UTF-8 for worldwide language support**” in
-_Control Panel → Region → Administrative → Language for non-Unicode programs → Change system locale_,
+> If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
+Administrative → Language for non-Unicode programs → Change system locale_,
 > your console already uses UTF-8 — no need to specify `--con-enc UTF-8`.
 > You can safely display emoji, Chinese, and other Unicode characters without needing to run `chcp 65001` or modify code
 > pages manually.

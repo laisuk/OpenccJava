@@ -104,9 +104,17 @@ public final class CliUtils {
 
     private static List<CustomDictSpec> parseCustomDictSpecs(List<String> values) {
         List<CustomDictSpec> specs = new ArrayList<>(values.size());
+
         for (String value : values) {
-            specs.add(CustomDictSpec.parse(value));
+            CustomDictSpec spec = CustomDictSpec.parse(value);
+
+            for (java.nio.file.Path path : spec.paths) {
+                validateFile(path.toFile(), "Custom dictionary file");
+            }
+
+            specs.add(spec);
         }
+
         return specs;
     }
 
@@ -118,16 +126,20 @@ public final class CliUtils {
      *                                  exist, or is not a regular file
      */
     static void validateInputFile(File input) {
-        if (input == null) {
-            throw new IllegalArgumentException("Input file must not be null");
+        validateFile(input, "Input file");
+    }
+
+    private static void validateFile(File file, String label) {
+        if (file == null) {
+            throw new IllegalArgumentException(label + " must not be null");
         }
 
-        if (!input.exists()) {
-            throw new IllegalArgumentException("Input file not found: " + input);
+        if (!file.exists()) {
+            throw new IllegalArgumentException(label + " not found: " + file);
         }
 
-        if (!input.isFile()) {
-            throw new IllegalArgumentException("Input path is not a file: " + input);
+        if (!file.isFile()) {
+            throw new IllegalArgumentException(label + " is not a file: " + file);
         }
     }
 }
