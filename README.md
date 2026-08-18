@@ -192,10 +192,10 @@ public class Example {
     static void main(String[] args) {
         OpenCC converter = new OpenCC("s2t");
         String result = converter.convert("汉字转换");
-        System.out.println(result); // → 漢字轉換
+        System.err.println(result); // → 漢字轉換
 
         String withPunctuation = converter.convert("“春眠不觉晓”", true);
-        System.out.println(withPunctuation); // → 「春眠不覺曉」
+        System.err.println(withPunctuation); // → 「春眠不覺曉」
     }
 }
 ```
@@ -340,7 +340,7 @@ public class CompatBeforeConvertExample {
         String normalized = cc.normalizeCompat("天龍八部書裡的喬峰是契丹人");
         String converted = cc.convert(normalized);
 
-        System.out.println(converted);
+        System.err.println(converted);
         // 天龙八部书里的乔峰是契丹人
     }
 }
@@ -388,7 +388,7 @@ public class DeTofuApiExample {
         String converted = cc.convert("儼驂騑於上路，訪風景於崇阿，𱁬");
         String safe = cc.deTofu(converted, DeTofu.Level.ExtB);
 
-        System.out.println(safe);
+        System.err.println(safe);
         // 俨骖騑于上路，访风景于崇阿，𱁬
     }
 }
@@ -402,7 +402,7 @@ import openccjava.DeTofu;
 public class DeTofuDirectExample {
     static void main(String[] args) {
         String safe = DeTofu.convert("骖𬴂", DeTofu.Level.ExtB);
-        System.out.println(safe);
+        System.err.println(safe);
         // 骖騑
     }
 }
@@ -441,7 +441,7 @@ public class DeTofuCustomFileExample {
                 "custom-tofu.txt"
         );
 
-        System.out.println(safe);
+        System.err.println(safe);
         // 氂毛
     }
 }
@@ -493,7 +493,7 @@ public class DeTofuCustomPairsExample {
                 pairs
         );
 
-        System.out.println(safe);
+        System.err.println(safe);
         // 氂毛 骖騑
     }
 }
@@ -1396,7 +1396,7 @@ public class DictionaryJsonExample {
 
         // JSON string serialization.
         String json = dict.serializeToJsonString(false, false);
-        System.out.println(json.length());
+        System.err.println(json.length());
     }
 }
 ```

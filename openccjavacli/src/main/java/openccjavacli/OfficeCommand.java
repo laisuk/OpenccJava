@@ -43,7 +43,8 @@ public class OfficeCommand implements Runnable {
             names = {"-D", "--custom-dict"},
             paramLabel = "<slot:mode:path>",
             split = ",",
-            description = "Apply custom dictionary file. Format: slot:append|override:path. Can be repeated or comma-separated."
+            completionCandidates = CliUtils.SlotCandidates.class,
+            description = "Apply custom dictionary file. Format: slot:append|override:path. Can be repeated or comma-separated. Supported slots: ${COMPLETION-CANDIDATES}"
     )
     private List<String> customDictSpecs;
 

@@ -35,6 +35,17 @@ public final class CliUtils {
         }
     }
 
+    /**
+     * Supplies canonical OpenCC configuration names for CLI option completion
+     * and generated help text.
+     */
+    @SuppressWarnings("NullableProblems")
+    static final class SlotCandidates implements Iterable<String> {
+        @Override
+        public Iterator<String> iterator() {
+            return DictSlot.supportedCanonicalNames().iterator();
+        }
+    }
 
     /**
      * Creates an {@link OpenCC} instance for a CLI command.
