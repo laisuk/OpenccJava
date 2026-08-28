@@ -42,6 +42,12 @@ public class ConvertCommand implements Callable<Integer> {
     private boolean normCompat;
 
     @Option(
+            names = {"-E", "--norm-compat-extended"},
+            description = "Normalize extended Unicode compatibility/allograph forms and CJK Compatibility Ideographs before conversion."
+    )
+    private boolean normCompatExtended;
+
+    @Option(
             names = "--detofu",
             paramLabel = "<level>",
             description = "Apply tofu-safe fallback after conversion: all, ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h, ext-i"
@@ -123,7 +129,9 @@ public class ConvertCommand implements Callable<Integer> {
                 inputText = new String(inputStreamReadAllBytes(), inputCharset);
             }
 
-            if (normCompat) {
+            if (normCompatExtended) {
+                inputText = opencc.normalizeCompatExtended(inputText);
+            } else if (normCompat) {
                 inputText = opencc.normalizeCompat(inputText);
             }
 

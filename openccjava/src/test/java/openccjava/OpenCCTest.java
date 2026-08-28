@@ -517,86 +517,113 @@ class OpenCCTest {
         assertEquals("氂毛", output);
     }
 
-    @Test
-    public void normalizeCompat() {
-        assertEquals("金庸", CompatIdeographs.normalize("金庸"));
-    }
+    // Unicode compatibility normalization tests
 
     @Test
-    public void normalizeCompatNonBmp() {
-        assertEquals("鼖鼻𪘀",
-                CompatIdeographs.normalize("鼖鼻𪘀"));
-    }
-
-    @Test
-    public void normalizeCompatScalarRejectsIsolatedSurrogates() {
-        assertThrows(IllegalArgumentException.class,
-                () -> CompatIdeographs.normalizeScalar("\uD800"));
-        assertThrows(IllegalArgumentException.class,
-                () -> CompatIdeographs.normalizeScalar("\uDC00"));
-    }
-
-    @Test
-    public void normalizeCompatScalarReturnsMappedAndUnmappedValues() {
-        assertEquals("金", CompatIdeographs.normalizeScalar("金"));
-        assertEquals("A", CompatIdeographs.normalizeScalar("A"));
-    }
-
-    @Test
-    public void normalizeCompatCustomPairsIgnoreIsolatedSurrogates() {
-        Map<String, String> pairs = new HashMap<>();
-        pairs.put("\uD800", "A");
-        pairs.put("A", "\uDC00");
-
-        CompatIdeographs.Map map = CompatIdeographs.fromText("A\tB")
-                .withCustomPairs(pairs);
-
-        assertEquals("B", map.normalizeScalar("A"));
-        assertEquals("\uD800", map.normalize("\uD800"));
-    }
-
-    @Test
-    public void normalizeCompatPreservesUnmapped() {
-        assertEquals("abc金庸123",
-                CompatIdeographs.normalize("abc金庸123"));
-    }
-
-    @Test
-    public void openccNormalizeCompat() {
+    void normalizeCompatUsesPublicApi() {
         OpenCC cc = new OpenCC();
 
-        assertEquals("金庸",
-                cc.normalizeCompat("金庸"));
+        assertEquals("金庸", cc.normalizeCompat("金庸"));
     }
 
     @Test
-    public void openccNormalizeCompatNonBmp() {
+    void normalizeCompatHandlesNonBmpCompatibilityIdeographs() {
         OpenCC cc = new OpenCC();
 
-        assertEquals("鼖鼻𪘀",
-                cc.normalizeCompat("鼖鼻𪘀"));
+        assertEquals(
+                "鼖鼻𪘀",
+                cc.normalizeCompat("鼖鼻𪘀")
+        );
     }
 
     @Test
-    public void normalizeCompatGolden() {
+    void normalizeCompatPreservesUnmappedCharacters() {
+        OpenCC cc = new OpenCC();
+
+        assertEquals(
+                "abc金庸123",
+                cc.normalizeCompat("abc金庸123")
+        );
+    }
+
+    @Test
+    void normalizeCompatGolden() {
+        OpenCC cc = new OpenCC();
+
         assertEquals(
                 "天龍八部書裡的喬峰是契丹人",
-                CompatIdeographs.normalize("天龍八部書裡的喬峰是契丹人"));
+                cc.normalizeCompat("天龍八部書裡的喬峰是契丹人")
+        );
     }
 
     @Test
-    public void openccNormalizeCompatThenConvertGolden() {
+    void normalizeUnicodeCompatGolden() {
+        OpenCC cc = new OpenCC();
+
+        assertEquals(
+                "聽聽奇美玉石瓶器音",
+                cc.normalizeUnicodeCompat("聼聼竒羙⽟䂖甁噐⾳")
+        );
+    }
+
+    @Test
+    void normalizeUnicodeCompatDoesNotApplyCjkCompatIdeographsTable() {
+        OpenCC cc = new OpenCC();
+
+        assertEquals(
+                "金鼖",
+                cc.normalizeUnicodeCompat("金鼖")
+        );
+    }
+
+    @Test
+    void normalizeCompatDoesNotApplyExtendedUnicodeCompatTable() {
+        OpenCC cc = new OpenCC();
+
+        assertEquals(
+                "聼竒羙䂖甁噐",
+                cc.normalizeCompat("聼竒羙䂖甁噐")
+        );
+    }
+
+    @Test
+    void normalizeCompatExtendedGolden() {
+        OpenCC cc = new OpenCC();
+
+        assertEquals(
+                "聽聽奇美玉石瓶器音",
+                cc.normalizeCompatExtended("聼聼竒羙⽟䂖甁噐⾳")
+        );
+    }
+
+    @Test
+    void normalizeCompatExtendedMatchesExplicitComposition() {
+        OpenCC cc = new OpenCC();
+
+        String input = "聼聼竒羙⽟䂖甁噐⾳";
+
+        assertEquals(
+                cc.normalizeCompat(cc.normalizeUnicodeCompat(input)),
+                cc.normalizeCompatExtended(input)
+        );
+    }
+
+    @Test
+    void normalizeCompatExtendedThenConvertGolden() {
         OpenCC cc = new OpenCC(OpenccConfig.T2S);
 
-        String normalized = cc.normalizeCompat("天龍八部書裡的喬峰是契丹人");
+        String normalized =
+                cc.normalizeCompatExtended("天龍八部書裡的聼眾");
 
         assertEquals(
-                "天龍八部書裡的喬峰是契丹人",
-                normalized);
+                "天龍八部書裡的聽眾",
+                normalized
+        );
 
         assertEquals(
-                "天龙八部书里的乔峰是契丹人",
-                cc.convert(normalized));
+                "天龙八部书里的听众",
+                cc.convert(normalized)
+        );
     }
 
     @Test

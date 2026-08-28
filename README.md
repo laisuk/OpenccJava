@@ -63,7 +63,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.4.2")
+    implementation("io.github.laisuk:openccjava:1.4.3")
 }
 ```
 
@@ -71,7 +71,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.4.2'
+    implementation 'io.github.laisuk:openccjava:1.4.3'
 }
 ```
 
@@ -82,7 +82,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.4.2</version>
+    <version>1.4.3</version>
 </dependency>
 ```
 
@@ -98,7 +98,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.4.2' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.4.3' // replace with latest tag
 }
 ```
 
@@ -116,7 +116,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.4.2</version>
+<version>v1.4.3</version>
 </dependency>
 ```
 
@@ -288,46 +288,101 @@ are single-argument methods. Use `s2hkp` / `hk2sp` for phrase-aware Hong Kong co
 Use `t2hkp` / `hk2tp` when `HKPhrases.txt` / `HKPhrasesRev.txt` should be applied directly between general Traditional
 and Hong Kong Traditional Chinese.
 
-## CJK Compatibility Ideograph normalization
+## Unicode compatibility normalization
 
-`CompatIdeographs` is an optional Unicode compatibility pre-processing helper. It maps CJK Compatibility Ideographs to
-their Unicode decomposition targets before OpenCC segmentation and dictionary conversion. This is useful when input text
-contains compatibility forms such as `金` but you want conversion to behave as if the canonical ideograph `金` had been
-provided.
+OpenCC Java provides optional Unicode compatibility pre-processing through the `OpenCC` API. These helpers normalize CJK
+compatibility and variant forms before OpenCC segmentation and dictionary conversion.
 
-Compatibility ideograph normalization is not part of OpenCC dictionary conversion logic. It does not affect phrase
-matching, regional variants, punctuation conversion, script detection, or dictionary data. For converted text, the
-recommended order is:
+Normalization is separate from normal OpenCC dictionary conversion. It does not modify dictionary data, regional
+conversion rules, punctuation handling, script detection, or conversion configuration.
 
-1. Normalize compatibility ideographs with `CompatIdeographs.normalize(...)` or `OpenCC.normalizeCompat(...)`.
+Three normalization modes are available:
+
+* `normalizeCompat(...)` — normalizes Unicode CJK Compatibility Ideographs.
+* `normalizeUnicodeCompat(...)` — normalizes additional Unicode CJK compatibility and allograph mappings.
+* `normalizeCompatExtended(...)` — applies the additional Unicode compatibility mappings first, then CJK Compatibility
+  Ideograph normalization.
+
+For text that may contain mixed compatibility or variant forms, `normalizeCompatExtended(...)` is the recommended
+pre-processing option.
+
+For converted text, the recommended order is:
+
+1. Normalize the input with `normalizeCompat(...)`, `normalizeUnicodeCompat(...)`, or `normalizeCompatExtended(...)`.
 2. Run normal OpenCC conversion with `convert(...)`.
 3. Optionally run DeTofu on the converted result for display fallback.
 
 ### Java API usage
 
+Normalize CJK Compatibility Ideographs:
+
 ```java
 import openccjava.OpenCC;
-import openccjava.CompatIdeographs;
 
 public class CompatIdeographsExample {
     static void main(String[] args) {
-        System.out.println(CompatIdeographs.normalize("天龍八部書裡的喬峰是契丹人"));
+        OpenCC cc = new OpenCC();
+
+        System.out.println(
+                cc.normalizeCompat("天龍八部書裡的喬峰是契丹人")
+        );
         // 天龍八部書裡的喬峰是契丹人
 
-        System.out.println(CompatIdeographs.normalize("abc天龍八部書裡的喬峰是契丹人123"));
+        System.out.println(
+                cc.normalizeCompat("abc天龍八部書裡的喬峰是契丹人123")
+        );
         // abc天龍八部書裡的喬峰是契丹人123
 
-        System.out.println(CompatIdeographs.normalize("鼖鼻𪘀"));
+        System.out.println(
+                cc.normalizeCompat("鼖鼻𪘀")
+        );
         // 鼖鼻𪘀
-
-        OpenCC cc = new OpenCC();
-        System.out.println(cc.normalizeCompat("天龍八部書裡的喬峰是契丹人"));
-        // 天龍八部書裡的喬峰是契丹人
     }
 }
 ```
 
-Normalize before conversion:
+Normalize additional Unicode compatibility and allograph forms:
+
+```java
+import openccjava.OpenCC;
+
+public class UnicodeCompatExample {
+    static void main(String[] args) {
+        OpenCC cc = new OpenCC();
+
+        String input = "聼聼竒羙䂖甁噐";
+
+        System.out.println(cc.normalizeUnicodeCompat(input));
+        // 聽聽奇美石瓶器
+    }
+}
+```
+
+Apply extended compatibility normalization:
+
+```java
+import openccjava.OpenCC;
+
+public class CompatExtendedExample {
+    static void main(String[] args) {
+        OpenCC cc = new OpenCC();
+
+        String input = "聼聼竒羙⽟䂖甁噐⾳";
+
+        System.out.println(cc.normalizeCompatExtended(input));
+        // 聽聽奇美玉石瓶器音
+    }
+}
+```
+
+`normalizeCompatExtended(...)` applies normalization in this order:
+
+1. Additional Unicode compatibility/allograph mappings.
+2. CJK Compatibility Ideograph mappings.
+
+This allows input containing both forms to be normalized in one operation.
+
+### Normalize before conversion
 
 ```java
 import openccjava.OpenCC;
@@ -337,22 +392,33 @@ public class CompatBeforeConvertExample {
     static void main(String[] args) {
         OpenCC cc = new OpenCC(OpenccConfig.T2S);
 
-        String normalized = cc.normalizeCompat("天龍八部書裡的喬峰是契丹人");
+        String input = "天龍八部書裡的聼眾";
+
+        String normalized = cc.normalizeCompatExtended(input);
         String converted = cc.convert(normalized);
 
+        System.err.println(normalized);
+        // 天龍八部書裡的聽眾
+
         System.err.println(converted);
-        // 天龙八部书里的乔峰是契丹人
+        // 天龙八部书里的听众
     }
 }
 ```
 
-### Compatibility ideograph API
+### Unicode compatibility API
 
-- `CompatIdeographs.normalize(...)`
 - `OpenCC.normalizeCompat(...)`
+- `OpenCC.normalizeUnicodeCompat(...)`
+- `OpenCC.normalizeCompatExtended(...)`
 
-Built-in mappings are embedded under `dicts/CJK_Compatibility_Ideographs.txt`. Characters outside the CJK Compatibility
-Ideograph ranges, and compatibility ideographs without a decomposition mapping, are preserved unchanged.
+Built-in normalization data is embedded under:
+
+- `dicts/CJK_Compatibility_Ideographs.txt`
+- `dicts/Unicode_Compatibility.txt`
+
+Characters without a matching normalization entry are preserved unchanged. Normalization is opt-in and is not performed
+automatically by `convert(...)`.
 
 ## DeTofu display-compatible fallback
 
@@ -371,8 +437,7 @@ DeTofu is not part of OpenCC dictionary conversion logic. It does not affect phr
 punctuation conversion, script detection, or dictionary data. Apply it after normal OpenCC conversion when display
 compatibility is more important than preserving every converted rare extension character.
 
-Built-in mappings are embedded under `dicts/TSCharactersTofu.txt`. Users do not need to manage this file for normal
-usage.
+Built-in mappings are embedded under `dicts/CharactersTofu.txt`. Users do not need to manage this file for normal usage.
 
 ### Java API usage
 

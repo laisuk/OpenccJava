@@ -103,6 +103,12 @@ public class PdfCommand implements Runnable {
     private boolean normCompat;
 
     @Option(
+            names = {"-E", "--norm-compat-extended"},
+            description = "Normalize extended Unicode compatibility/allograph forms and CJK Compatibility Ideographs before conversion."
+    )
+    private boolean normCompatExtended;
+
+    @Option(
             names = {"-D", "--custom-dict"},
             paramLabel = "<slot:mode:path>",
             split = ",",
@@ -170,7 +176,9 @@ public class PdfCommand implements Runnable {
 //                OpenCC opencc = new OpenCC(config);
                 OpenCC opencc = CliUtils.createOpenCC(config, customDictSpecs);
                 System.err.println("🔁 Converting with OpenccJava...");
-                if (normCompat) {
+                if (normCompatExtended) {
+                    processed = opencc.normalizeCompatExtended(processed);
+                } else if (normCompat) {
                     processed = opencc.normalizeCompat(processed);
                 }
                 String converted = opencc.convert(processed, punct);

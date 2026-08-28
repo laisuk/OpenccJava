@@ -22,7 +22,7 @@ import static openccjava.Utils.readUtf8;
  * code point.</p>
  *
  * <p>The built-in table is loaded from the classpath resource
- * {@code /dicts/TSCharactersTofu.txt}. If the resource is unavailable or cannot
+ * {@code /dicts/CharactersTofu.txt}. If the resource is unavailable or cannot
  * be read, the built-in map is empty and conversions preserve the input text.</p>
  *
  * <p>This class cannot be instantiated.</p>
@@ -32,7 +32,7 @@ import static openccjava.Utils.readUtf8;
  * @since 1.4.0
  */
 public final class DeTofu {
-    private static final String BUILTIN_RESOURCE = "/dicts/TSCharactersTofu.txt";
+    private static final String BUILTIN_RESOURCE = "/dicts/CharactersTofu.txt";
 
     private static final List<Entry> BUILTIN_ENTRIES = loadBuiltinEntries();
 
