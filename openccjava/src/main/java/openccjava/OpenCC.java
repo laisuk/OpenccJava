@@ -957,6 +957,37 @@ public class OpenCC {
         return conversionPlanCache.getPlan(cfg, punctuation);
     }
 
+    private static final int AVAILABLE_PROCESSORS =
+            Runtime.getRuntime().availableProcessors();
+
+    /**
+     * Determines whether segmented replacement should use parallel processing.
+     *
+     * <p>Parallel processing is enabled only when the current runtime exposes
+     * more than one available processor and the input is large or sufficiently
+     * segmented to justify parallel-stream overhead.</p>
+     *
+     * <p>This avoids entering {@link java.util.stream.Stream#parallel()} on
+     * single-processor environments such as single-threaded WebAssembly runtimes,
+     * where parallel setup provides no useful concurrency.</p>
+     *
+     * @param textLength       input length in UTF-16 code units
+     * @param segmentCount     number of independent split ranges
+     * @param textThreshold    minimum text length that favors parallel processing
+     * @param segmentThreshold minimum segment count that favors parallel processing
+     * @return {@code true} when parallel processing is worthwhile
+     */
+    private static boolean shouldRunSegmentReplaceInParallel(
+            int textLength,
+            int segmentCount,
+            int textThreshold,
+            int segmentThreshold
+    ) {
+        return AVAILABLE_PROCESSORS > 1
+                && (textLength > textThreshold
+                || segmentCount > segmentThreshold);
+    }
+
     /**
      * Applies dictionary-based replacements to the input text using segment-based processing.
      *
@@ -990,7 +1021,13 @@ public class OpenCC {
         }
 
         // Use parallel stream if input is large or highly segmented
-        boolean useParallel = textLength > 10_000 || numSegments > 100;
+//        boolean useParallel = textLength > 10_000 || numSegments > 100;
+        boolean useParallel = shouldRunSegmentReplaceInParallel(
+                textLength,
+                numSegments,
+                10_000,
+                100
+        );
         int sbCapacity = textLength + (textLength >> 4);
         StringBuilder sb = new StringBuilder(sbCapacity);
 
@@ -1168,7 +1205,13 @@ public class OpenCC {
             return convertSegmentWithUnion(text, part);
         }
 
-        boolean useParallel = textLen > 100_000 || numSegments > 1_000;
+//        boolean useParallel = textLen > 100_000 || numSegments > 1_000;
+        boolean useParallel = shouldRunSegmentReplaceInParallel(
+                textLen,
+                numSegments,
+                10_000,
+                1_000
+        );
         int sbCapacity = textLen + (textLen >> 4);
         StringBuilder sb = new StringBuilder(sbCapacity);
 
