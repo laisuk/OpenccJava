@@ -6,7 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.4.3] - Unreleased
+## [1.5.0] - Unreleased
+
+### Fixed
+
+- Fixed direct/config-based API consistency: explicit punctuation conversion is now honored across all
+  configurations, including Traditional↔Japanese. Default conversion behavior is unchanged.
 
 ### Added
 
@@ -20,12 +25,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Breaking change (direct conversion API only):** `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`,
+  `hk2t`, `hk2tp`, `t2jp`, and `jp2t` now require `(String input, boolean punctuation)` instead of `(String input)`.
+  Pass `false` to preserve the previous behavior, or `true` to enable punctuation conversion. Recompile direct-API
+  callers against 1.5.0. The `convert(...)` signatures and default behavior are unchanged; dispatch now forwards the
+  punctuation flag uniformly to all directional methods.
 - Internalized compatibility normalization helpers so public normalization is exposed only through the `OpenCC` API.
 - Optimized `OfficeHelper` in-memory document conversion to process ZIP-based Office/EPUB packages directly in memory
   while streaming unchanged entries.
 - Improved custom dictionary file parsing and validation.
 - Updated OpenCC dictionary data and regenerated bundled `dictionary_maxlength.json`.
-- ~~Updated GraalVM Native Build Tools to `1.1.8` and~~ refreshed native-image metadata generation workflows/configuration.
+- ~~Updated GraalVM Native Build Tools to `1.1.8` and~~ refreshed native-image metadata generation
+  workflows/configuration.
 
 ---
 

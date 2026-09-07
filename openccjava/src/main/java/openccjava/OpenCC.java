@@ -750,7 +750,9 @@ public class OpenCC {
      * (Taiwan, Hong Kong, Japan).</p>
      *
      * <p>If {@code punctuation} is {@code true}, punctuation characters are
-     * converted using the corresponding punctuation dictionaries where applicable.
+     * converted for all supported configurations using the corresponding punctuation dictionaries.
+     * For Traditional/Taiwan/Hong Kong and Traditional/Japanese conversions, punctuation
+     * is applied after the main configuration conversion in a separate round.
      * If {@code false}, punctuation is preserved as-is.</p>
      *
      * <p>This method never throws due to an invalid configuration.
@@ -812,35 +814,35 @@ public class OpenCC {
                 break;
 
             case T2TW:
-                result = t2tw(input);
+                result = t2tw(input, punctuation);
                 break;
             case T2TWP:
-                result = t2twp(input);
+                result = t2twp(input, punctuation);
                 break;
             case TW2T:
-                result = tw2t(input);
+                result = tw2t(input, punctuation);
                 break;
             case TW2TP:
-                result = tw2tp(input);
+                result = tw2tp(input, punctuation);
                 break;
             case T2HK:
-                result = t2hk(input);
+                result = t2hk(input, punctuation);
                 break;
             case T2HKP:
-                result = t2hkp(input);
+                result = t2hkp(input, punctuation);
                 break;
             case HK2T:
-                result = hk2t(input);
+                result = hk2t(input, punctuation);
                 break;
             case HK2TP:
-                result = hk2tp(input);
+                result = hk2tp(input, punctuation);
                 break;
 
             case T2JP:
-                result = t2jp(input);
+                result = t2jp(input, punctuation);
                 break;
             case JP2T:
-                result = jp2t(input);
+                result = jp2t(input, punctuation);
                 break;
 
             default:
@@ -1358,7 +1360,7 @@ public class OpenCC {
      * Converts Simplified Chinese to Traditional Chinese.
      *
      * @param input       the text in Simplified Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Traditional Chinese
      */
     public String s2t(String input, boolean punctuation) {
@@ -1370,7 +1372,7 @@ public class OpenCC {
      * Converts Traditional Chinese to Simplified Chinese.
      *
      * @param input       the text in Traditional Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Simplified Chinese
      */
     public String t2s(String input, boolean punctuation) {
@@ -1382,7 +1384,7 @@ public class OpenCC {
      * Converts Simplified Chinese to Traditional Chinese (Taiwan standard).
      *
      * @param input       the text in Simplified Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Traditional Chinese (Taiwan)
      */
     public String s2tw(String input, boolean punctuation) {
@@ -1394,7 +1396,7 @@ public class OpenCC {
      * Converts Traditional Chinese (Taiwan) to Simplified Chinese.
      *
      * @param input       the text in Traditional Chinese (Taiwan)
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Simplified Chinese
      */
     public String tw2s(String input, boolean punctuation) {
@@ -1412,7 +1414,7 @@ public class OpenCC {
      * </ol>
      *
      * @param input       the text in Simplified Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in full Taiwan-style Traditional Chinese
      */
     public String s2twp(String input, boolean punctuation) {
@@ -1424,7 +1426,7 @@ public class OpenCC {
      * Converts Taiwan-style Traditional Chinese to Simplified Chinese.
      *
      * @param input       the text in Taiwan Traditional Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Simplified Chinese
      */
     public String tw2sp(String input, boolean punctuation) {
@@ -1442,7 +1444,7 @@ public class OpenCC {
      * as {@link #s2twp(String, boolean)}.</p>
      *
      * @param input       the text in Simplified Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in phrase-normalized Hong Kong Traditional Chinese
      * @since 1.4.0
      */
@@ -1461,7 +1463,7 @@ public class OpenCC {
      * {@link #tw2sp(String, boolean)}.</p>
      *
      * @param input       the text in Hong Kong Traditional Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Simplified Chinese
      * @since 1.4.0
      */
@@ -1474,7 +1476,7 @@ public class OpenCC {
      * Converts Simplified Chinese to Traditional Chinese (Hong Kong standard).
      *
      * @param input       the text in Simplified Chinese
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Hong Kong-style Traditional Chinese
      */
     public String s2hk(String input, boolean punctuation) {
@@ -1486,7 +1488,7 @@ public class OpenCC {
      * Converts Hong Kong-style Traditional Chinese to Simplified Chinese.
      *
      * @param input       the text in Traditional Chinese (HK)
-     * @param punctuation whether to also convert punctuation marks
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text in Simplified Chinese
      */
     public String hk2s(String input, boolean punctuation) {
@@ -1497,11 +1499,15 @@ public class OpenCC {
     /**
      * Converts Traditional Chinese to Taiwan Traditional variants.
      *
-     * @param input the Traditional Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Traditional Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the text converted to Taiwan-style Traditional Chinese
      */
-    public String t2tw(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2TW, false);
+    public String t2tw(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2TW, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1509,22 +1515,30 @@ public class OpenCC {
      * Converts Traditional Chinese to Taiwan Traditional by applying Taiwan phrase,
      * phrase-variant, and character-variant dictionaries in one conversion round.
      *
-     * @param input the Traditional Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Traditional Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted Taiwan Traditional Chinese with phrases and variants
      */
-    public String t2twp(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2TWP, false);
+    public String t2twp(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2TWP, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
     /**
      * Converts Taiwan Traditional Chinese to base Traditional Chinese.
      *
-     * @param input the Taiwan Traditional input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Taiwan Traditional input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted base Traditional Chinese text
      */
-    public String tw2t(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.TW2T, false);
+    public String tw2t(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.TW2T, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1533,22 +1547,30 @@ public class OpenCC {
      * reverse Taiwan phrase, phrase-variant, and character-variant dictionaries in
      * one conversion round.
      *
-     * @param input the Taiwan Traditional input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Taiwan Traditional input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the fully reverted Traditional Chinese text
      */
-    public String tw2tp(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.TW2TP, false);
+    public String tw2tp(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.TW2TP, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
     /**
      * Converts Traditional Chinese to Hong Kong Traditional variants.
      *
-     * @param input the Traditional Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Traditional Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted text using HK Traditional variants
      */
-    public String t2hk(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2HK, false);
+    public String t2hk(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2HK, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1556,22 +1578,30 @@ public class OpenCC {
      * Converts Traditional Chinese to Hong Kong Traditional by applying Hong Kong
      * phrase, phrase-variant, and character-variant dictionaries in one conversion round.
      *
-     * @param input the Traditional Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Traditional Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted Hong Kong Traditional Chinese with phrases and variants
      */
-    public String t2hkp(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2HKP, false);
+    public String t2hkp(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2HKP, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
     /**
      * Converts Hong Kong Traditional Chinese to base Traditional Chinese.
      *
-     * @param input the HK Traditional Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the HK Traditional Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted base Traditional Chinese text
      */
-    public String hk2t(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.HK2T, false);
+    public String hk2t(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.HK2T, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1580,33 +1610,45 @@ public class OpenCC {
      * reverse Hong Kong phrase, phrase-variant, and character-variant dictionaries in
      * one conversion round.
      *
-     * @param input the Hong Kong Traditional Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Hong Kong Traditional Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted base Traditional Chinese text
      */
-    public String hk2tp(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.HK2TP, false);
+    public String hk2tp(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.HK2TP, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
     /**
      * Converts Traditional Chinese to Japanese Kanji variants.
      *
-     * @param input the Traditional Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Traditional Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the text converted to Japanese-style Kanji variants
      */
-    public String t2jp(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2JP, false);
+    public String t2jp(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2JP, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
     /**
      * Converts Japanese-style Kanji back to Traditional Chinese.
      *
-     * @param input the Japanese Kanji-style Chinese input
+     * <p>When punctuation is enabled, punctuation conversion is applied after the
+     * main conversion in a separate round.</p>
+     *
+     * @param input       the Japanese Kanji-style Chinese input
+     * @param punctuation {@code true} to also convert punctuation marks; {@code false} to preserve them
      * @return the converted Traditional Chinese text
      */
-    public String jp2t(String input) {
-        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.JP2T, false);
+    public String jp2t(String input, boolean punctuation) {
+        DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.JP2T, punctuation);
         return refs.applySegmentReplace(input, this::segmentReplaceWithUnion);
     }
 
@@ -1750,7 +1792,7 @@ public class OpenCC {
      * @param text the input text; {@code null} and empty strings return
      *             {@code ""}
      * @return normalized text
-     * @since 1.4.3
+     * @since 1.5.0
      */
     public String normalizeUnicodeCompat(String text) {
         return UnicodeCompat.normalize(text);
@@ -1775,7 +1817,7 @@ public class OpenCC {
      * @param text the input text; {@code null} and empty strings return
      *             {@code ""}
      * @return text after extended compatibility normalization
-     * @since 1.4.3
+     * @since 1.5.0
      */
     public String normalizeCompatExtended(String text) {
         if (text == null || text.isEmpty())

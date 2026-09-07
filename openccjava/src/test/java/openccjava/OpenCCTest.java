@@ -2,6 +2,9 @@ package openccjava;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -186,22 +189,78 @@ class OpenCCTest {
         assertEquals("港字詞", cc.s2hkp("汉字词", false));
         assertEquals("汉字词", cc.hk2sp("港字詞", false));
 
-        assertEquals("港字詞", cc.t2hkp("漢字詞"));
-        assertEquals("漢字詞", cc.hk2tp("港字詞"));
+        assertEquals("港字詞", cc.t2hkp("漢字詞", false));
+        assertEquals("漢字詞", cc.hk2tp("港字詞", false));
     }
 
     @Test
     void testT2JPUsesShinjitaiCharactersRev() {
         OpenCC cc = OpenCC.fromConfig(OpenccConfig.T2JP);
 
-        assertEquals("旧字体：広国，読売。", cc.t2jp("舊字體：廣國，讀賣。"));
+        assertEquals("旧字体：広国，読売。", cc.t2jp("舊字體：廣國，讀賣。", false));
     }
 
     @Test
     void testJP2TUsesShinjitaiPhrasesAndCharacters() {
         OpenCC cc = OpenCC.fromConfig(OpenccConfig.JP2T);
 
-        assertEquals("舊字體：廣國，讀賣。", cc.jp2t("旧字体：広国，読売。"));
+        assertEquals("舊字體：廣國，讀賣。", cc.jp2t("旧字体：広国，読売。", false));
+    }
+
+    @ParameterizedTest
+    @EnumSource(OpenccConfig.class)
+    void testConfiguredPunctuationFlagForAllConfigs(OpenccConfig config) {
+        OpenCC cc = OpenCC.fromConfig(config);
+        boolean toSimplified = Arrays.asList(OpenccConfig.T2S, OpenccConfig.TW2S,
+                OpenccConfig.TW2SP, OpenccConfig.HK2S, OpenccConfig.HK2SP).contains(config);
+        String input = toSimplified ? "「你好」『世界』" : "“你好”‘世界’";
+        String expected = toSimplified ? "“你好”‘世界’" : "「你好」『世界』";
+
+        assertEquals(input, cc.convert(input, false));
+        assertEquals(expected, cc.convert(input, true));
+        assertEquals(input, cc.convert(input));
+        assertEquals(input, cc.convert(input, false)); // Reusing the enabled plan must not affect false.
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = OpenccConfig.class, names = {
+            "T2TW", "T2TWP", "TW2T", "TW2TP", "T2HK", "T2HKP", "HK2T", "HK2TP", "T2JP", "JP2T"
+    })
+    void testDirectPlansApplyPunctuationInSeparateSecondRound(OpenccConfig config) {
+        ConversionPlanCache cache = ConversionPlanCache.forDictionary(OpenCC.DictionaryHolder.get());
+        DictRefs plain = cache.getPlan(config, false);
+        DictRefs punct = cache.getPlan(config, true);
+        String input = "“你好”‘世界’";
+
+        assertEquals(input, plain.applySegmentReplace(input, opencc::segmentReplaceWithUnion));
+        assertEquals("「你好」『世界』", punct.applySegmentReplace(input, opencc::segmentReplaceWithUnion));
+        assertSame(plain.u1, punct.u1); // Punctuation must not be merged into the primary union.
+        assertNull(plain.u2);
+        assertNull(punct.u3);
+        punct.applySegmentReplace(input, (text, partition) -> {
+            if (partition.union == punct.u2) {
+                assertTrue(partition.phraseDicts.isEmpty());
+                assertEquals(Collections.singletonList(OpenCC.DictionaryHolder.get().st_punctuations),
+                        partition.singleDicts);
+            }
+            return text;
+        });
+        assertNotNull(punct.u2);
+        assertSame(cache.getPlan(OpenccConfig.T2TW, true).u2, punct.u2);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"T2JP, 舊字體：廣國，讀賣。, 旧字体：広国，読売。",
+            "JP2T, 旧字体：広国，読売。, 舊字體：廣國，讀賣。"})
+    void testJapaneseConfiguredPunctuationFlag(OpenccConfig config, String input, String expected) {
+        OpenCC cc = OpenCC.fromConfig(config);
+
+        assertEquals("“" + expected + "”", cc.convert("“" + input + "”", false));
+        assertEquals("「" + expected + "」", cc.convert("“" + input + "”", true));
+        assertEquals("「" + expected + "」", config == OpenccConfig.T2JP
+                ? cc.t2jp("“" + input + "”", true) : cc.jp2t("“" + input + "”", true));
+        assertEquals("“" + expected + "”", config == OpenccConfig.T2JP
+                ? cc.t2jp("“" + input + "”", false) : cc.jp2t("“" + input + "”", false));
     }
 
     private static DictionaryMaxlength minimalDirectHongKongPhraseDictionary() {

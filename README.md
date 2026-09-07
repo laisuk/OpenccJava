@@ -63,7 +63,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.4.3")
+    implementation("io.github.laisuk:openccjava:1.5.0")
 }
 ```
 
@@ -71,7 +71,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.4.3'
+    implementation 'io.github.laisuk:openccjava:1.5.0'
 }
 ```
 
@@ -82,7 +82,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.4.3</version>
+    <version>1.5.0</version>
 </dependency>
 ```
 
@@ -98,7 +98,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.4.3' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.5.0' // replace with latest tag
 }
 ```
 
@@ -116,7 +116,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.4.3</version>
+<version>v1.5.0</version>
 </dependency>
 ```
 
@@ -263,6 +263,12 @@ public class Example {
 
 ### 🔄 Direct Conversion APIs (Optional Use)
 
+For every supported configuration, `cc.convert(text, true)` enables punctuation conversion;
+`false` preserves punctuation. Traditional/Taiwan/Hong Kong and Traditional↔Japanese configurations
+apply punctuation after the main conversion in a separate Round 2. Although Japanese text rarely
+uses the affected Chinese punctuation forms, the explicit flag is honored consistently.
+The single-argument `convert(text)` behavior is unchanged; existing callers need no changes.
+
 ```java
 import openccjava.OpenCC;
 
@@ -275,16 +281,18 @@ public class Example {
         cc.tw2sp("臺灣計程車", false); // 台湾出租车 - Taiwan Traditional → Simplified with idioms
         cc.s2hkp("香港鼠标", false); // 香港滑鼠 - Simplified → Hong Kong Traditional with phrases
         cc.hk2sp("香港滑鼠", false); // 香港鼠标 - Hong Kong Traditional with phrases → Simplified
-        cc.t2hkp("光標");          // 游標 - Traditional → Hong Kong Traditional with phrases
-        cc.hk2tp("游標");          // 光標 - Hong Kong Traditional with phrases → Traditional
-        cc.t2jp("傳統");             // 伝統 - Traditional → Japanese Kanji
+        cc.t2hkp("光標", false);          // 游標 - Traditional → Hong Kong Traditional with phrases
+        cc.hk2tp("游標", false);          // 光標 - Hong Kong Traditional with phrases → Traditional
+        cc.t2jp("傳統", false);             // 伝統 - Traditional → Japanese Kanji
+        cc.t2jp("“廣國”", true); // 「広国」 - explicit punctuation conversion
     }
 }
 ```
 
-Most directional conversion methods support a boolean punctuation flag as a second parameter. Methods such as `t2tw`,
-`t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`, `hk2t`, `hk2tp`, `t2jp`, and `jp2t`
-are single-argument methods. Use `s2hkp` / `hk2sp` for phrase-aware Hong Kong conversions to or from Simplified Chinese.
+All directional conversion methods take a boolean punctuation flag as the second parameter. Starting with 1.5.0,
+callers of the formerly single-argument methods must pass `false` to retain their previous behavior, or `true` to
+enable punctuation conversion. Use `s2hkp` / `hk2sp` for phrase-aware Hong Kong conversions to or from Simplified
+Chinese.
 Use `t2hkp` / `hk2tp` when `HKPhrases.txt` / `HKPhrasesRev.txt` should be applied directly between general Traditional
 and Hong Kong Traditional Chinese.
 
@@ -1510,7 +1518,7 @@ Generate base dictionary for OpenccJava
   the CLI flags below.
 
 > 💡 Tip for Windows users:  
-> If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
+> If you have enabled “**Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
 Administrative → Language for non-Unicode programs → Change system locale_,
 > your console already uses UTF-8 — no need to specify `--con-enc UTF-8`.
 > You can safely display emoji, Chinese, and other Unicode characters without needing to run `chcp 65001` or modify code
