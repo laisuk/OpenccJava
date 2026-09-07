@@ -960,6 +960,8 @@ public class OpenCC {
     private static final int AVAILABLE_PROCESSORS =
             Runtime.getRuntime().availableProcessors();
 
+    private static final int TEXT_THRESHOLD = 10_100;
+
     /**
      * Determines whether segmented replacement should use parallel processing.
      *
@@ -973,18 +975,16 @@ public class OpenCC {
      *
      * @param textLength       input length in UTF-16 code units
      * @param segmentCount     number of independent split ranges
-     * @param textThreshold    minimum text length that favors parallel processing
      * @param segmentThreshold minimum segment count that favors parallel processing
      * @return {@code true} when parallel processing is worthwhile
      */
     private static boolean shouldRunSegmentReplaceInParallel(
             int textLength,
             int segmentCount,
-            int textThreshold,
             int segmentThreshold
     ) {
         return AVAILABLE_PROCESSORS > 1
-                && (textLength > textThreshold
+                && (textLength > TEXT_THRESHOLD
                 || segmentCount > segmentThreshold);
     }
 
@@ -1025,7 +1025,6 @@ public class OpenCC {
         boolean useParallel = shouldRunSegmentReplaceInParallel(
                 textLength,
                 numSegments,
-                10_000,
                 100
         );
         int sbCapacity = textLength + (textLength >> 4);
@@ -1209,7 +1208,6 @@ public class OpenCC {
         boolean useParallel = shouldRunSegmentReplaceInParallel(
                 textLen,
                 numSegments,
-                10_000,
                 1_000
         );
         int sbCapacity = textLen + (textLen >> 4);
