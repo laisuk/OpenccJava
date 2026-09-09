@@ -97,8 +97,10 @@ public class ConvertCommand implements Callable<Integer> {
             return ExitCode.USAGE;
         }
 
-        if (detofuFile != null && (detofu == null || detofu.trim().isEmpty())) {
-            System.err.println("❌ --detofu-file requires --detofu");
+        try {
+            CliUtils.validateDeTofuOptions(detofu, detofuFile);
+        } catch (IllegalArgumentException e) {
+            System.err.println("❌ " + e.getMessage());
             return ExitCode.USAGE;
         }
 
@@ -129,21 +131,16 @@ public class ConvertCommand implements Callable<Integer> {
                 inputText = new String(inputStreamReadAllBytes(), inputCharset);
             }
 
-            if (normCompatExtended) {
-                inputText = opencc.normalizeCompatExtended(inputText);
-            } else if (normCompat) {
-                inputText = opencc.normalizeCompat(inputText);
-            }
+            OfficeTextConverter textConverter = CliUtils.createTextConverter(
+                    opencc,
+                    punct,
+                    normCompat,
+                    normCompatExtended,
+                    detofu,
+                    detofuFile
+            );
 
-            String outputText = opencc.convert(inputText, punct);
-
-            if (detofu != null && !detofu.trim().isEmpty()) {
-                DeTofu.Level level = DeTofu.Level.parse(detofu);
-
-                outputText = detofuFile != null
-                        ? opencc.deTofuWithCustomFile(outputText, level, detofuFile.getPath())
-                        : opencc.deTofu(outputText, level);
-            }
+            String outputText = textConverter.convert(inputText);
 
             if (output != null) {
                 Files.write(output.toPath(), outputText.getBytes(Charset.forName(outEncoding)));

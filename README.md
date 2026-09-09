@@ -1099,35 +1099,50 @@ silent.
 
 ### 🧩 Example – Converting a `.docx` Using `File` → `File` (`FileResult`)
 
+`OfficeTextConverter` is the more flexible/general API for Office and EPUB conversion: a Java 8 functional interface
+that transforms only selected text fragments. Callers can compose other transformations without coupling them to
+`OfficeHelper`.
+
+`OfficeHelper` handles package mechanics only: ZIP/package reconstruction, DOCX/XLSX/PPTX/ODF/EPUB entry selection,
+XLSX inline-string handling, optional font protection (`keepFont`), and EPUB packaging rules.
+
+The intended pipeline is: **Normalize compatibility → OpenCC conversion / punctuation → DeTofu → write transformed
+text back into the Office/EPUB package**. Normalization and DeTofu are optional caller-supplied steps.
+
 ```java
 import openccjava.OpenCC;
 import openccjava.OfficeHelper;
-import openccjava.OfficeHelper.FileResult;
+import openccjava.DeTofu;
+import openccjava.OfficeTextConverter;
 
 import java.io.File;
 
 public class Example {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         // Input and output files
-        File input = new File("example_simplified.docx");
-        File output = new File("example_traditional.docx");
+        File inputFile = new File("example_traditional.docx");
+        File outputFile = new File("example_simplified.docx");
 
-        // Create an OpenCC converter (Simplified → Traditional)
-        OpenCC converter = new OpenCC("s2t");
+        OpenCC opencc = new OpenCC("t2s");
+        OfficeTextConverter textConverter = text -> {
+            String result = opencc.normalizeCompatExtended(text);
+            result = opencc.convert(result, true);
+            result = opencc.deTofu(result, DeTofu.Level.ExtB);
+            return result;
+        };
 
         // Convert the document (output must not be null)
-        FileResult result = OfficeHelper.convert(
-                input,
-                output,
+        OfficeHelper.FileResult result = OfficeHelper.convert(
+                inputFile,
+                outputFile,
                 "docx",      // Supported: docx, xlsx, pptx, odt, ods, odp, epub
-                converter,
-                true,        // Convert punctuation
+                textConverter,
                 true         // Preserve font names
         );
 
         // Show result
         if (result.success) {
-            System.out.println("✅ Conversion successful: " + output.getAbsolutePath());
+            System.out.println("✅ Conversion successful: " + outputFile.getAbsolutePath());
         } else {
             System.err.println("❌ Conversion failed: " + result.message);
         }
@@ -1142,25 +1157,26 @@ public class Example {
 import openccjava.OpenCC;
 import openccjava.OfficeHelper;
 import openccjava.OfficeHelper.MemoryResult;
+import openccjava.OfficeTextConverter;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class ExampleBytes {
-    static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
         // Load the document entirely into memory
         byte[] inputBytes = Files.readAllBytes(Paths.get("example_simplified.docx"));
 
         // Create an OpenCC converter
         OpenCC converter = new OpenCC("s2t");   // Simplified → Traditional
+        OfficeTextConverter textConverter = text -> converter.convert(text, true);
 
         // Perform in-memory conversion
         MemoryResult result = OfficeHelper.convert(
                 inputBytes,
                 "docx",      // Supported: docx, xlsx, pptx, odt, ods, odp, epub
-                converter,
-                true,        // Convert punctuation
+                textConverter,
                 true         // Keep font names
         );
 
@@ -1194,8 +1210,7 @@ keeping the complete input and output packages in memory at the same time.
   OfficeHelper.convert(
       byte[] inputBytes,
       String format,
-      OpenCC converter,
-      boolean punctuation,
+      OfficeTextConverter textConverter,
       boolean keepFont
   )
 ```
@@ -1207,15 +1222,19 @@ OfficeHelper.convert(
     File inputFile,
     File outputFile,
     String format,
-    OpenCC converter,
-    boolean punctuation,
+    OfficeTextConverter textConverter,
     boolean keepFont
 )
 ```
 
 > The file-to-file overload does not delegate through the `byte[]` API. It reads the source package as a ZIP stream and
-> writes the rebuilt package through file I/O, materializing only the selected text-bearing entries that require OpenCC
-> conversion.
+> writes the rebuilt package through file I/O, materializing only the selected text-bearing entries that require
+> transformation.
+
+- Existing public `OpenCC` convenience overloads remain supported for both paths:
+  `convert(byte[], String, OpenCC, boolean punctuation, boolean keepFont)` and
+  `convert(File, File, String, OpenCC, boolean punctuation, boolean keepFont)`.
+  These apply OpenCC conversion with optional punctuation; use `OfficeTextConverter` to compose additional steps.
 
 - You may still use `Result` (the abstract base class) as the return type in legacy code.  
   it remains **fully valid** since both `MemoryResult` and `FileResult` extend it.
@@ -1263,11 +1282,11 @@ bin/OpenccJavaCli.bat convert -c s2t -i input.txt -o output.txt
 
 ```bash
 bin/OpenccJavaCli convert --help                                                           
-Usage: openccjavacli convert [-hpV] -c=<conversion> [--con-enc=<encoding>]                                                                                          
+Usage: openccjavacli convert [-EhnpV] -c=<conversion> [--con-enc=<encoding>]
                              [--detofu=<level>] [--detofu-file=<file>]
                              [-i=<file>] [--in-enc=<encoding>] [-o=<file>]
-                             [--out-enc=<encoding>] [--custom-dict=<slot:mode:
-                             path>[,<slot:mode:path>...]]...
+                             [--out-enc=<encoding>] [-D=<slot:mode:path>[,<slot:
+                             mode:path>...]]...
 Convert plain text using OpenccJava
   -c, --config=<conversion>  Conversion configuration. Supported: s2t, t2s,
                                s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk,
@@ -1276,19 +1295,31 @@ Convert plain text using OpenccJava
       --con-enc=<encoding>   Console encoding for interactive mode. Ignored if
                                not attached to a terminal. Common <encoding>:
                                UTF-8, GBK, Big5
-      --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
+  -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
                              Apply custom dictionary file. Format: slot:
                                append|override:path. Can be repeated or
-                               comma-separated.
+                               comma-separated. Supported slots: STCharacters,
+                               STPhrases, STPunctuations, TSCharacters,
+                               TSPhrases, TSPunctuations, TWPhrases,
+                               TWPhrasesRev, TWVariants, TWVariantsPhrases,
+                               TWVariantsRev, TWVariantsRevPhrases, HKPhrases,
+                               HKPhrasesRev, HKVariants, HKVariantsPhrases,
+                               HKVariantsRev, HKVariantsRevPhrases,
+                               JPSCharacters, JPSCharactersRev, JPSPhrases
       --detofu=<level>       Apply tofu-safe fallback after conversion: all,
                                ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h,
                                ext-i
       --detofu-file=<file>   Load additional DeTofu fallback mappings from a
                                UTF-8 text file. Custom mappings override
                                built-in mappings (requires --detofu)
+  -E, --norm-compat-extended Normalize extended Unicode compatibility/allograph
+                               forms and CJK Compatibility Ideographs before
+                               conversion.
   -h, --help                 Show this help message and exit.
   -i, --input=<file>         Input file
       --in-enc=<encoding>    Input encoding
+  -n, --norm-compat          Normalize CJK Compatibility Ideographs before
+                               conversion.
   -o, --output=<file>        Output file
       --out-enc=<encoding>   Output encoding
   -p, --punct                Punctuation conversion (default: false)
@@ -1334,31 +1365,58 @@ echo "這個細路哥很靈活" | ./openccjavacli convert -c hk2sp --custom-dict
 
 ```bash
 bin/OpenccJavaCli.bat office -c s2t -i book.docx -o book_converted.docx
+bin/OpenccJavaCli.bat office -c t2s -i book.docx -o book_simplified.docx -E -p --detofu ext-b
+bin/OpenccJavaCli.bat office -c t2s -i book.epub -o book_simplified.epub -n -p --detofu ext-b --detofu-file custom-tofu.txt -D TSCharacters:append:custom.txt
 ```
+
+Like `convert`, `office` uses the shared `CliUtils` text pipeline: `normalizeCompatExtended` when
+`-E` / `--norm-compat-extended` is present, otherwise `normalizeCompat` when `-n` / `--norm-compat` is present,
+then OpenCC conversion with optional `-p` punctuation, then optional `--detofu <level>`. The transformed text is
+written back into the package. If both normalization flags are supplied, `-E` takes precedence.
+`--detofu-file <file>` requires `--detofu` and overrides built-in fallback mappings; `-D` / `--custom-dict`
+continues to configure custom dictionaries for the OpenCC conversion step.
 
 ```bash
 bin/OpenccJavaCli office --help 
-Usage: openccjavacli office [-hkpV] -c=<conversion> [-f=<format>] -i=<file>
+Usage: openccjavacli office [-EhknpV] -c=<conversion> [--detofu=<level>]
+                            [--detofu-file=<file>] [-f=<format>] -i=<file>
                             [-o=<file>] [-D=<slot:mode:path>[,<slot:mode:
                             path>...]]...
 Convert Office documents using OpenccJava
-  -c, --config=<conversion>
-                          Conversion configuration. Supported: s2t, t2s, s2tw,
-                            tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk, hk2s, t2tw,
-                            t2twp, tw2t, tw2tp, t2hk, t2hkp, hk2t, hk2tp, t2jp,
-                            jp2t
+  -c, --config=<conversion>  Conversion configuration. Supported: s2t, t2s,
+                               s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk,
+                               hk2s, t2tw, t2twp, tw2t, tw2tp, t2hk, t2hkp,
+                               hk2t, hk2tp, t2jp, jp2t
   -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
-                          Apply custom dictionary file. Format: slot:
-                            append|override:path. Can be repeated or
-                            comma-separated.
-  -f, --format=<format>   Target Office format (e.g., docx, xlsx, pptx, odt,
-                            epub)
-  -h, --help              Show this help message and exit.
-  -i, --input=<file>      Input Office file
-  -k, --[no-]keep-font    Preserve font-family info (default: false)
-  -o, --output=<file>     Output Office file
-  -p, --punct             Punctuation conversion (default: false)
-  -V, --version           Print version information and exit.
+                             Apply custom dictionary file. Format: slot:
+                               append|override:path. Can be repeated or
+                               comma-separated. Supported slots: STCharacters,
+                               STPhrases, STPunctuations, TSCharacters,
+                               TSPhrases, TSPunctuations, TWPhrases,
+                               TWPhrasesRev, TWVariants, TWVariantsPhrases,
+                               TWVariantsRev, TWVariantsRevPhrases, HKPhrases,
+                               HKPhrasesRev, HKVariants, HKVariantsPhrases,
+                               HKVariantsRev, HKVariantsRevPhrases,
+                               JPSCharacters, JPSCharactersRev, JPSPhrases
+      --detofu=<level>       Apply tofu-safe fallback after conversion: all,
+                               ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h,
+                               ext-i
+      --detofu-file=<file>   Load additional DeTofu fallback mappings from a
+                               UTF-8 text file. Custom mappings override
+                               built-in mappings (requires --detofu)
+  -E, --norm-compat-extended Normalize extended Unicode compatibility/allograph
+                               forms and CJK Compatibility Ideographs before
+                               conversion.
+  -f, --format=<format>      Target Office format (e.g., docx, xlsx, pptx, odt,
+                               epub)
+  -h, --help                 Show this help message and exit.
+  -i, --input=<file>         Input Office file
+  -k, --[no-]keep-font       Preserve font-family info (default: false)
+  -n, --norm-compat          Normalize CJK Compatibility Ideographs before
+                               conversion.
+  -o, --output=<file>        Output Office file
+  -p, --punct                Punctuation conversion (default: false)
+  -V, --version              Print version information and exit.
 ```
 
 #### Optional flags:
@@ -1379,7 +1437,7 @@ bin/OpenccJavaCli.bat pdf -c s2t -p -i sample.pdf -o converted.txt --reflow
 ```
 
 ```
-Usage: openccjavacli pdf [-CehHnprV] [-c=<conversion>] -i=<file> [-o=<file>]
+Usage: openccjavacli pdf [-CeEhHnprV] [-c=<conversion>] -i=<file> [-o=<file>]
                          [-D=<slot:mode:path>[,<slot:mode:path>...]]...
 Extract PDF text, optionally reflow CJK paragraphs, then convert with
 OpenccJava                                                                                                                                                          
@@ -1393,8 +1451,19 @@ OpenccJava
   -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
                         Apply custom dictionary file. Format: slot:
                           append|override:path. Can be repeated or
-                          comma-separated.
+                          comma-separated. Supported slots: STCharacters,
+                          STPhrases, STPunctuations, TSCharacters, TSPhrases,
+                          TSPunctuations, TWPhrases, TWPhrasesRev, TWVariants,
+                          TWVariantsPhrases, TWVariantsRev,
+                          TWVariantsRevPhrases, HKPhrases, HKPhrasesRev,
+                          HKVariants, HKVariantsPhrases, HKVariantsRev,
+                          HKVariantsRevPhrases, JPSCharacters,
+                          JPSCharactersRev, JPSPhrases
   -e, --extract         Extract text from PDF document only (default: false)
+  -E, --norm-compat-extended
+                        Normalize extended Unicode compatibility/allograph
+                          forms and CJK Compatibility Ideographs before
+                          conversion.
   -h, --help            Show this help message and exit.
   -H, --header          Insert per-page header markers into extracted text
   -i, --input=<file>    Input PDF file

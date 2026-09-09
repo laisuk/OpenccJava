@@ -25,7 +25,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Utility class for converting Office-based document formats using OpenCC logic.
+ * Utility class for transforming text-bearing content inside Office and EPUB packages.
  *
  * <p>Supported formats include:
  * <ul>
@@ -35,9 +35,13 @@ import java.util.zip.ZipOutputStream;
  * </ul>
  *
  * <p>Internally, the class handles these formats as ZIP archives, extracts and processes
- * their XML/XHTML content, applies OpenCC transformations, and repackages the result.
+ * their XML/XHTML content, applies a caller-supplied {@link OfficeTextConverter} transformation, and repackages the result.
  *
- * <p>This class is designed for use in batch or CLI applications.
+ * <p>Callers may use either an {@link OfficeTextConverter} for a custom text-processing
+ * pipeline or an {@link OpenCC} instance through the compatibility convenience overloads.
+ * The package-processing core is shared by both forms.
+ *
+ * <p>This class is designed for use in batch, library, or CLI applications.
  */
 public class OfficeHelper {
     /**
@@ -207,35 +211,34 @@ public class OfficeHelper {
     }
 
     /**
-     * Converts an Office or EPUB document entirely in memory.
+     * Converts an Office or EPUB document entirely in memory using a caller-supplied
+     * text transformation.
      *
      * <p>The input ZIP package is read directly from {@code inputBytes}. Unchanged
      * entries are streamed into a new in-memory ZIP, while only selected text-bearing
-     * XML/XHTML entries are materialized as UTF-8 strings for OpenCC conversion.
-     * No temporary directory or temporary package file is created.</p>
+     * XML/XHTML entries are materialized as UTF-8 strings. No temporary directory or
+     * temporary package file is created.</p>
      *
      * <p>For EPUB, the {@code mimetype} entry is emitted first and stored without
      * compression as required by the EPUB container specification.</p>
      *
-     * @param inputBytes  the complete Office/EPUB package bytes
-     * @param format      logical format name ({@code docx/xlsx/pptx/odt/ods/odp/epub})
-     * @param converter   OpenCC converter
-     * @param punctuation whether punctuation conversion is enabled
-     * @param keepFont    whether supported font declarations should be preserved
+     * @param inputBytes    the complete Office/EPUB package bytes
+     * @param format        logical format name ({@code docx/xlsx/pptx/odt/ods/odp/epub})
+     * @param textConverter text transformation applied to selected document content
+     * @param keepFont      whether supported font declarations should be preserved
      * @return conversion result containing the rebuilt package bytes on success
      */
     public static MemoryResult convert(
             byte[] inputBytes,
             String format,
-            OpenCC converter,
-            boolean punctuation,
+            OfficeTextConverter textConverter,
             boolean keepFont
     ) {
         if (inputBytes == null || inputBytes.length == 0) {
             return new MemoryResult(false, "❌ Input bytes are empty.", null);
         }
-        if (converter == null) {
-            return new MemoryResult(false, "❌ Converter must not be null.", null);
+        if (textConverter == null) {
+            return new MemoryResult(false, "❌ Text converter must not be null.", null);
         }
 
         String normalizedFormat = normalizeFormat(format);
@@ -265,8 +268,7 @@ public class OfficeHelper {
                             zis,
                             zos,
                             normalizedFormat,
-                            converter,
-                            punctuation,
+                            textConverter,
                             keepFont,
                             "epub".equals(normalizedFormat)
                     );
@@ -292,7 +294,41 @@ public class OfficeHelper {
     }
 
     /**
-     * Converts an Office or EPUB document using a streaming file-to-file path.
+     * Converts an Office or EPUB document entirely in memory using an initialized
+     * {@link OpenCC} instance.
+     *
+     * <p>This convenience overload preserves the established API and adapts OpenCC
+     * conversion to the {@link OfficeTextConverter}-based package pipeline.</p>
+     *
+     * @param inputBytes  the complete Office/EPUB package bytes
+     * @param format      logical format name ({@code docx/xlsx/pptx/odt/ods/odp/epub})
+     * @param converter   initialized OpenCC converter
+     * @param punctuation whether punctuation conversion is enabled
+     * @param keepFont    whether supported font declarations should be preserved
+     * @return conversion result containing the rebuilt package bytes on success
+     */
+    public static MemoryResult convert(
+            byte[] inputBytes,
+            String format,
+            OpenCC converter,
+            boolean punctuation,
+            boolean keepFont
+    ) {
+        if (converter == null) {
+            return new MemoryResult(false, "❌ Converter must not be null.", null);
+        }
+
+        return convert(
+                inputBytes,
+                format,
+                openCcTextConverter(converter, punctuation),
+                keepFont
+        );
+    }
+
+    /**
+     * Converts an Office or EPUB document using a streaming file-to-file path and a
+     * caller-supplied text transformation.
      *
      * <p>The complete source package is never read into a {@code byte[]}. Unchanged
      * ZIP entries stream directly from the input file to the rebuilt package; only
@@ -300,20 +336,18 @@ public class OfficeHelper {
      * is first written to a sibling temporary file and then published to
      * {@code outputFile} after successful conversion.</p>
      *
-     * @param inputFile   source Office/EPUB package
-     * @param outputFile  destination package
-     * @param format      logical format name
-     * @param converter   OpenCC converter
-     * @param punctuation whether punctuation conversion is enabled
-     * @param keepFont    whether supported font declarations should be preserved
+     * @param inputFile     source Office/EPUB package
+     * @param outputFile    destination package
+     * @param format        logical format name
+     * @param textConverter text transformation applied to selected document content
+     * @param keepFont      whether supported font declarations should be preserved
      * @return file conversion result
      */
     public static FileResult convert(
             File inputFile,
             File outputFile,
             String format,
-            OpenCC converter,
-            boolean punctuation,
+            OfficeTextConverter textConverter,
             boolean keepFont
     ) {
         if (inputFile == null || !inputFile.isFile()) {
@@ -322,8 +356,8 @@ public class OfficeHelper {
         if (outputFile == null) {
             return new FileResult(false, "❌ Output file must not be null.");
         }
-        if (converter == null) {
-            return new FileResult(false, "❌ Converter must not be null.");
+        if (textConverter == null) {
+            return new FileResult(false, "❌ Text converter must not be null.");
         }
 
         String normalizedFormat = normalizeFormat(format);
@@ -345,7 +379,7 @@ public class OfficeHelper {
 
             int convertedCount;
             try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(
-                    Files.newOutputStream(tempOutput.toFile().toPath())))) {
+                    Files.newOutputStream(tempOutput)))) {
 
                 if ("epub".equals(normalizedFormat)) {
                     byte[] mimetype;
@@ -364,8 +398,7 @@ public class OfficeHelper {
                             zis,
                             zos,
                             normalizedFormat,
-                            converter,
-                            punctuation,
+                            textConverter,
                             keepFont,
                             "epub".equals(normalizedFormat)
                     );
@@ -408,6 +441,62 @@ public class OfficeHelper {
     }
 
     /**
+     * Converts an Office or EPUB document using a streaming file-to-file path and an
+     * initialized {@link OpenCC} instance.
+     *
+     * <p>This convenience overload preserves the established API and adapts OpenCC
+     * conversion to the {@link OfficeTextConverter}-based package pipeline.</p>
+     *
+     * @param inputFile   source Office/EPUB package
+     * @param outputFile  destination package
+     * @param format      logical format name
+     * @param converter   initialized OpenCC converter
+     * @param punctuation whether punctuation conversion is enabled
+     * @param keepFont    whether supported font declarations should be preserved
+     * @return file conversion result
+     */
+    public static FileResult convert(
+            File inputFile,
+            File outputFile,
+            String format,
+            OpenCC converter,
+            boolean punctuation,
+            boolean keepFont
+    ) {
+        if (converter == null) {
+            return new FileResult(false, "❌ Converter must not be null.");
+        }
+
+        return convert(
+                inputFile,
+                outputFile,
+                format,
+                openCcTextConverter(converter, punctuation),
+                keepFont
+        );
+    }
+
+    /**
+     * Adapts an initialized {@link OpenCC} instance to the generic Office text
+     * transformation contract.
+     *
+     * <p>OpenCC-specific error handling is deliberately kept here so the package core
+     * remains independent of OpenCC conversion state and punctuation policy.</p>
+     */
+    private static OfficeTextConverter openCcTextConverter(
+            final OpenCC converter,
+            final boolean punctuation
+    ) {
+        return text -> {
+            String converted = converter.convert(text, punctuation);
+            if (converted == null) {
+                throw new IllegalStateException("native error: " + converter.getLastError());
+            }
+            return converted;
+        };
+    }
+
+    /**
      * Streams one ZIP archive into another, converting only text-bearing entries.
      *
      * @param skipEpubMimetype whether an already-emitted EPUB {@code mimetype} entry should be skipped
@@ -417,8 +506,7 @@ public class OfficeHelper {
             ZipInputStream zis,
             ZipOutputStream zos,
             String format,
-            OpenCC converter,
-            boolean punctuation,
+            OfficeTextConverter textConverter,
             boolean keepFont,
             boolean skipEpubMimetype
     ) throws IOException {
@@ -454,8 +542,7 @@ public class OfficeHelper {
                         format,
                         entryName,
                         xml,
-                        converter,
-                        punctuation,
+                        textConverter,
                         keepFont
                 );
                 zos.write(converted.getBytes(StandardCharsets.UTF_8));
@@ -478,8 +565,7 @@ public class OfficeHelper {
             String format,
             String entryName,
             String xml,
-            OpenCC converter,
-            boolean punctuation,
+            OfficeTextConverter textConverter,
             boolean keepFont
     ) {
         Map<String, String> fontMap = new HashMap<>();
@@ -514,12 +600,8 @@ public class OfficeHelper {
                 format,
                 relativePath,
                 xml,
-                converter,
-                punctuation
+                textConverter
         );
-        if (converted == null) {
-            throw new IllegalStateException("native error: " + converter.getLastError());
-        }
 
         for (Map.Entry<String, String> entry : fontMap.entrySet()) {
             converted = converted.replace(entry.getKey(), entry.getValue());
@@ -740,13 +822,31 @@ public class OfficeHelper {
             String format,
             Path relativePath,
             String xml,
-            OpenCC converter,
-            boolean punctuation
+            OfficeTextConverter textConverter
     ) {
         if ("xlsx".equals(format) && isWorksheetPath(relativePath)) {
-            return convertXlsxInlineStrings(xml, converter, punctuation);
+            return convertXlsxInlineStrings(xml, textConverter);
         }
-        return converter.convert(xml, punctuation);
+        return applyTextConverter(textConverter, xml);
+    }
+
+    /**
+     * Applies the caller-supplied text transformation and enforces the
+     * non-null return contract of {@link OfficeTextConverter}.
+     *
+     * @param textConverter text transformation to invoke
+     * @param text          text supplied to the transformation
+     * @return transformed text
+     * @throws NullPointerException  if {@code textConverter} is {@code null}
+     * @throws IllegalStateException if the converter returns {@code null}
+     */
+    private static String applyTextConverter(OfficeTextConverter textConverter, String text) {
+        Objects.requireNonNull(textConverter, "textConverter must not be null");
+        String converted = textConverter.convert(text);
+        if (converted == null) {
+            throw new IllegalStateException("Office text converter returned null.");
+        }
+        return converted;
     }
 
     /**
@@ -760,15 +860,14 @@ public class OfficeHelper {
     /**
      * Converts only XLSX inline-string cells in a worksheet XML file.
      */
-    private static String convertXlsxInlineStrings(String xml, OpenCC converter, boolean punctuation) {
+    private static String convertXlsxInlineStrings(String xml, OfficeTextConverter textConverter) {
         Matcher cellMatcher = XLSX_INLINE_STRING_CELL_PATTERN.matcher(xml);
         StringBuffer xmlOut = new StringBuffer();
 
         while (cellMatcher.find()) {
             String convertedCell = convertXlsxInlineStringCell(
                     cellMatcher.group(),
-                    converter,
-                    punctuation
+                    textConverter
             );
             cellMatcher.appendReplacement(xmlOut, Matcher.quoteReplacement(convertedCell));
         }
@@ -780,15 +879,12 @@ public class OfficeHelper {
     /**
      * Converts only {@code <t>} text nodes inside one XLSX inline-string cell.
      */
-    private static String convertXlsxInlineStringCell(String cellXml, OpenCC converter, boolean punctuation) {
+    private static String convertXlsxInlineStringCell(String cellXml, OfficeTextConverter textConverter) {
         Matcher textMatcher = XLSX_TEXT_NODE_PATTERN.matcher(cellXml);
         StringBuffer cellOut = new StringBuffer();
 
         while (textMatcher.find()) {
-            String convertedText = converter.convert(textMatcher.group(2), punctuation);
-            if (convertedText == null) {
-                throw new IllegalStateException("native error: " + converter.getLastError());
-            }
+            String convertedText = applyTextConverter(textConverter, textMatcher.group(2));
 
             String replacement = textMatcher.group(1) + convertedText + textMatcher.group(3);
             textMatcher.appendReplacement(cellOut, Matcher.quoteReplacement(replacement));

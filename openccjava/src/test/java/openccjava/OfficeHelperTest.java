@@ -145,4 +145,92 @@ class OfficeHelperTest {
         }
         return null;
     }
+
+    @Test
+    void convertsOfficeContentUsingTextConverter() throws IOException {
+        byte[] workbook = createInlineStringWorkbook();
+
+        OfficeTextConverter textConverter =
+                text -> text.replace("简体中文", "PIPELINE_OK");
+
+        OfficeHelper.MemoryResult result = OfficeHelper.convert(
+                workbook,
+                "xlsx",
+                textConverter,
+                false
+        );
+
+        assertTrue(result.success, result.message);
+        assertNotNull(result.data);
+
+        String sheetXml = unzipEntry(
+                result.data,
+                "xl/worksheets/sheet1.xml"
+        );
+
+        assertNotNull(sheetXml);
+        assertTrue(sheetXml.contains("<t>PIPELINE_OK</t>"), sheetXml);
+
+        // XLSX worksheet formulas must remain outside the text pipeline.
+        assertTrue(
+                sheetXml.contains("<f>IF(A1=\"简体\",1,0)</f>"),
+                sheetXml
+        );
+    }
+
+    @Test
+    void textConverterCanComposeMultipleTransformations() throws IOException {
+        byte[] workbook = createInlineStringWorkbook();
+
+        OfficeTextConverter textConverter = text ->
+                "[" + text.replace("简体中文", "converted") + "]";
+
+        OfficeHelper.MemoryResult result = OfficeHelper.convert(
+                workbook,
+                "xlsx",
+                textConverter,
+                false
+        );
+
+        assertTrue(result.success, result.message);
+        assertNotNull(result.data);
+
+        String sheetXml = unzipEntry(
+                result.data,
+                "xl/worksheets/sheet1.xml"
+        );
+
+        assertNotNull(sheetXml);
+        assertTrue(
+                sheetXml.contains("<t>[converted]</t>"),
+                sheetXml
+        );
+    }
+
+    @Test
+    void rejectsNullResultFromTextConverter() {
+        byte[] workbook;
+
+        try {
+            workbook = createInlineStringWorkbook();
+        } catch (IOException e) {
+            fail(e);
+            return;
+        }
+
+        OfficeTextConverter textConverter = text -> null;
+
+        OfficeHelper.MemoryResult result = OfficeHelper.convert(
+                workbook,
+                "xlsx",
+                textConverter,
+                false
+        );
+
+        assertFalse(result.success);
+        assertTrue(
+                result.message.contains("Office text converter returned null"),
+                result.message
+        );
+    }
 }

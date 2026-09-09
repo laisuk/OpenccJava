@@ -12,9 +12,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - Fixed direct/config-based API consistency: explicit punctuation conversion is now honored across all
   configurations, including Traditional↔Japanese. Default conversion behavior is unchanged.
+- Fixed UTF-8 BOM handling in text dictionary parsing so BOM-prefixed comment/header lines are recognized correctly
+  instead of producing a malformed-line warning. This is a parser robustness fix; custom dictionary behavior is
+  unchanged.
 
 ### Added
 
+- Added `OfficeTextConverter`, a Java 8 functional interface for caller-supplied text transformation inside Office and
+  EPUB packages.
+- Added `OfficeHelper` overloads accepting `OfficeTextConverter`, preserving existing `OpenCC` convenience overloads.
+- Added CLI `office` options `-n` / `--norm-compat`, `-E` / `--norm-compat-extended`, `--detofu`, and `--detofu-file`.
 - Added extended Unicode compatibility normalization with:
     - `OpenCC.normalizeUnicodeCompat(...)` for additional Unicode CJK compatibility/allograph mappings.
     - `OpenCC.normalizeCompatExtended(...)` for combined Unicode compatibility and CJK Compatibility Ideograph
@@ -30,6 +37,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   Pass `false` to preserve the previous behavior, or `true` to enable punctuation conversion. Recompile direct-API
   callers against 1.5.0. The `convert(...)` signatures and default behavior are unchanged; dispatch now forwards the
   punctuation flag uniformly to all directional methods.
+- Refactored `OfficeHelper` so package handling is independent of OpenCC conversion policy.
+- Shared CLI text-pipeline construction through `CliUtils` so `convert` and `office` use the same transformation order
+  and option semantics: compatibility normalization → OpenCC conversion/punctuation → optional DeTofu.
 - Internalized compatibility normalization helpers so public normalization is exposed only through the `OpenCC` API.
 - Optimized `OfficeHelper` in-memory document conversion to process ZIP-based Office/EPUB packages directly in memory
   while streaming unchanged entries.

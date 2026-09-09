@@ -2,6 +2,7 @@ package openccjavacli;
 
 import openccjava.OpenCC;
 import openccjava.OfficeHelper;
+import openccjava.OfficeTextConverter;
 import picocli.CommandLine.*;
 
 import java.io.File;
@@ -38,6 +39,32 @@ public class OfficeCommand implements Runnable {
 
     @Option(names = {"-k", "--keep-font"}, defaultValue = "false", negatable = true, description = "Preserve font-family info (default: false)")
     private boolean keepFont;
+
+    @Option(
+            names = {"-n", "--norm-compat"},
+            description = "Normalize CJK Compatibility Ideographs before conversion."
+    )
+    private boolean normCompat;
+
+    @Option(
+            names = {"-E", "--norm-compat-extended"},
+            description = "Normalize extended Unicode compatibility/allograph forms and CJK Compatibility Ideographs before conversion."
+    )
+    private boolean normCompatExtended;
+
+    @Option(
+            names = "--detofu",
+            paramLabel = "<level>",
+            description = "Apply tofu-safe fallback after conversion: all, ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h, ext-i"
+    )
+    private String detofu;
+
+    @Option(
+            names = "--detofu-file",
+            paramLabel = "<file>",
+            description = "Load additional DeTofu fallback mappings from a UTF-8 text file. Custom mappings override built-in mappings (requires --detofu)"
+    )
+    private File detofuFile;
 
     @Option(
             names = {"-D", "--custom-dict"},
@@ -88,9 +115,31 @@ public class OfficeCommand implements Runnable {
                 System.err.println("ℹ️ Auto-extension applied: " + output.getAbsolutePath());
             }
 
+            if (detofuFile != null && (detofu == null || detofu.trim().isEmpty())) {
+                System.err.println("❌ --detofu-file requires --detofu");
+                System.exit(2);
+                return;
+            }
+
 //            OpenCC opencc = new OpenCC(config);
             OpenCC opencc = CliUtils.createOpenCC(config, customDictSpecs);
-            OfficeHelper.FileResult result = OfficeHelper.convert(input, output, officeFormat, opencc, punct, keepFont);
+
+            OfficeTextConverter textConverter = CliUtils.createTextConverter(
+                    opencc,
+                    punct,
+                    normCompat,
+                    normCompatExtended,
+                    detofu,
+                    detofuFile
+            );
+
+            OfficeHelper.FileResult result = OfficeHelper.convert(
+                    input,
+                    output,
+                    officeFormat,
+                    textConverter,
+                    keepFont
+            );
 
             if (result.success) {
                 System.err.println(result.message + "\n\uD83D\uDCC1 Output saved to: " + output.getAbsolutePath());

@@ -823,69 +823,116 @@ public class DictionaryMaxlength {
 
             int start = 0;
             int end = raw.length();
-            while (start < end && Character.isWhitespace(raw.charAt(start))) start++;
-            while (end > start && Character.isWhitespace(raw.charAt(end - 1))) end--;
-            if (start >= end) continue;
+
+            // Strip an optional UTF-8 BOM from the first physical line.
+            if (lineNo == 1 && start < end && raw.charAt(start) == '\uFEFF') {
+                start++;
+            }
+
+            while (start < end && Character.isWhitespace(raw.charAt(start))) {
+                start++;
+            }
+            while (end > start && Character.isWhitespace(raw.charAt(end - 1))) {
+                end--;
+            }
+
+            if (start >= end) {
+                continue;
+            }
 
             char first = raw.charAt(start);
-            if (first == '#') continue;
-            if (first == '/' && start + 1 < end && raw.charAt(start + 1) == '/') continue;
+            if (first == '#') {
+                continue;
+            }
+            if (first == '/' &&
+                    start + 1 < end &&
+                    raw.charAt(start + 1) == '/') {
+                continue;
+            }
 
             int tab = -1;
             for (int i = start; i < end; i++) {
-                if (raw.charAt(i) == '	') {
+                if (raw.charAt(i) == '\t') {
                     tab = i;
                     break;
                 }
             }
+
             if (tab < 0) {
-                System.err.println("Warning: malformed (no TAB) at line " + lineNo + ": " + raw);
+                System.err.println(
+                        "Warning: malformed (no TAB) at line " +
+                                lineNo + ": " + raw
+                );
                 continue;
             }
 
             int keyStart = start;
-
-            if (lineNo == 1 && keyStart < tab && raw.charAt(keyStart) == '\uFEFF') keyStart++;
             if (keyStart >= tab) {
-                System.err.println("Warning: empty key/value at line " + lineNo + ": " + raw);
+                System.err.println(
+                        "Warning: empty key/value at line " +
+                                lineNo + ": " + raw
+                );
                 continue;
             }
+
             String key = raw.substring(keyStart, tab);
 
             int valueStart = tab + 1;
             while (valueStart < end) {
                 char c = raw.charAt(valueStart);
-                if (c != ' ' && c != '	') break;
+                if (c != ' ' && c != '\t') {
+                    break;
+                }
                 valueStart++;
             }
+
             if (valueStart >= end) {
-                System.err.println("Warning: empty key/value at line " + lineNo + ": " + raw);
+                System.err.println(
+                        "Warning: empty key/value at line " +
+                                lineNo + ": " + raw
+                );
                 continue;
             }
 
             int valueEnd = valueStart;
             while (valueEnd < end) {
                 char c = raw.charAt(valueEnd);
-                if (c == ' ' || c == '	') break;
+                if (c == ' ' || c == '\t') {
+                    break;
+                }
                 valueEnd++;
             }
+
             if (valueEnd <= valueStart) {
-                System.err.println("Warning: empty key/value at line " + lineNo + ": " + raw);
+                System.err.println(
+                        "Warning: empty key/value at line " +
+                                lineNo + ": " + raw
+                );
                 continue;
             }
+
             String val = raw.substring(valueStart, valueEnd);
 
             dict.put(key, val);
+
             int len = key.length();
-            if (len > maxLength) maxLength = len;
-            if (len < minLength) minLength = len;
+            if (len > maxLength) {
+                maxLength = len;
+            }
+            if (len < minLength) {
+                minLength = len;
+            }
         }
+
         if (dict.isEmpty()) {
             return new DictEntry(dict, 1, 1);
-        } else {
-            if (minLength == Integer.MAX_VALUE) minLength = 1;
-            return new DictEntry(dict, maxLength, minLength);
         }
+
+        if (minLength == Integer.MAX_VALUE) {
+            minLength = 1;
+        }
+
+        return new DictEntry(dict, maxLength, minLength);
     }
 
     /**
