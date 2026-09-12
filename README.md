@@ -1099,9 +1099,9 @@ silent.
 
 ### 🧩 Example – Converting a `.docx` Using `File` → `File` (`FileResult`)
 
-`TextConverter` is the more flexible/general API for Office and EPUB conversion: a Java 8 functional interface
-that transforms only selected text fragments. Callers can compose other transformations without coupling them to
-`OfficeHelper`.
+`TextConverter` is the flexible/general API for Office and EPUB conversion: a Java 8 functional interface representing
+a `String -> String` transformation over selected text fragments. Callers can compose other transformations without
+coupling them to `OfficeHelper`.
 
 `OfficeHelper` handles package mechanics only: ZIP/package reconstruction, DOCX/XLSX/PPTX/ODF/EPUB entry selection,
 XLSX inline-string handling, optional font protection (`keepFont`), and EPUB packaging rules.
@@ -1124,10 +1124,10 @@ public class Example {
         File outputFile = new File("example_simplified.docx");
 
         OpenCC opencc = new OpenCC("t2s");
-        OfficeTextConverter textConverter = text -> {
+        TextConverter textConverter = text -> {
             String result = opencc.normalizeCompatExtended(text);
             result = opencc.convert(result, true);
-            result = opencc.deTofu(result, DeTofu.Level.ExtB);
+            result = opencc.deToFu(result, DeTofu.Level.ExtB);
             return result;
         };
 
@@ -1148,10 +1148,12 @@ public class Example {
         }
     }
 }
-
 ```
 
 ### 🧩 Example – Pure In-Memory `.docx` Conversion (`byte[]` → `MemoryResult`)
+
+For a simple OpenCC-only transformation, an `OpenCC` instance can be adapted directly to `TextConverter` with a
+Java 8 method reference.
 
 ```java
 import openccjava.OpenCC;
@@ -1170,7 +1172,7 @@ public class ExampleBytes {
 
         // Create an OpenCC converter
         OpenCC converter = new OpenCC("s2t");   // Simplified → Traditional
-        OfficeTextConverter textConverter = text -> converter.convert(text, true);
+        TextConverter textConverter = converter::convert;
 
         // Perform in-memory conversion
         MemoryResult result = OfficeHelper.convert(
@@ -1189,15 +1191,14 @@ public class ExampleBytes {
         }
     }
 }
-
 ```
 
 The `byte[]` overload is a pure in-memory conversion path. It does not create a temporary extraction directory or
 temporary output archive. The input ZIP container is read directly from memory and rebuilt into a new in-memory ZIP.
 
-Only text-bearing XML/XHTML entries selected for conversion are materialized temporarily as text. Unchanged package
-entries such as images, media, embedded files, relationships, and other binary resources are streamed directly from the
-input archive to the output archive.
+Only selected text-bearing package entries are materialized as decoded UTF-8 text. Unchanged entries such as images,
+media, embedded files, relationships, and other binary resources are copied directly between the input and output ZIP
+streams.
 
 For large filesystem-backed documents, prefer the `File` overload. It uses a separate streaming file-I/O path and avoids
 keeping the complete input and output packages in memory at the same time.
@@ -1207,23 +1208,23 @@ keeping the complete input and output packages in memory at the same time.
 - **`MemoryResult`** is returned when you call the **in-memory overload**:
 
 ```
-  OfficeHelper.convert(
-      byte[] inputBytes,
-      String format,
-      OfficeTextConverter textConverter,
-      boolean keepFont
-  )
+OfficeHelper.convert(
+        byte[] inputBytes,
+        String format,
+        TextConverter textConverter,
+        boolean keepFont
+)
 ```
 
 - **`FileResult`** is returned when you call the **file-to-file overload**:
 
 ```
 OfficeHelper.convert(
-    File inputFile,
-    File outputFile,
-    String format,
-    OfficeTextConverter textConverter,
-    boolean keepFont
+        File inputFile,
+        File outputFile,
+        String format,
+        TextConverter textConverter,
+        boolean keepFont
 )
 ```
 
@@ -1231,25 +1232,28 @@ OfficeHelper.convert(
 > writes the rebuilt package through file I/O, materializing only the selected text-bearing entries that require
 > transformation.
 
-- Existing public `OpenCC` convenience overloads remain supported for both paths:
+- Existing public `OpenCC` convenience overloads remain supported for source compatibility and convenience on both
+  paths:
   `convert(byte[], String, OpenCC, boolean punctuation, boolean keepFont)` and
   `convert(File, File, String, OpenCC, boolean punctuation, boolean keepFont)`.
-  These apply OpenCC conversion with optional punctuation; use `TextConverter` to compose additional steps.
+  Internally, these adapt OpenCC conversion to the same `TextConverter`-based package-processing core. Use
+  `TextConverter` directly when composing compatibility normalization, OpenCC conversion, punctuation, DeTofu, or
+  other transformations.
 
 - You may still use `Result` (the abstract base class) as the return type in legacy code.  
-  it remains **fully valid** since both `MemoryResult` and `FileResult` extend it.
+  It remains **fully valid** since both `MemoryResult` and `FileResult` extend it.
 
 ### ✔ Where this API design shines
 
 #### Ideal for in-memory workflows (`MemoryResult`)
 
-Perfect for platforms where file system access is limited or optional:
+Useful where the package already exists in memory or filesystem access is limited or undesirable:
 
-- **Blazor WebAssembly** (browser sandbox → byte[] only)
-- **Android / iOS** (ContentResolver/InputStream → byte[])
-- **REST APIs** (receive byte[], return byte[])
-- **CLI pipes** (stdin → stdout)
-- **Unit tests** (no temp files, fast in-memory testing)
+- **Android** (`ContentResolver` / `InputStream` → `byte[]`)
+- **REST APIs** (receive `byte[]`, return `byte[]`)
+- **Web/service backends** working with uploaded document bytes
+- **Unit tests** (no temporary extraction directory)
+- **Other embedded or sandboxed Java environments**
 
 #### Ideal for desktop/server workflows (`FileResult`)
 
@@ -1587,7 +1591,7 @@ Generate base dictionary for OpenccJava
   the CLI flags below.
 
 > 💡 Tip for Windows users:  
-> If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
+> If you have enabled “**Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
 Administrative → Language for non-Unicode programs → Change system locale_,
 > your console already uses UTF-8 — no need to specify `--con-enc UTF-8`.
 > You can safely display emoji, Chinese, and other Unicode characters without needing to run `chcp 65001` or modify code

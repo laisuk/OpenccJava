@@ -6,7 +6,7 @@ package openccjava;
  *
  * <p>{@link OfficeHelper} owns package parsing, ZIP reconstruction, entry
  * selection, XLSX inline-string handling, EPUB packaging rules, and optional
- * font protection. An {@code OfficeTextConverter} owns only the transformation
+ * font protection. A {@code TextConverter} owns only the transformation
  * applied to selected text.</p>
  *
  * <p>This separation allows callers to compose OpenCC conversion with other
@@ -17,7 +17,7 @@ package openccjava;
  * references.</p>
  *
  * <pre>{@code
- * OfficeTextConverter textConverter = text -> converter.convert(text, true);
+ * TextConverter textConverter = converter::convert;
  * }</pre>
  */
 @FunctionalInterface
