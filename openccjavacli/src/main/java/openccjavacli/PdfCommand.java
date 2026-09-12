@@ -2,6 +2,7 @@ package openccjavacli;
 
 import openccjava.OpenCC;
 import openccjava.OpenccConfig;
+import openccjava.TextConverter;
 import pdfboxhelper.PdfBoxHelper;
 import pdfboxhelper.PdfReflowHelper;
 import picocli.CommandLine;
@@ -198,15 +199,28 @@ public class PdfCommand implements Runnable {
                 Files.write(output.toPath(), processed.getBytes(StandardCharsets.UTF_8));
             } else {
 //                OpenCC opencc = new OpenCC(config);
-                OpenCC opencc = CliUtils.createOpenCC(config, customDictSpecs);
+                OpenCC opencc =
+                        CliUtils.createOpenCC(config, customDictSpecs);
+
+                TextConverter textConverter =
+                        CliUtils.createTextConverter(
+                                opencc,
+                                punct,
+                                normCompat,
+                                normCompatExtended,
+                                detofu,
+                                detofuFile
+                        );
+
                 System.err.println("🔁 Converting with OpenccJava...");
-                if (normCompatExtended) {
-                    processed = opencc.normalizeCompatExtended(processed);
-                } else if (normCompat) {
-                    processed = opencc.normalizeCompat(processed);
-                }
-                String converted = opencc.convert(processed, punct);
-                Files.write(output.toPath(), converted.getBytes(StandardCharsets.UTF_8));
+
+                String converted =
+                        textConverter.convert(processed);
+
+                Files.write(
+                        output.toPath(),
+                        converted.getBytes(StandardCharsets.UTF_8)
+                );
             }
 
             System.err.println("✅ PDF " + (extract ? "extraction" : "conversion") + " succeeded.");
