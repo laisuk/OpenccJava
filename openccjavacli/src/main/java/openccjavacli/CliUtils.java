@@ -105,7 +105,7 @@ public final class CliUtils {
      * <p>The DeToFu level is parsed once when this method is called rather than
      * once for every Office text fragment. A checked {@link IOException} raised
      * while loading a custom DeToFu file is wrapped in an
-     * {@link IllegalStateException}, because {@link OfficeTextConverter} is a
+     * {@link IllegalStateException}, because {@link TextConverter} is a
      * general text transformation contract and does not expose checked
      * exceptions.</p>
      *
@@ -123,7 +123,7 @@ public final class CliUtils {
      * @throws IllegalArgumentException if the DeToFu options are inconsistent or
      *                                  the level name is invalid
      */
-    static OfficeTextConverter createTextConverter(
+    static TextConverter createTextConverter(
             OpenCC opencc,
             boolean punctuation,
             boolean normCompat,

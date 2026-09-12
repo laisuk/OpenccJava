@@ -37,7 +37,7 @@ import java.util.zip.ZipOutputStream;
  * Converts text-bearing content inside Office, OpenDocument, and EPUB packages.
  *
  * <p>The package layer is independent of any particular text-conversion engine.
- * Callers may provide an {@link OfficeTextConverter} that performs any
+ * Callers may provide an {@link TextConverter} that performs any
  * {@code String -> String} transformation. Convenience overloads accepting an
  * {@link OpenCC} instance are retained and adapt OpenCC conversion to the same
  * generic package-processing core.</p>
@@ -208,7 +208,7 @@ public class OfficeHelper {
     public static MemoryResult convert(
             byte[] inputBytes,
             String format,
-            OfficeTextConverter textConverter,
+            TextConverter textConverter,
             boolean keepFont
     ) {
         if (inputBytes == null || inputBytes.length == 0) {
@@ -291,7 +291,7 @@ public class OfficeHelper {
      * {@link OpenCC} instance.
      *
      * <p>This convenience overload preserves the established API and adapts
-     * {@link OpenCC} to the generic {@link OfficeTextConverter} core.</p>
+     * {@link OpenCC} to the generic {@link TextConverter} core.</p>
      *
      * @param inputBytes  complete source package bytes
      * @param format      logical format name
@@ -341,7 +341,7 @@ public class OfficeHelper {
             File inputFile,
             File outputFile,
             String format,
-            OfficeTextConverter textConverter,
+            TextConverter textConverter,
             boolean keepFont
     ) {
         if (inputFile == null || !inputFile.isFile()) {
@@ -465,7 +465,7 @@ public class OfficeHelper {
      * instance and the streaming file-to-file path.
      *
      * <p>This convenience overload adapts OpenCC conversion to the generic
-     * {@link OfficeTextConverter} package-processing core.</p>
+     * {@link TextConverter} package-processing core.</p>
      *
      * @param inputFile   source Office/EPUB package
      * @param outputFile  destination package
@@ -503,7 +503,7 @@ public class OfficeHelper {
      * <p>OpenCC-specific conversion state and error handling remain outside the
      * package core.</p>
      */
-    private static OfficeTextConverter openCcTextConverter(
+    private static TextConverter openCcTextConverter(
             final OpenCC converter,
             final boolean punctuation
     ) {
@@ -537,7 +537,7 @@ public class OfficeHelper {
             ZipInputStream zis,
             ZipOutputStream zos,
             String format,
-            OfficeTextConverter textConverter,
+            TextConverter textConverter,
             boolean keepFont,
             boolean skipEpubMimetype
     ) throws IOException {
@@ -610,7 +610,7 @@ public class OfficeHelper {
             String format,
             String entryName,
             String xml,
-            OfficeTextConverter textConverter,
+            TextConverter textConverter,
             boolean keepFont
     ) {
         Map<String, String> fontMap = new HashMap<>();
@@ -1080,7 +1080,7 @@ public class OfficeHelper {
             String format,
             Path relativePath,
             String xml,
-            OfficeTextConverter textConverter
+            TextConverter textConverter
     ) {
         if ("xlsx".equals(format) && isWorksheetPath(relativePath)) {
             return convertXlsxInlineStrings(xml, textConverter);
@@ -1097,7 +1097,7 @@ public class OfficeHelper {
      * @throws IllegalStateException if the converter returns {@code null}
      */
     private static String applyTextConverter(
-            OfficeTextConverter textConverter,
+            TextConverter textConverter,
             String text
     ) {
         Objects.requireNonNull(
@@ -1134,7 +1134,7 @@ public class OfficeHelper {
      */
     private static String convertXlsxInlineStrings(
             String xml,
-            OfficeTextConverter textConverter
+            TextConverter textConverter
     ) {
         Matcher cellMatcher = XLSX_INLINE_STRING_CELL_PATTERN.matcher(xml);
         StringBuffer xmlOut = new StringBuffer();
@@ -1160,7 +1160,7 @@ public class OfficeHelper {
      */
     private static String convertXlsxInlineStringCell(
             String cellXml,
-            OfficeTextConverter textConverter
+            TextConverter textConverter
     ) {
         Matcher textMatcher = XLSX_TEXT_NODE_PATTERN.matcher(cellXml);
         StringBuffer cellOut = new StringBuffer();

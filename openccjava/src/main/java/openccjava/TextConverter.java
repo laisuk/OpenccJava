@@ -21,7 +21,7 @@ package openccjava;
  * }</pre>
  */
 @FunctionalInterface
-public interface OfficeTextConverter {
+public interface TextConverter {
 
     /**
      * Transforms one text fragment selected by the Office/EPUB package layer.

@@ -2,7 +2,7 @@ package openccjavacli;
 
 import openccjava.OpenCC;
 import openccjava.OfficeHelper;
-import openccjava.OfficeTextConverter;
+import openccjava.TextConverter;
 import picocli.CommandLine.*;
 
 import java.io.File;
@@ -124,7 +124,7 @@ public class OfficeCommand implements Runnable {
 //            OpenCC opencc = new OpenCC(config);
             OpenCC opencc = CliUtils.createOpenCC(config, customDictSpecs);
 
-            OfficeTextConverter textConverter = CliUtils.createTextConverter(
+            TextConverter textConverter = CliUtils.createTextConverter(
                     opencc,
                     punct,
                     normCompat,

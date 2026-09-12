@@ -1099,7 +1099,7 @@ silent.
 
 ### 🧩 Example – Converting a `.docx` Using `File` → `File` (`FileResult`)
 
-`OfficeTextConverter` is the more flexible/general API for Office and EPUB conversion: a Java 8 functional interface
+`TextConverter` is the more flexible/general API for Office and EPUB conversion: a Java 8 functional interface
 that transforms only selected text fragments. Callers can compose other transformations without coupling them to
 `OfficeHelper`.
 
@@ -1113,7 +1113,7 @@ text back into the Office/EPUB package**. Normalization and DeTofu are optional 
 import openccjava.OpenCC;
 import openccjava.OfficeHelper;
 import openccjava.DeTofu;
-import openccjava.OfficeTextConverter;
+import openccjava.TextConverter;
 
 import java.io.File;
 
@@ -1157,7 +1157,7 @@ public class Example {
 import openccjava.OpenCC;
 import openccjava.OfficeHelper;
 import openccjava.OfficeHelper.MemoryResult;
-import openccjava.OfficeTextConverter;
+import openccjava.TextConverter;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -1234,7 +1234,7 @@ OfficeHelper.convert(
 - Existing public `OpenCC` convenience overloads remain supported for both paths:
   `convert(byte[], String, OpenCC, boolean punctuation, boolean keepFont)` and
   `convert(File, File, String, OpenCC, boolean punctuation, boolean keepFont)`.
-  These apply OpenCC conversion with optional punctuation; use `OfficeTextConverter` to compose additional steps.
+  These apply OpenCC conversion with optional punctuation; use `TextConverter` to compose additional steps.
 
 - You may still use `Result` (the abstract base class) as the return type in legacy code.  
   it remains **fully valid** since both `MemoryResult` and `FileResult` extend it.
@@ -1587,7 +1587,7 @@ Generate base dictionary for OpenccJava
   the CLI flags below.
 
 > 💡 Tip for Windows users:  
-> If you have enabled “**Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
+> If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
 Administrative → Language for non-Unicode programs → Change system locale_,
 > your console already uses UTF-8 — no need to specify `--con-enc UTF-8`.
 > You can safely display emoji, Chinese, and other Unicode characters without needing to run `chcp 65001` or modify code

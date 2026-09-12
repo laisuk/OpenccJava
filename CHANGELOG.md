@@ -18,9 +18,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Added `OfficeTextConverter`, a Java 8 functional interface for caller-supplied text transformation inside Office and
+- Added `TextConverter`, a Java 8 functional interface for caller-supplied text transformation inside Office and
   EPUB packages.
-- Added `OfficeHelper` overloads accepting `OfficeTextConverter`, preserving existing `OpenCC` convenience overloads.
+- Added `OfficeHelper` overloads accepting `TextConverter`, preserving existing `OpenCC` convenience overloads.
 - Added CLI `office` options `-n` / `--norm-compat`, `-E` / `--norm-compat-extended`, `--detofu`, and `--detofu-file`.
 - Added extended Unicode compatibility normalization with:
     - `OpenCC.normalizeUnicodeCompat(...)` for additional Unicode CJK compatibility/allograph mappings.

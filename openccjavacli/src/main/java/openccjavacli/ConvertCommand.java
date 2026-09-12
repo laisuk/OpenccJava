@@ -131,7 +131,7 @@ public class ConvertCommand implements Callable<Integer> {
                 inputText = new String(inputStreamReadAllBytes(), inputCharset);
             }
 
-            OfficeTextConverter textConverter = CliUtils.createTextConverter(
+            TextConverter textConverter = CliUtils.createTextConverter(
                     opencc,
                     punct,
                     normCompat,

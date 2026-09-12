@@ -13,6 +13,7 @@ import picocli.CommandLine.Spec;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -109,6 +110,20 @@ public class PdfCommand implements Runnable {
     private boolean normCompatExtended;
 
     @Option(
+            names = "--detofu",
+            paramLabel = "<level>",
+            description = "Apply tofu-safe fallback after conversion: all, ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h, ext-i"
+    )
+    private String detofu;
+
+    @Option(
+            names = "--detofu-file",
+            paramLabel = "<file>",
+            description = "Load additional DeToFu fallback mappings from a UTF-8 text file. Custom mappings override built-in mappings (requires --detofu)"
+    )
+    private File detofuFile;
+
+    @Option(
             names = {"-D", "--custom-dict"},
             paramLabel = "<slot:mode:path>",
             split = ",",
@@ -129,10 +144,19 @@ public class PdfCommand implements Runnable {
                                 + "Supported configs: " + String.join(", ", OpenCC.getSupportedConfigs())
                 );
             }
+
+            CliUtils.validateDeTofuOptions(detofu, detofuFile);
         }
 
-        if (extract && punct) {
-            System.err.println("ℹ️  Note: --punct has no effect in extract-only mode.");
+        if (extract) {
+            List<String> ignoredOptions = createIgnoredOptions();
+
+            if (!ignoredOptions.isEmpty()) {
+                System.err.println(
+                        "ℹ️  Note: " + String.join(", ", ignoredOptions)
+                                + " have no effect in extract-only mode."
+                );
+            }
         }
 
         validateInputPdf();
@@ -189,7 +213,7 @@ public class PdfCommand implements Runnable {
             System.err.println("📄 Input : " + input.toPath().toAbsolutePath().normalize());
             System.err.println("📁 Output: " + output.toPath().toAbsolutePath().normalize());
             System.err.println("⚙️  Config: " + (extract ? "Extract only" : config +
-                                                                            (punct ? " (punct: on)" : " (punct: off)")) +
+                    (punct ? " (punct: on)" : " (punct: off)")) +
                     (addHeader ? ", header" : "") +
                     (reflow ? ", reflow" : "") +
                     (compact ? ", compact" : ""));
@@ -201,6 +225,27 @@ public class PdfCommand implements Runnable {
             System.err.println("❌ Exception occurred: " + ex.getMessage());
             System.exit(1);
         }
+    }
+
+    private List<String> createIgnoredOptions() {
+        List<String> ignoredOptions = new ArrayList<>();
+
+        if (punct) {
+            ignoredOptions.add("--punct");
+        }
+        if (normCompat) {
+            ignoredOptions.add("--norm-compat");
+        }
+        if (normCompatExtended) {
+            ignoredOptions.add("--norm-compat-extended");
+        }
+        if (detofu != null && !detofu.trim().isEmpty()) {
+            ignoredOptions.add("--detofu");
+        }
+        if (detofuFile != null) {
+            ignoredOptions.add("--detofu-file");
+        }
+        return ignoredOptions;
     }
 
     private void validateInputPdf() {

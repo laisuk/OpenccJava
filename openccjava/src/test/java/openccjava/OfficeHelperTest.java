@@ -150,7 +150,7 @@ class OfficeHelperTest {
     void convertsOfficeContentUsingTextConverter() throws IOException {
         byte[] workbook = createInlineStringWorkbook();
 
-        OfficeTextConverter textConverter =
+        TextConverter textConverter =
                 text -> text.replace("简体中文", "PIPELINE_OK");
 
         OfficeHelper.MemoryResult result = OfficeHelper.convert(
@@ -182,7 +182,7 @@ class OfficeHelperTest {
     void textConverterCanComposeMultipleTransformations() throws IOException {
         byte[] workbook = createInlineStringWorkbook();
 
-        OfficeTextConverter textConverter = text ->
+        TextConverter textConverter = text ->
                 "[" + text.replace("简体中文", "converted") + "]";
 
         OfficeHelper.MemoryResult result = OfficeHelper.convert(
@@ -218,7 +218,7 @@ class OfficeHelperTest {
             return;
         }
 
-        OfficeTextConverter textConverter = text -> null;
+        TextConverter textConverter = text -> null;
 
         OfficeHelper.MemoryResult result = OfficeHelper.convert(
                 workbook,
