@@ -11,7 +11,13 @@
   }, {
     "pattern":"\\Qdicts/dictionary_maxlength.json\\E"
   }, {
+    "pattern":"\\Qorg/apache/fontbox/cmap/Adobe-GB1-2\\E"
+  }, {
+    "pattern":"\\Qorg/apache/fontbox/cmap/Adobe-GB1-UCS2\\E"
+  }, {
     "pattern":"\\Qorg/apache/fontbox/cmap/Identity-H\\E"
+  }, {
+    "pattern":"\\Qorg/apache/fontbox/cmap/UniGB-UCS2-H\\E"
   }, {
     "pattern":"\\Qorg/apache/pdfbox/resources/glyphlist/additional.txt\\E"
   }, {
@@ -20,6 +26,8 @@
     "pattern":"\\Qorg/apache/pdfbox/resources/glyphlist/zapfdingbats.txt\\E"
   }, {
     "pattern":"\\Qorg/apache/pdfbox/resources/text/BidiMirroring.txt\\E"
+  }, {
+    "pattern":"\\Qorg/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf\\E"
   }, {
     "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/ubidi.icu\\E"
   }]},

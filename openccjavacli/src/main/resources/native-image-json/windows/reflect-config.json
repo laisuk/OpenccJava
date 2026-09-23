@@ -108,6 +108,10 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"openccjavacli.CliUtils$SlotCandidates",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"openccjavacli.ConvertCommand",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
