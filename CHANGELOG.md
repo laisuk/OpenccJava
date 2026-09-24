@@ -45,8 +45,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   while streaming unchanged entries.
 - Improved custom dictionary file parsing and validation.
 - Updated OpenCC dictionary data and regenerated bundled `dictionary_maxlength.json`.
-- ~~Updated GraalVM Native Build Tools to `1.1.8` and~~ refreshed native-image metadata generation
-  workflows/configuration.
+- Refreshed native-image metadata generation workflows/configuration.
 
 ---
 
