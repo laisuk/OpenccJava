@@ -1284,7 +1284,7 @@ Zip file will be created in: `openccjavacli/build/distributions/openccjavacli-<v
 bin/OpenccJavaCli.bat convert -c s2t -i input.txt -o output.txt
 ```
 
-```bash
+```
 bin/OpenccJavaCli convert --help                                                           
 Usage: openccjavacli convert [-EhnpV] -c=<conversion> [--con-enc=<encoding>]
                              [--detofu=<level>] [--detofu-file=<file>]
@@ -1380,7 +1380,7 @@ written back into the package. If both normalization flags are supplied, `-E` ta
 `--detofu-file <file>` requires `--detofu` and overrides built-in fallback mappings; `-D` / `--custom-dict`
 continues to configure custom dictionaries for the OpenCC conversion step.
 
-```bash
+```
 bin/OpenccJavaCli office --help 
 Usage: openccjavacli office [-EhknpV] -c=<conversion> [--detofu=<level>]
                             [--detofu-file=<file>] [-f=<format>] -i=<file>
@@ -1565,7 +1565,7 @@ openccjavacli dictgen --compact --sort
 Plain `dictgen` keeps the previous pretty, sorted output behavior. `--compact` writes compact JSON; add `--sort`
 when compact output should also have deterministic lexical key ordering.
 
-```bash
+```
 OpenccJavaCli dictgen --help
 sage: openccjavacli dictgen [-chsV] [-f=<format>] [-o=<filename>] [-D=<slot:
                              mode:path>[,<slot:mode:path>...]]...
