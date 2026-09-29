@@ -287,6 +287,7 @@ class DictionaryLibTest {
     void testWithCustomDictFilesDelegatesToWithCustomDicts() {
         DictionaryMaxlength base = DictionaryMaxlength.fromDicts();
 
+        //noinspection deprecation
         DictionaryMaxlength customized =
                 base.withCustomDictFiles(Collections.emptyList());
 
@@ -337,7 +338,7 @@ class DictionaryLibTest {
                         )
                 )
         );
-        DictionaryMaxlength customized = base.withCustomDicts(Collections.<CustomDictSpec>emptyList());
+        DictionaryMaxlength customized = base.withCustomDicts(Collections.emptyList());
 
         assertNotSame(base, customized);
         assertEquals("喫茶小舖", customized.tw_variants_phrases.dict.get("喫茶小舖"));

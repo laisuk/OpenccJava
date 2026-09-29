@@ -29,5 +29,5 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Build and test OpenccJava only
-        run: ./gradlew :openccjava:clean :openccjava:test --no-daemon
+      - name: Build, test, and validate OpenccJava Javadoc
+        run: ./gradlew :openccjava:clean :openccjava:test :openccjava:javadocJar :openccjava:sourcesJar --no-daemon

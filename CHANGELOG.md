@@ -10,6 +10,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Preserved filesystem providers and path spelling in typed custom-dictionary factories, including ZIP filesystem
+  paths and filenames with leading spaces. Textual specification parsing still trims surrounding whitespace.
 - Fixed direct/config-based API consistency: explicit punctuation conversion is now honored across all
   configurations, including Traditional↔Japanese. Default conversion behavior is unchanged.
 - Fixed UTF-8 BOM handling in text dictionary parsing so BOM-prefixed comment/header lines are recognized correctly
@@ -32,7 +34,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- **Breaking change (direct conversion API only):** `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`,
+- Added package-level API guidance and clarified Java 8 Javadoc contracts for dictionary ownership, shared caches,
+  initialization errors, and Office/EPUB callbacks. Javadoc now checks Java 8 API references with full doclint,
+  uses UTF-8 output, and is built alongside source archives in the library test workflow.
+- **Breaking change (direct conversion methods):** `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`,
   `hk2t`, `hk2tp`, `t2jp`, and `jp2t` now require `(String input, boolean punctuation)` instead of `(String input)`.
   Pass `false` to preserve the previous behavior, or `true` to enable punctuation conversion. Recompile direct-API
   callers against 1.5.0. The `convert(...)` signatures and default behavior are unchanged; dispatch now forwards the
@@ -40,7 +45,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Refactored `OfficeHelper` so package handling is independent of OpenCC conversion policy.
 - Shared CLI text-pipeline construction through `CliUtils` so `convert` and `office` use the same transformation order
   and option semantics: compatibility normalization → OpenCC conversion/punctuation → optional DeTofu.
-- Internalized compatibility normalization helpers so public normalization is exposed only through the `OpenCC` API.
+- **Breaking change (compatibility normalization):** internalized the previously public `CompatIdeographs` class
+  and removed its public nested map/customization API. Use `OpenCC.normalizeCompat(...)` for built-in normalization;
+  there is no direct replacement for custom compatibility maps. See `MIGRATION.md`.
 - Optimized `OfficeHelper` in-memory document conversion to process ZIP-based Office/EPUB packages directly in memory
   while streaming unchanged entries.
 - Improved custom dictionary file parsing and validation.

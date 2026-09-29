@@ -57,12 +57,14 @@ public class DictionaryMaxlength {
         public Map<String, String> dict;
 
         /**
-         * Maximum phrase length in this dictionary
+         * Maximum source key length in UTF-16 code units, as measured by
+         * {@link String#length()}.
          */
         public int maxLength;
 
         /**
-         * Minimum phrase length in this dictionary
+         * Minimum source key length in UTF-16 code units, as measured by
+         * {@link String#length()}.
          */
         public int minLength; // NEW
 
@@ -79,9 +81,13 @@ public class DictionaryMaxlength {
         /**
          * Constructs a new dictionary entry.
          *
-         * @param dict      The dictionary mapping strings.
-         * @param maxLength The maximum key length in the dictionary.
-         * @param minLength The minimum key length in the dictionary.
+         * <p>The map is retained directly, not copied. Length bounds are accepted
+         * as supplied; callers must keep them consistent with the source keys.</p>
+         *
+         * @param dict      the dictionary mapping strings, retained by reference
+         * @param maxLength the maximum source key length in UTF-16 code units
+         * @param minLength the minimum source key length in UTF-16 code units
+         * @throws NullPointerException if {@code dict} is {@code null}
          */
         public DictEntry(Map<String, String> dict, int maxLength, int minLength) {
             this.dict = Objects.requireNonNull(dict, "dict");
@@ -1004,11 +1010,13 @@ public class DictionaryMaxlength {
      * Loads a {@code DictionaryMaxlength} from a JSON input stream.
      *
      * <p>This compatibility overload delegates to {@link #fromJsonNoDeps(InputStream)}.</p>
+     * <p>The supplied stream is closed on success or failure.</p>
      *
      * @param in an input stream containing the JSON (UTF-8 encoded)
      * @return a populated {@code DictionaryMaxlength} instance
      * @throws IOException          if reading fails
      * @throws NullPointerException if {@code in} is {@code null}
+     * @throws IllegalArgumentException if the JSON is malformed or violates the expected schema
      * @since 1.4.0
      */
     public static DictionaryMaxlength fromJson(InputStream in) throws IOException {
@@ -1038,6 +1046,9 @@ public class DictionaryMaxlength {
 
     /**
      * Loads a {@code DictionaryMaxlength} from a JSON input stream without using external libraries.
+     *
+     * <p>This method takes ownership of the stream and closes it on success or
+     * failure, including parse errors.</p>
      * <p>
      * This method expects the JSON to follow the {@code dictionary_maxlength.json} schema:
      * each top-level field maps to an array

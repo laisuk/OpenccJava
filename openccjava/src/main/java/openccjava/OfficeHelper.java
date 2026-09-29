@@ -160,7 +160,9 @@ public class OfficeHelper {
         /**
          * Converted package bytes, or {@code null} when conversion failed.
          *
-         * <p>The constructor defensively copies the supplied array.</p>
+         * <p>The constructor defensively copies the supplied array. This public
+         * array itself remains mutable; callers needing an independent snapshot
+         * should clone it before sharing or modifying it.</p>
          */
         public final byte[] data;
 
@@ -204,6 +206,7 @@ public class OfficeHelper {
      * @param textConverter caller-supplied text transformation
      * @param keepFont      whether supported font declarations should be protected
      * @return conversion result containing rebuilt package bytes on success
+     * @since 1.5.0
      */
     public static MemoryResult convert(
             byte[] inputBytes,
@@ -336,6 +339,7 @@ public class OfficeHelper {
      * @param textConverter caller-supplied text transformation
      * @param keepFont      whether supported font declarations should be protected
      * @return file conversion result
+     * @since 1.5.0
      */
     public static FileResult convert(
             File inputFile,

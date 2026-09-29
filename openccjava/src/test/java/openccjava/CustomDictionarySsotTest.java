@@ -1,19 +1,67 @@
 package openccjava;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CustomDictionarySsotTest {
+
+    @Test
+    void typedFactoryPreservesLeadingSpaceInFilename(@TempDir Path directory) throws Exception {
+        Path path = Paths.get(" custom.txt");
+        CustomDictSpec spec = CustomDictSpec.fromFile(
+                DictSlot.STPhrases, path, CustomDictMode.Append);
+        assertEquals(path, spec.paths.get(0));
+
+        Path file = directory.resolve(path);
+        Files.write(file, Collections.singletonList("custom\treplacement"), StandardCharsets.UTF_8);
+        CustomDictSpec absoluteSpec = CustomDictSpec.fromFile(
+                DictSlot.STPhrases, file, CustomDictMode.Append);
+        DictionaryMaxlength dictionary = new DictionaryMaxlength()
+                .withCustomDicts(Collections.singletonList(absoluteSpec));
+        assertEquals("replacement", dictionary.st_phrases.dict.get("custom"));
+    }
+
+    @Test
+    void typedFactoriesPreserveZipFilesystemPaths(@TempDir Path directory) throws Exception {
+        Path archive = directory.resolve("custom.zip");
+        try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(archive))) {
+            out.putNextEntry(new ZipEntry("custom.txt"));
+            out.write("custom\treplacement\n".getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+        }
+        URI uri = URI.create("jar:" + archive.toUri());
+        try (FileSystem zip = FileSystems.newFileSystem(uri, Collections.<String, String>emptyMap())) {
+            Path path = zip.getPath("/custom.txt");
+            CustomDictSpec single = CustomDictSpec.fromFile(
+                    DictSlot.STPhrases, path, CustomDictMode.Append);
+            CustomDictSpec multiple = CustomDictSpec.fromFiles(
+                    DictSlot.STPhrases, Collections.singletonList(path), CustomDictMode.Override);
+            for (CustomDictSpec spec : Arrays.asList(single, multiple)) {
+                assertSame(zip, spec.paths.get(0).getFileSystem());
+                DictionaryMaxlength dictionary = new DictionaryMaxlength()
+                        .withCustomDicts(Collections.singletonList(spec));
+                assertEquals("replacement", dictionary.st_phrases.dict.get("custom"));
+            }
+        }
+    }
 
     private static final List<DictSlot> EXPECTED_ACTIVE_SLOTS = Arrays.asList(
             DictSlot.STCharacters,

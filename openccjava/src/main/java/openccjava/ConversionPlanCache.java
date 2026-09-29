@@ -18,7 +18,10 @@ import java.util.concurrent.ConcurrentMap;
  * </p>
  *
  * <p>
- * Thread-safe: backed by a {@link ConcurrentHashMap}.
+ * Cache lookup is thread-safe. The provider must safely return the same
+ * dictionary for the lifetime of this cache. Neither the dictionary nor returned
+ * plans may be mutated while in use; the concurrent map does not make those
+ * mutable objects thread-safe.
  * </p>
  */
 public final class ConversionPlanCache {
@@ -35,6 +38,7 @@ public final class ConversionPlanCache {
      *
      * @param dictionary dictionary backing the conversion plans
      * @return shared conversion-plan cache for that dictionary
+     * @throws NullPointerException if {@code dictionary} is {@code null}
      */
     public static ConversionPlanCache forDictionary(DictionaryMaxlength dictionary) {
         Objects.requireNonNull(dictionary, "dictionary");
@@ -61,7 +65,8 @@ public final class ConversionPlanCache {
         /**
          * Returns the {@link DictionaryMaxlength} backing this cache.
          *
-         * @return a dictionary instance, never {@code null}
+         * @return the same dictionary instance on every call, never {@code null};
+         * its contents must remain unchanged while the cache is in use
          */
         DictionaryMaxlength get();
     }
@@ -107,6 +112,7 @@ public final class ConversionPlanCache {
      * @param punctuation {@code true} to enable punctuation conversion for all supported
      *                    configurations; {@code false} to omit punctuation conversion
      * @return the prepared {@link DictRefs} with unions for this config
+     * @throws NullPointerException if {@code config} is {@code null}
      */
     public DictRefs getPlan(OpenccConfig config, boolean punctuation) {
         return planCache.computeIfAbsent(new PlanKey(config, punctuation),
@@ -115,6 +121,11 @@ public final class ConversionPlanCache {
 
     /**
      * Clears all cached conversion plans and cached union slots.
+     *
+     * <p>Previously returned plans remain usable. This operation is not an atomic
+     * reset with respect to concurrent lookups; callers needing a complete reset
+     * must prevent concurrent access. It does not rebuild dictionary length
+     * metadata and is not a supported way to mutate a converter's dictionary.</p>
      */
     public void clear() {
         planCache.clear();

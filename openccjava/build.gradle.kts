@@ -13,6 +13,8 @@ group = "io.github.laisuk"
 version = "1.5.0"
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
     withJavadocJar()
     withSourcesJar()
 }
@@ -46,15 +48,21 @@ dependencies {
 tasks.withType<JavaCompile>().configureEach {
     if (JavaVersion.current().isJava9Compatible) {
         options.release.set(8)
-    } else {
-        // Fallback for Gradle running on Java 8
-//        sourceCompatibility = "1.8"
-//        targetCompatibility = "1.8"
     }
 }
 
-tasks.withType<Javadoc> {
+tasks.withType<Javadoc>().configureEach {
     options.encoding = "UTF-8"
+    (options as StandardJavadocDocletOptions).apply {
+        charSet = "UTF-8"
+        docEncoding = "UTF-8"
+        addBooleanOption("Xdoclint:all", true)
+        if (JavaVersion.current().isJava9Compatible) {
+            addStringOption("-release", "8")
+        } else {
+            source = "8"
+        }
+    }
 }
 
 tasks.test {

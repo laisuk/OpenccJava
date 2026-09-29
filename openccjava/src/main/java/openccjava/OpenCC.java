@@ -110,14 +110,14 @@ public class OpenCC {
             ThreadLocal.withInitial(() -> new StringBuilder(MAX_SB_CAPACITY));
 
     /**
-     * Provides a lazily initialized, thread-safe singleton instance of
+     * Provides thread-safe lazy initialization of a shared instance of
      * {@link DictionaryMaxlength}.
      *
      * <p>This holder follows the <em>Initialization-on-demand holder idiom</em>:
      * the dictionary is not loaded until the first call to {@link #get()}.
      * This guarantees that:</p>
      * <ul>
-     *   <li>The dictionary is loaded exactly once per JVM.</li>
+     *   <li>The dictionary is loaded once per defining class loader.</li>
      *   <li>Access is thread-safe without requiring explicit synchronization.</li>
      *   <li>Subsequent calls to {@code get()} return the same shared instance.</li>
      * </ul>
@@ -134,7 +134,15 @@ public class OpenCC {
      *       dictionary text files via {@link DictionaryMaxlength#fromDicts()}.</li>
      * </ol>
      *
-     * <p>If all attempts fail, a {@link RuntimeException} is thrown.</p>
+     * <p>A source that exists but cannot be read or parsed fails initialization;
+     * fallback is used only when a source is absent. The first initialization
+     * failure is reported as an {@link ExceptionInInitializerError}. Later
+     * accesses to the failed holder can throw {@link NoClassDefFoundError}.</p>
+     *
+     * <p>Initialization is thread-safe, but the returned dictionary is mutable.
+     * Do not modify this shared instance: converters cache metadata derived from
+     * it. Use {@link DictionaryMaxlength#withCustomDicts(java.util.List)} to
+     * produce a separate dictionary instead.</p>
      *
      * <b>Usage Example:</b>
      * <pre>{@code
@@ -157,7 +165,8 @@ public class OpenCC {
          * The instance is created on first invocation.
          *
          * @return the shared dictionary instance
-         * @throws RuntimeException if dictionary loading fails
+         * @throws ExceptionInInitializerError if the initial dictionary load fails
+         * @throws NoClassDefFoundError if a previous initialization attempt failed
          */
         public static DictionaryMaxlength get() {
             return Holder.DEFAULT;
@@ -369,16 +378,18 @@ public class OpenCC {
      *   </li>
      * </ol>
      *
-     * <p><b>Important:</b> Because the dictionary is a shared singleton,
-     * any modification to its contents (for example, adding or removing entries)
-     * will affect <em>all</em> {@code OpenCC} instances within the same JVM.</p>
+     * <p>The shared dictionary must not be modified. Conversion metadata is
+     * cached, so mutation can cause inconsistent results in every converter
+     * using that dictionary. Use custom dictionary specifications to customize
+     * a separate copy.</p>
      *
-     * <p>If no dictionary source can be loaded or parsed, a
-     * {@link RuntimeException} is thrown before the instance can be created.</p>
+     * <p>Dictionary initialization failures are reported as described by
+     * {@link DictionaryHolder#get()}.</p>
      *
      * @param config the configuration key (for example {@code "s2t"},
      *               {@code "S2TWP"}, {@code "tw2sp"}); may be {@code null}
-     * @throws RuntimeException if no dictionary source can be loaded or parsed
+     * @throws ExceptionInInitializerError if the initial dictionary load fails
+     * @throws NoClassDefFoundError if a previous dictionary initialization failed
      * @since 1.1.0
      */
     public OpenCC(String config) {
@@ -396,7 +407,8 @@ public class OpenCC {
      * is performed lazily on first access.</p>
      *
      * @param configId the configuration ID, or {@code null} to use the default
-     * @throws RuntimeException if no dictionary source can be loaded or parsed
+     * @throws ExceptionInInitializerError if the initial dictionary load fails
+     * @throws NoClassDefFoundError if a previous dictionary initialization failed
      * @since 1.1.0
      */
     public OpenCC(OpenccConfig configId) {

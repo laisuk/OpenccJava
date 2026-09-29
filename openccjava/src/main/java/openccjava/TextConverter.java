@@ -16,9 +16,22 @@ package openccjava;
  * <p>The interface is deliberately compatible with Java 8 lambdas and method
  * references.</p>
  *
+ * <p>Input is UTF-8-decoded package content, not necessarily plain text.
+ * Most selected parts are passed as whole XML/XHTML strings, including markup
+ * and entity references. XLSX worksheet inline strings are passed as the raw
+ * contents of individual {@code <t>} elements. Implementations must preserve
+ * markup and escaping; OfficeHelper does not XML-escape the returned string.</p>
+ *
+ * <p>OfficeHelper invokes the callback synchronously. A null return or a runtime
+ * exception causes conversion to return a failed result. Callers sharing a
+ * callback across concurrent conversions must provide any synchronization it needs.</p>
+ *
  * <pre>{@code
- * TextConverter textConverter = converter::convert;
+ * OpenCC converter = new OpenCC(OpenccConfig.S2T);
+ * TextConverter textConverter = text -> text.isEmpty() ? text : converter.convert(text);
  * }</pre>
+ *
+ * @since 1.5.0
  */
 @FunctionalInterface
 public interface TextConverter {
@@ -26,7 +39,8 @@ public interface TextConverter {
     /**
      * Transforms one text fragment selected by the Office/EPUB package layer.
      *
-     * @param text decoded text fragment; never {@code null}
+     * @param text package content including any markup or entity references;
+     *             never {@code null}, but may be empty
      * @return transformed text; must not be {@code null}
      */
     String convert(String text);
