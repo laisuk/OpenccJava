@@ -1382,7 +1382,7 @@ continues to configure custom dictionaries for the OpenCC conversion step.
 
 ```
 bin/OpenccJavaCli office --help 
-Usage: openccjavacli office [-EhknpV] -c=<conversion> [--detofu=<level>]
+Usage: openccjavacli office [-EFhknpV] -c=<conversion> [--detofu=<level>]
                             [--detofu-file=<file>] [-f=<format>] -i=<file>
                             [-o=<file>] [-D=<slot:mode:path>[,<slot:mode:
                             path>...]]...
@@ -1413,6 +1413,8 @@ Convert Office documents using OpenccJava
                                conversion.
   -f, --format=<format>      Target Office format (e.g., docx, xlsx, pptx, odt,
                                epub)
+  -F, --convert-filename     Convert the output filename using the selected
+                               OpenCC configuration.
   -h, --help                 Show this help message and exit.
   -i, --input=<file>         Input Office file
   -k, --[no-]keep-font       Preserve font-family info (default: false)
