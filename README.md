@@ -1593,7 +1593,7 @@ Generate base dictionary for OpenccJava
   the CLI flags below.
 
 > 💡 Tip for Windows users:  
-> If you have enabled “**Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
+> If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
 Administrative → Language for non-Unicode programs → Change system locale_,
 > your console already uses UTF-8 — no need to specify `--con-enc UTF-8`.
 > You can safely display emoji, Chinese, and other Unicode characters without needing to run `chcp 65001` or modify code
@@ -1659,7 +1659,7 @@ openccjavacli.bat convert -c s2t -p --con-enc UTF-8
 
 ---
 
-### ⚡ Benchmark (`s2t`, sliced input, `openccjava v1.2.2`)
+### ⚡ Benchmark (`s2t`, sliced input, `openccjava v1.5.1`)
 
 Environment: GitHub Actions Linux runner, Java 17 (`Temurin 17.0.18`), `AMD EPYC 9V74`, `4 vCPUs`  
 Sample: `bench/sample.txt`  
@@ -1669,31 +1669,35 @@ Each case: **20 runs (1 conversion per run)**
 
 | Input size (chars)    | Runs | Total chars processed | Time min (ms) | Time avg (ms) | Time max (ms) | Throughput min (M chars/sec) | Throughput avg (M chars/sec) | Throughput max (M chars/sec) |
 |-----------------------|-----:|----------------------:|--------------:|--------------:|--------------:|-----------------------------:|-----------------------------:|-----------------------------:|
-| 100                   |   20 |                 2,000 |        0.0869 |        0.2123 |        0.6252 |                       0.1599 |                       0.5643 |                       1.1510 |
-| 1,000                 |   20 |                20,000 |        0.3080 |        1.0492 |        1.6489 |                       0.6065 |                       1.3565 |                       3.2472 |
-| 10,000                |   20 |               200,000 |        1.1105 |        1.5012 |        2.5395 |                       3.9378 |                       6.8545 |                       9.0053 |
-| 100,000               |   20 |             2,000,000 |        8.9072 |       17.2694 |       68.8832 |                       1.4517 |                       8.5961 |                      11.2269 |
-| 1,000,000             |   20 |            20,000,000 |       95.4285 |      101.5516 |      115.1731 |                       8.6826 |                       9.8680 |                      10.4791 |
-| 1,000,000 (cache-hot) |   20 |            20,000,000 |       94.7716 |      101.6154 |      116.9032 |                       8.5541 |                       9.8622 |                      10.5517 |
+| 100                   |   20 |                 2,000 |        0.0867 |        0.2121 |        0.6402 |                       0.1562 |                       0.6032 |                       1.1531 |
+| 1,000                 |   20 |                20,000 |        0.2028 |        0.2695 |        0.3623 |                       2.7598 |                       3.7907 |                       4.9315 |
+| 10,000                |   20 |               200,000 |        0.7817 |        1.3740 |        2.6503 |                       3.7731 |                       8.1666 |                      12.7923 |
+| 100,000               |   20 |             2,000,000 |        6.1644 |        9.9166 |       32.0504 |                       3.1201 |                      12.5986 |                      16.2223 |
+| 1,000,000             |   20 |            20,000,000 |       75.2113 |       80.0686 |       85.7006 |                      11.6685 |                      12.5016 |                      13.2959 |
+| 1,000,000 (cache-hot) |   20 |            20,000,000 |       72.6626 |       79.3488 |       92.2273 |                      10.8428 |                      12.6302 |                      13.7622 |
 
 ### Benchmark summary (`s2t`)
 
-| Input size            | Avg time (ms) | Avg throughput (M chars/sec) | Notes                                     |
-|-----------------------|--------------:|-----------------------------:|-------------------------------------------|
-| 100                   |         0.212 |                        0.564 | Dominated by fixed call/JVM overhead      |
-| 1,000                 |         1.049 |                        1.357 | Strong warmup effect across runs          |
-| 10,000                |         1.501 |                        6.854 | Approaching steady-state                  |
-| 100,000               |        17.269 |                        8.596 | Early cold runs skew the average downward |
-| 1,000,000             |       101.552 |                        9.868 | Stable large-input throughput             |
-| 1,000,000 (cache-hot) |       101.615 |                        9.862 | Nearly identical to the normal 1M run     |
+| Input size            | Avg time (ms) | Avg throughput (M chars/sec) | Notes                                       |
+|-----------------------|--------------:|-----------------------------:|---------------------------------------------|
+| 100                   |         0.212 |                        0.603 | Dominated by fixed call/JVM overhead        |
+| 1,000                 |         0.270 |                        3.791 | Fixed overhead remains significant          |
+| 10,000                |         1.374 |                        8.167 | Transitioning toward bulk throughput        |
+| 100,000               |         9.917 |                       12.599 | Some run-to-run variance remains            |
+| 1,000,000             |        80.069 |                       12.502 | Stable large-input throughput               |
+| 1,000,000 (cache-hot) |        79.349 |                       12.630 | Nearly identical to the normal 1M benchmark |
 
-* The benchmark measures single-pass conversion latency across different input sizes using 20 runs per case.
-* Small inputs (≤1k chars) are dominated by JVM and call overhead, so they are not representative of bulk conversion
-  throughput.
-* From 100k chars onward, throughput stabilizes around **9-10 M chars/sec** on this GitHub Actions runner.
-* At 1 million characters, average throughput is about **9.9 M chars/sec** for `s2t`.
-* Explicit cache priming has little effect on the average 1M result, suggesting normal execution already benefits from
-  warm caches.
+* The benchmark measures single-pass `s2t` conversion latency across different sliced input sizes using 20 runs per
+  case.
+* Small inputs are strongly affected by fixed JVM, call, and timing overhead, so they are not representative of bulk
+  conversion throughput.
+* Large-input throughput is about **12.5 M chars/sec** on this GitHub Actions runner.
+* At 1 million characters, average conversion time is about **80 ms**, with throughput averaging approximately **12.5 M
+  chars/sec**.
+* The 1-million-character runs are relatively stable, ranging from approximately **75-86 ms** in the normal case.
+* Explicit cache priming has little effect on the 1M result: **79.35 ms / 12.63 M chars/sec** cache-hot versus **80.07
+  ms / 12.50 M chars/sec** normally, indicating that the standard warmup already leaves the benchmark in a
+  representative warmed state.
 
 ---
 
