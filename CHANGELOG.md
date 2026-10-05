@@ -6,6 +6,33 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.5.1] - Unreleased
+
+### Fixed
+
+- Fixed long-only dictionary starters being skipped during phrase conversion for keys of 64 or more UTF-16 units.
+  Starter unions now derive per-starter maximum lengths at runtime, preserving exact short-length masks,
+  dictionary precedence, and existing dictionary files/schema without imposing a 255-unit limit.
+
+### Changed
+
+- Replaced dictionary-loop iterators in the conversion hot path with indexed access, preserving dictionary order.
+- Added cached single-code-point lookup indexes to conversion partitions, avoiding temporary substrings for
+  character fallback while preserving phrase priority, dictionary precedence, and supplementary/isolated-surrogate
+  handling. Indexes are built once per prepared partition; public APIs and Java 8 compatibility are unchanged.
+- Measured approximately 19% higher direct `s2t` throughput and 18% lower allocation on the full 1.13-million-character
+  sample in local JDK 21 benchmarks. Complete `s2t` plan preparation increased by approximately 93 microseconds,
+  with about 265 KiB of additional retained index memory per plan; results vary by workload and JVM.
+
+### Added
+
+- Added real-corpus JMH benchmarks for direct `s2t` conversion and separate partition preparation, full plan
+  preparation, and cached-plan lookup measurements.
+- Added regression tests for indexed character lookup, including dictionary precedence, empty replacements,
+  supplementary characters, isolated surrogates, and phrase-first matching.
+
+--
+
 ## [1.5.0] - 2026-09-30
 
 ### Fixed
