@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.5.1] - Unreleased
+## [1.6.0] - Unreleased
 
 ### Fixed
 
@@ -26,6 +26,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added Small Seal Script configs `s2seal`, `t2seal`, `seal2s`, and `seal2t`, ported from stable OpenccNet 1.8.0,
+  with direct `OpenCC.s2seal`, `t2seal`, `seal2s`, and `seal2t` APIs and directional punctuation support.
+- Added `SealCharacters`, `SealCharactersRev`, `SealVariants`, and `SealVariantsRev` slots throughout text/JSON
+  loading, serialization, dictionary cloning, custom append/override operations, and cached conversion plans/unions.
+- Regenerated all three built-in JSON dictionary copies with Seal data. Older folders and JSON snapshots remain
+  loadable with empty missing Seal slots.
+- Added Seal config/slot support to CLI help/completion, conversion, and dictionary generation/downloads, plus
+  regression tests covering stable-release outputs, round order, supplementary starters, cache isolation, JSON
+  round trips, custom dictionaries, legacy artifacts, and CLI UTF-8 file conversion.
 - Added real-corpus JMH benchmarks for direct `s2t` conversion and separate partition preparation, full plan
   preparation, and cached-plan lookup measurements.
 - Added regression tests for indexed character lookup, including dictionary precedence, empty replacements,

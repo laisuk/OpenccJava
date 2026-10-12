@@ -36,6 +36,7 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 - ✅ **CLI tool included** (`OpenccJavaCli.bat`) – convert files or stdin with flexible encoding options.
 - ✅ **Cross-platform** – runs on Windows, Linux, and macOS without extra dependencies.
 - ✅ **Self-contained** – no third-party dependencies, just the JDK.
+- ✅ **Small Seal Script** – convert Simplified/Traditional Chinese with `s2seal`, `t2seal`, `seal2s`, and `seal2t`.
 - ✅ **Drop-in replacement for OpenCC configs** – supports the same dictionary structure and configs.
 
 ---
@@ -1030,6 +1031,10 @@ public class CustomDictFilesAndPairsExample {
 | JPSCharacters        | JPShinjitaiCharacters.txt    | jps_characters          |
 | JPSCharactersRev     | JPShinjitaiCharactersRev.txt | jps_characters_rev      |
 | JPSPhrases           | JPShinjitaiPhrases.txt       | jps_phrases             |
+| SealCharacters       | SealCharacters.txt           | seal_characters         |
+| SealCharactersRev    | SealCharactersRev.txt        | seal_characters_rev     |
+| SealVariants         | SealVariants.txt             | seal_variants           |
+| SealVariantsRev      | SealVariantsRev.txt          | seal_variants_rev       |
 
 The deprecated `JPVariants` and `JPVariantsRev` constants are intentionally absent from this active mapping. They remain
 compilable compatibility constants but cannot be parsed or used for new dictionary operations.
@@ -1054,28 +1059,69 @@ List<String> configs = OpenCC.getSupportedConfigs();
 
 The following configuration keys correspond to OpenCC conversion modes:
 
-| Config Key | Direction                                       | Description                                                                   |
-|------------|-------------------------------------------------|-------------------------------------------------------------------------------|
-| **s2t**    | Simplified → Traditional                        | General conversion from Simplified Chinese to Traditional Chinese.            |
-| **t2s**    | Traditional → Simplified                        | Converts Traditional Chinese text to Simplified Chinese.                      |
-| **s2tw**   | Simplified → Traditional (Taiwan)               | Uses Taiwan-specific vocabulary and character preferences.                    |
-| **tw2s**   | Traditional (Taiwan) → Simplified               | Converts Taiwan Traditional Chinese to Simplified Chinese.                    |
-| **s2twp**  | Simplified → Traditional (Taiwan + phrases)     | Applies Taiwan-specific character and phrase mappings.                        |
-| **tw2sp**  | Traditional (Taiwan + phrases) → Simplified     | Converts Taiwan-phrased Traditional Chinese to Simplified Chinese.            |
-| **s2hk**   | Simplified → Traditional (Hong Kong)            | Uses Hong Kong variant characters and word choices.                           |
-| **hk2s**   | Traditional (Hong Kong) → Simplified            | Converts Hong Kong Traditional Chinese to Simplified Chinese.                 |
-| **s2hkp**  | Simplified → Traditional (Hong Kong + phrases)  | Applies HK phrase mappings, HK phrase variants, and HK character variants.    |
-| **hk2sp**  | Traditional (Hong Kong + phrases) → Simplified  | Applies HK phrase/variant reverse normalization before Simplified conversion. |
-| **t2tw**   | Traditional → Traditional (Taiwan)              | Normalizes Traditional Chinese to Taiwan variant.                             |
-| **t2twp**  | Traditional → Traditional (Taiwan + phrases)    | Includes Taiwan-specific phrase-level normalization.                          |
-| **t2hk**   | Traditional → Traditional (Hong Kong)           | Normalizes Traditional Chinese to Hong Kong variant.                          |
-| **t2hkp**  | Traditional → Traditional (Hong Kong + phrases) | Applies HK phrase mappings, HK phrase variants, and HK character variants.    |
-| **tw2t**   | Traditional (Taiwan) → Traditional              | Converts Taiwan variant back to general Traditional Chinese.                  |
-| **tw2tp**  | Traditional (Taiwan + phrases) → Traditional    | Converts Taiwan phrased Traditional Chinese to general Traditional.           |
-| **hk2t**   | Traditional (Hong Kong) → Traditional           | Converts Hong Kong variant back to general Traditional Chinese.               |
-| **hk2tp**  | Traditional (Hong Kong + phrases) → Traditional | Reverses HK phrase and variant mappings to general Traditional Chinese.       |
-| **t2jp**   | Traditional → Japanese Shinjitai                | Converts Traditional Chinese characters to Japanese Shinjitai-style kanji.    |
-| **jp2t**   | Japanese Shinjitai → Traditional                | Converts Japanese Shinjitai-style kanji back to Traditional Chinese.          |
+| Config Key | Direction                                       | Description                                                                        |
+|------------|-------------------------------------------------|------------------------------------------------------------------------------------|
+| **s2t**    | Simplified → Traditional                        | General conversion from Simplified Chinese to Traditional Chinese.                 |
+| **t2s**    | Traditional → Simplified                        | Converts Traditional Chinese text to Simplified Chinese.                           |
+| **s2tw**   | Simplified → Traditional (Taiwan)               | Uses Taiwan-specific vocabulary and character preferences.                         |
+| **tw2s**   | Traditional (Taiwan) → Simplified               | Converts Taiwan Traditional Chinese to Simplified Chinese.                         |
+| **s2twp**  | Simplified → Traditional (Taiwan + phrases)     | Applies Taiwan-specific character and phrase mappings.                             |
+| **tw2sp**  | Traditional (Taiwan + phrases) → Simplified     | Converts Taiwan-phrased Traditional Chinese to Simplified Chinese.                 |
+| **s2hk**   | Simplified → Traditional (Hong Kong)            | Uses Hong Kong variant characters and word choices.                                |
+| **hk2s**   | Traditional (Hong Kong) → Simplified            | Converts Hong Kong Traditional Chinese to Simplified Chinese.                      |
+| **s2hkp**  | Simplified → Traditional (Hong Kong + phrases)  | Applies HK phrase mappings, HK phrase variants, and HK character variants.         |
+| **hk2sp**  | Traditional (Hong Kong + phrases) → Simplified  | Applies HK phrase/variant reverse normalization before Simplified conversion.      |
+| **t2tw**   | Traditional → Traditional (Taiwan)              | Normalizes Traditional Chinese to Taiwan variant.                                  |
+| **t2twp**  | Traditional → Traditional (Taiwan + phrases)    | Includes Taiwan-specific phrase-level normalization.                               |
+| **t2hk**   | Traditional → Traditional (Hong Kong)           | Normalizes Traditional Chinese to Hong Kong variant.                               |
+| **t2hkp**  | Traditional → Traditional (Hong Kong + phrases) | Applies HK phrase mappings, HK phrase variants, and HK character variants.         |
+| **tw2t**   | Traditional (Taiwan) → Traditional              | Converts Taiwan variant back to general Traditional Chinese.                       |
+| **tw2tp**  | Traditional (Taiwan + phrases) → Traditional    | Converts Taiwan phrased Traditional Chinese to general Traditional.                |
+| **hk2t**   | Traditional (Hong Kong) → Traditional           | Converts Hong Kong variant back to general Traditional Chinese.                    |
+| **hk2tp**  | Traditional (Hong Kong + phrases) → Traditional | Reverses HK phrase and variant mappings to general Traditional Chinese.            |
+| **t2jp**   | Traditional → Japanese Shinjitai                | Converts Traditional Chinese characters to Japanese Shinjitai-style kanji.         |
+| **jp2t**   | Japanese Shinjitai → Traditional                | Converts Japanese Shinjitai-style kanji back to Traditional Chinese.               |
+| **s2seal** | Simplified → Small Seal Script                  | Applies Simplified-to-Traditional conversion, Seal variants, then Seal characters. |
+| **t2seal** | Traditional → Small Seal Script                 | Applies Seal variants, then Seal characters.                                       |
+| **seal2s** | Small Seal Script → Simplified                  | Decodes Seal characters and variants, then converts to Simplified Chinese.         |
+| **seal2t** | Small Seal Script → Traditional                 | Decodes Seal characters and normalizes their regular-script variants.              |
+
+### Small Seal Script usage (1.6.0, unreleased)
+
+```java
+OpenCC cc = new OpenCC(OpenccConfig.S2SEAL);
+String seal = cc.convert("你好，小篆国际编码18");
+// 你𿒛，𽌠𽴖𾇓𿭖𿛛碼18
+String traditional = OpenCC.convert(seal, "seal2t");
+// 你好，小篆國際編碼18
+String simplified = OpenCC.convert(seal, OpenccConfig.SEAL2S);
+// 你好，小篆国际编码18
+
+// Direct methods select their own direction independently of the instance config.
+String sameSeal = cc.t2seal("你好，小篆國際編碼18", false);
+String sealWithQuotes = cc.s2seal("“你好”", true);
+String backToSimplified = cc.seal2s(seal, false);
+String backToTraditional = cc.seal2t(seal, false);
+```
+
+All four configs accept optional punctuation conversion. `s2seal`, `t2seal`, and `seal2t` use Traditional-style
+punctuation; `seal2s` uses Simplified-style punctuation. Characters without a dictionary mapping pass through.
+Displaying Seal characters requires a font covering the dictionary's supplementary Unicode characters.
+
+```bash
+OpenccJavaCli convert -c s2seal -i simplified.txt -o seal.txt
+OpenccJavaCli convert -c t2seal -i traditional.txt -o seal.txt -p
+OpenccJavaCli convert -c seal2s -i seal.txt -o simplified.txt
+OpenccJavaCli convert -c seal2t -i seal.txt -o traditional.txt
+OpenccJavaCli convert -c t2seal -i traditional.txt -o seal.txt -D SealCharactersRev:append:custom-seal.txt
+```
+
+The same config names work with `office` and `pdf`. The four Seal slots support the existing custom-dictionary
+append/override APIs and CLI `-D` option. `SealVariants` normalizes modern characters to regular-script
+transcriptions, and `SealCharactersRev` maps those transcriptions to Seal characters; the two other slots decode
+these stages in reverse order. Older dictionary folders and JSON snapshots still load, with missing Seal slots
+initialized as empty dictionaries; use the updated dictionaries for Seal conversion.
+
 
 ---
 
@@ -1295,7 +1341,7 @@ Convert plain text using OpenccJava
   -c, --config=<conversion>  Conversion configuration. Supported: s2t, t2s,
                                s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk,
                                hk2s, t2tw, t2twp, tw2t, tw2tp, t2hk, t2hkp,
-                               hk2t, hk2tp, t2jp, jp2t
+                               hk2t, hk2tp, t2jp, jp2t, s2seal, t2seal, seal2s, seal2t
       --con-enc=<encoding>   Console encoding for interactive mode. Ignored if
                                not attached to a terminal. Common <encoding>:
                                UTF-8, GBK, Big5
@@ -1309,7 +1355,8 @@ Convert plain text using OpenccJava
                                TWVariantsRev, TWVariantsRevPhrases, HKPhrases,
                                HKPhrasesRev, HKVariants, HKVariantsPhrases,
                                HKVariantsRev, HKVariantsRevPhrases,
-                               JPSCharacters, JPSCharactersRev, JPSPhrases
+                               JPSCharacters, JPSCharactersRev, JPSPhrases,
+                               SealCharacters, SealCharactersRev, SealVariants, SealVariantsRev
       --detofu=<level>       Apply tofu-safe fallback after conversion: all,
                                ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h,
                                ext-i
@@ -1390,7 +1437,7 @@ Convert Office documents using OpenccJava
   -c, --config=<conversion>  Conversion configuration. Supported: s2t, t2s,
                                s2tw, tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk,
                                hk2s, t2tw, t2twp, tw2t, tw2tp, t2hk, t2hkp,
-                               hk2t, hk2tp, t2jp, jp2t
+                               hk2t, hk2tp, t2jp, jp2t, s2seal, t2seal, seal2s, seal2t
   -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
                              Apply custom dictionary file. Format: slot:
                                append|override:path. Can be repeated or
@@ -1401,7 +1448,8 @@ Convert Office documents using OpenccJava
                                TWVariantsRev, TWVariantsRevPhrases, HKPhrases,
                                HKPhrasesRev, HKVariants, HKVariantsPhrases,
                                HKVariantsRev, HKVariantsRevPhrases,
-                               JPSCharacters, JPSCharactersRev, JPSPhrases
+                               JPSCharacters, JPSCharactersRev, JPSPhrases,
+                               SealCharacters, SealCharactersRev, SealVariants, SealVariantsRev
       --detofu=<level>       Apply tofu-safe fallback after conversion: all,
                                ext-b, ext-c, ext-d, ext-e, ext-f, ext-g, ext-h,
                                ext-i
@@ -1451,7 +1499,7 @@ OpenccJava
                         Conversion configuration. Supported: s2t, t2s, s2tw,
                           tw2s, s2twp, tw2sp, s2hkp, hk2sp, s2hk, hk2s, t2tw,
                           t2twp, tw2t, tw2tp, t2hk, t2hkp, hk2t, hk2tp, t2jp,
-                          jp2t
+                          jp2t, s2seal, t2seal, seal2s, seal2t
   -C, --compact         Compact / tighten paragraph gaps after reflow (default:
                           false)
   -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
@@ -1464,7 +1512,8 @@ OpenccJava
                           TWVariantsRevPhrases, HKPhrases, HKPhrasesRev,
                           HKVariants, HKVariantsPhrases, HKVariantsRev,
                           HKVariantsRevPhrases, JPSCharacters,
-                          JPSCharactersRev, JPSPhrases
+                          JPSCharactersRev, JPSPhrases, SealCharacters,
+                          SealCharactersRev, SealVariants, SealVariantsRev
   -e, --extract         Extract text from PDF document only (default: false)
   -E, --norm-compat-extended
                         Normalize extended Unicode compatibility/allograph
@@ -1593,7 +1642,7 @@ Generate base dictionary for OpenccJava
   the CLI flags below.
 
 > 💡 Tip for Windows users:  
-> If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support**” in _Control Panel → Region →
+> If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support** ” in _Control Panel → Region →
 Administrative → Language for non-Unicode programs → Change system locale_,
 > your console already uses UTF-8 — no need to specify `--con-enc UTF-8`.
 > You can safely display emoji, Chinese, and other Unicode characters without needing to run `chcp 65001` or modify code
