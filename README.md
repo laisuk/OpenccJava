@@ -1618,14 +1618,23 @@ when compact output should also have deterministic lexical key ordering.
 
 ```
 OpenccJavaCli dictgen --help
-sage: openccjavacli dictgen [-chsV] [-f=<format>] [-o=<filename>] [-D=<slot:
+Usage: openccjavacli dictgen [-chsV] [-f=<format>] [-o=<filename>] [-D=<slot:
                              mode:path>[,<slot:mode:path>...]]...
 Generate base dictionary for OpenccJava
   -c, --compact             Enable non-indented JSON output (default: false)
   -D, --custom-dict=<slot:mode:path>[,<slot:mode:path>...]
                             Apply custom dictionary file. Format: slot:
                               append|override:path. Can be repeated or
-                              comma-separated.
+                              comma-separated. Supported slots: STCharacters,
+                              STPhrases, STPunctuations, TSCharacters,
+                              TSPhrases, TSPunctuations, TWPhrases,
+                              TWPhrasesRev, TWVariants, TWVariantsPhrases,
+                              TWVariantsRev, TWVariantsRevPhrases, HKPhrases,
+                              HKPhrasesRev, HKVariants, HKVariantsPhrases,
+                              HKVariantsRev, HKVariantsRevPhrases,
+                              JPSCharacters, JPSCharactersRev, JPSPhrases,
+                              SealCharacters, SealCharactersRev, SealVariants,
+                              SealVariantsRev
   -f, --format=<format>     Dictionary output format: [json]
   -h, --help                Show this help message and exit.
   -o, --output=<filename>   Output filename
