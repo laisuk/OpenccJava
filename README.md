@@ -50,6 +50,24 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 
 ---
 
+## 🌐 OpenccJava CJK Conversion Tool Demo
+
+Try **OpenccJava** directly in your browser—no installation required!
+
+The online demo uses the Java conversion engine compiled with **TeaVM**, supporting both **WebAssembly GC** and
+**JavaScript** backends.
+
+- 🚀 **[Launch Online Demo](https://laisuk.github.io/OpenccJava/)** — Convert Simplified and Traditional Chinese text
+  directly in your browser.
+- ⚡ **[WebAssembly GC Backend](https://laisuk.github.io/OpenccJava/?backend=wasm)** — High-performance browser-based
+  conversion.
+- 🌐 **[JavaScript Backend](https://laisuk.github.io/OpenccJava/?backend=js)** — Alternative browser runtime.
+- 📄 **Document Conversion** — Convert Office documents and EPUB files, with optional font preservation.
+
+The demo runs entirely in your browser, without requiring a server-side conversion service.
+
+---
+
 ## Modules
 
 ### `openccjava`

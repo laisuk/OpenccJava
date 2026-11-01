@@ -926,8 +926,7 @@ public class OfficeHelper {
         try (ZipInputStream zis = new ZipInputStream(
                 new BufferedInputStream(new ByteArrayInputStream(data)))) {
 
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
+            while (zis.getNextEntry() != null) {
                 drain(zis);
                 zis.closeEntry();
             }
