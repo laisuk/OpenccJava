@@ -1,0 +1,12 @@
+[
+  {
+    "corpus": "SanWenHansSeal.txt",
+    "utf16": 7340,
+    "segments": 1150
+  },
+  {
+    "corpus": "sample.txt",
+    "utf16": 1130220,
+    "segments": 199940
+  }
+]
