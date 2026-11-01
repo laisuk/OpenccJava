@@ -1,0 +1,92 @@
+name: Build and deploy TeaVM browser demo
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'openccjavawasm/src/main/**'
+      - 'openccjava/src/main/**'
+      - 'openccjavawasm/build.gradle.kts'
+      - 'openccjava/build.gradle.kts'
+      - 'build.gradle'
+      - 'build.gradle.kts'
+      - 'settings.gradle'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - '.github/workflows/deploy-wasm.yml'
+      - '!**/*.md'
+      - '!**/*.adoc'
+      - '!**/*.rst'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  PUBLISH_DIR: openccjavawasm/build/generated/teavm
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v6
+        with:
+          enablement: false
+
+      - name: Build JavaScript and WebAssembly GC
+        run: ./gradlew :openccjavawasm:browserJavaScript :openccjavawasm:browserWasmGC --no-daemon
+
+      - name: Prepare GitHub Pages output
+        env:
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          python3 - <<'PY'
+          import html
+          import os
+          from pathlib import Path
+
+          output = Path(os.environ['PUBLISH_DIR'])
+          index = output / 'index.html'
+          base = os.environ['PAGES_BASE_PATH'].rstrip('/') + '/'
+          index.write_text(index.read_text(encoding='utf-8').replace(
+              '<head>', '<head>\n    <base href="' + html.escape(base, quote=True) + '">', 1
+          ), encoding='utf-8')
+          (output / '.nojekyll').touch()
+          PY
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ env.PUBLISH_DIR }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
