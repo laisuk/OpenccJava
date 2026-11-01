@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenccJava TeaVM experiment</title>
+<h1>OpenccJava TeaVM smoke test</h1>
+<p><a href="?backend=js">JavaScript</a> | <a href="?backend=wasm">WebAssembly GC</a></p>
+<p><label>Input<br><textarea id="input" rows="5" cols="60">汉字转换测试</textarea></label></p>
+<label>Configuration <select id="config"><option>s2t</option><option>t2s</option></select></label>
+<label><input id="punctuation" type="checkbox"> Convert punctuation</label>
+<button id="convert" disabled>Convert</button>
+<p><label>Output<br><textarea id="output" rows="5" cols="60" readonly></textarea></label></p>
+<pre id="status" role="status">Loading…</pre>
+<script type="module" src="smoke.js"></script>
+</html>

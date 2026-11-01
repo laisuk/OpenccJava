@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8"><pre id="status">Investigating EPUB…</pre>
+<script type="module">
+const params = new URLSearchParams(location.search);
+const backend = params.get('backend');
+const status = document.getElementById('status');
+try {
+    let api;
+    if (backend === 'js') api = await import('./js/openccjava.js');
+    else {
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script'); script.src = './wasm-gc/openccjava.wasm-runtime.js';
+            script.onload = resolve; script.onerror = reject; document.head.append(script);
+        });
+        api = (await TeaVM.wasmGC.load('./wasm-gc/openccjava.wasm')).exports;
+    }
+    if (!api.initialize()) throw new Error(api.getLastError());
+    const bytes = new Int8Array(await (await fetch('./private-diagnostics/book.epub')).arrayBuffer());
+    const start = performance.now();
+    console.log('[epub-diag] export call begin');
+    const output = api.diagnoseEpub(bytes, params.get('font') === 'true', params.get('identity') === 'true');
+    console.log('[epub-diag] export call returned ms=' + (performance.now()-start));
+    if (!output) throw new Error(api.getLastError());
+    document.documentElement.dataset.hang = 'passed';
+    status.textContent = `${backend}: completed in ${(performance.now()-start).toFixed(1)} ms, ${output.length} bytes`;
+} catch (error) {
+    document.documentElement.dataset.hang = 'failed'; status.textContent = String(error);
+}
+</script>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OpenccJava — CJK Conversion Tool</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        input, select, button {
+            margin-top: 10px;
+            padding: 6px;
+            font-size: 14px;
+        }
+
+        .row {
+            margin-top: 10px;
+        }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .config-row select {
+            margin-top: 0;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .editor-box {
+            border: 1px solid #ccc;
+        }
+
+        .cm-editor {
+            height: 360px;
+            font-size: 16px;
+        }
+
+        .cm-scroller {
+            overflow: auto;
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        @media (max-width: 900px) {
+            .editor-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cm-editor {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                margin: 10px;
+            }
+
+            .cm-editor {
+                height: 240px;
+            }
+        }
+
+        pre {
+            background: #f3f3f3;
+            padding: 12px;
+            white-space: pre-wrap;
+        }
+
+        .office-drop {
+            margin-top: 16px;
+            padding: 24px;
+            border: 2px dashed #aaa;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .office-drop.dragover {
+            border-color: #555;
+            background: #f7f7f7;
+        }
+
+        .office-drop.disabled {
+            opacity: 0.55;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .office-drop small {
+            display: block;
+            margin-top: 6px;
+        }
+
+        .office-result {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .office-result[hidden] {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .editor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>OpenccJava — CJK Conversion Tool</h1>
+
+<div class="row config-row">
+    <label for="config">Config:</label>
+    <select id="config"></select>
+    <span id="configDescription"></span>
+
+</div>
+
+<div class="row">
+    <strong>Supported configs:</strong>
+    <span id="supported"></span>
+</div>
+
+<div class="editor-grid">
+    <div>
+        <h3>Input (<span id="inputCount">0</span> characters)</h3>
+        <button id="pasteBtn">Paste</button>
+        <button id="normalizeBtn">Normalize</button>
+        <button id="gbMojibakeBtn">GB Mojibake</button>
+        <button id="clearInputBtn">Clear</button>
+        <div id="editor-left" class="editor-box"></div>
+    </div>
+
+    <div>
+        <h3>Output (<span id="outputCount">0</span> characters)</h3>
+        <button id="copyBtn">Copy</button>
+        <button id="deTofuBtn">DeTofu</button>
+        <button id="clearOutputBtn">Clear</button>
+        <button id="downloadOutputBtn">Download</button>
+        <a id="outputDownloadLink" hidden></a>
+        <div id="editor-right" class="editor-box"></div>
+    </div>
+</div>
+
+<div class="row">
+    <label>
+        <input type="checkbox" id="punctuation">
+        Enable punctuation conversion
+    </label>
+    <label>
+        <input type="checkbox" id="keepFont" checked>
+        Preserve document font declarations
+    </label>
+</div>
+
+<div class="row">
+    <input id="textFile" type="file" accept=".txt,.md" hidden>
+    <button id="openFileBtn">Open File</button>
+    <button id="btn">Convert</button>
+    <span id="openedFileName"></span>
+</div>
+
+<div class="row">
+    <label for="textEncoding">Text file encoding:</label>
+    <select id="textEncoding">
+        <option value="utf-8" selected>UTF-8</option>
+        <option value="utf-16le">UTF-16 LE</option>
+        <option value="utf-16be">UTF-16 BE</option>
+        <option value="gb18030">GB18030 / GBK</option>
+        <option value="big5">Big5</option>
+        <option value="shift_jis">Shift-JIS</option>
+    </select>
+</div>
+
+<div id="officeDrop" class="office-drop disabled" role="button" tabindex="0" aria-disabled="true">
+    <strong>Click to open or drop a document, EPUB or text file here</strong>
+    <small>DOCX, XLSX, PPTX, ODT, ODS, ODP, EPUB, TXT, MD — converted locally; nothing is uploaded</small>
+    <small>TXT/MD uses the selected encoding. Document conversion runs synchronously and may pause the interface.</small>
+    <small>EPUB internal entry names must be ASCII. ZIP32 only; 64 MiB package / 256 MiB expanded limit.</small>
+    <input id="officeFile"
+           type="file"
+           accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.epub,.txt,.md"
+           hidden>
+</div>
+
+<div id="officeResult" class="office-result" hidden>
+    <span id="officeResultText"></span>
+    <button id="officeDownloadBtn" type="button">Download converted file</button>
+</div>
+
+<h3>Status</h3>
+<p id="backendStatus" role="status">Selecting backend…</p>
+<p><a href="?backend=wasm">WebAssembly GC</a> | <a href="?backend=js">JavaScript</a> | <a href="smoke.html">Engine smoke test</a></p>
+<pre id="out" role="status">Loading engine...</pre>
+
+<script type="module" src="bootstrap.js"></script>
+</body>
+</html>
