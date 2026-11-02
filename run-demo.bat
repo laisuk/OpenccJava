@@ -3,6 +3,18 @@
 setlocal
 cd /d "%~dp0"
 
+REM Use the system Java installation, ignoring IntelliJ's JAVA_HOME.
+REM Replace this path with your actual JDK installation.
+set "JAVA_HOME=C:\Java\zulu21.54.109-ca-jdk21.0.13.0.3-win_x64"
+
+REM Ensure the selected JDK takes priority over Java 8.
+set "PATH=%JAVA_HOME%\bin;%PATH%"
+
+echo Using Java:
+"%JAVA_HOME%\bin\java.exe" -version
+echo.
+cd /d "%~dp0"
+
 set "PORT=8080"
 set "WEB_DIR=openccjavawasm\build\generated\teavm"
 
@@ -22,7 +34,7 @@ if errorlevel 1 (
 
 echo.
 echo [2/3] Starting HTTP server...
-start "OpenccJava Demo Server" cmd /k python -m http.server %PORT% --directory "%WEB_DIR%"
+start "OpenccJava Demo Server" /MIN cmd /k python -m http.server %PORT% --directory "%WEB_DIR%"
 
 echo.
 echo [3/3] Opening browser...
