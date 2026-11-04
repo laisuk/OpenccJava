@@ -36,8 +36,22 @@ jobs:
           free -h
 
       - name: 🚀 Run benchmark
+        shell: bash
         run: |
-          ./gradlew -q :openccjava:runOpenccBench | tee bench_result.txt
+          set -euo pipefail
+          OPENCCJAVA_VERSION="$(./gradlew -q :openccjava:properties | sed -n 's/^version: //p' | head -n 1)"
+          : "${OPENCCJAVA_VERSION:?Unable to determine OpenccJava version from Gradle}"
+
+          {
+            echo "OpenccJava version: ${OPENCCJAVA_VERSION}"
+            echo "Java runtime: $(java -version 2>&1 | head -n 1)"
+            echo "Git commit: $(git rev-parse --short HEAD)"
+            echo ""
+            echo "========================================"
+            echo ""
+          } | tee bench_result.txt
+
+          ./gradlew -q :openccjava:runOpenccBench | tee -a bench_result.txt
 
       - name: 📊 Upload benchmark result
         uses: actions/upload-artifact@v7
