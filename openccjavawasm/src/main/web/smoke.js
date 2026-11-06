@@ -1,6 +1,7 @@
 const status = document.querySelector('#status');
 const button = document.querySelector('#convert');
 const backend = new URLSearchParams(location.search).get('backend') || 'js';
+const yieldToBrowser = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 try {
     let api;
     if (backend === 'js') {
@@ -17,6 +18,7 @@ try {
     } else {
         throw new Error('Unknown backend: ' + backend);
     }
+    await yieldToBrowser();
     if (!api.initialize()) throw new Error(api.getLastError());
     function convert(text, config, punctuation = false) {
         const result = api.convert(text, config, punctuation);
@@ -38,19 +40,28 @@ try {
         ['汉字转换测试。'.repeat(1500), 's2t', '漢字轉換測試。'.repeat(1500)]
     ];
     for (const [input, config, expected, punctuation = false] of cases) {
+        await yieldToBrowser();
         const actual = convert(input, config, punctuation);
         if (actual !== expected) throw new Error(`${config} regression failed: ${actual.slice(0, 80)}`);
     }
+    await yieldToBrowser();
     const configs = Array.from(api.getSupportedConfigs());
     if (configs.length !== 24 || configs.some(config => !api.isValidConfig(config))) {
         throw new Error('Supported configuration enumeration failed');
     }
-    for (const config of configs) convert('汉字漢字🙂', config);
-    if (api.normalizeCompatExtended('聼竒金鼖🙂') !== '聽奇金鼖🙂') throw new Error('Normalization failed');
-    if (api.detofu('骖𬴂🙂') !== '骖騑🙂') throw new Error('DeTofu failed');
-    if (api.zhoCheck('汉字转换测试') !== 2 || api.zhoCheck('漢字轉換測試') !== 1 || api.zhoCheck('ABC🙂') !== 0) {
-        throw new Error('Chinese detection failed');
+    for (const config of configs) {
+        await yieldToBrowser();
+        convert('汉字漢字🙂', config);
     }
+    await yieldToBrowser();
+    if (api.normalizeCompatExtended('聼竒金鼖🙂') !== '聽奇金鼖🙂') throw new Error('Normalization failed');
+    await yieldToBrowser();
+    if (api.detofu('骖𬴂🙂') !== '骖騑🙂') throw new Error('DeTofu failed');
+    for (const [input, expected] of [['汉字转换测试', 2], ['漢字轉換測試', 1], ['ABC🙂', 0]]) {
+        await yieldToBrowser();
+        if (api.zhoCheck(input) !== expected) throw new Error('Chinese detection failed');
+    }
+    await yieldToBrowser();
     if (api.convert('test', 'invalid', false) !== null || !api.getLastError()) {
         throw new Error('Invalid configuration did not report an error');
     }
