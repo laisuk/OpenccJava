@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenccJava JS startup diagnostic</title>
+<h1>OpenccJava JS startup diagnostic</h1>
+<button id="import">1. Import JS module</button>
+<button id="initialize" disabled>2. Call initialize()</button>
+<button id="smoke" disabled>3. Run smoke tests with yields</button>
+<p id="status" role="status">Ready to import</p>
+<p id="completed">Last completed phase: none</p>
+<p id="previous" hidden></p>
+
+<script type="module">
+const importButton = document.getElementById('import');
+const initializeButton = document.getElementById('initialize');
+const smokeButton = document.getElementById('smoke');
+const status = document.getElementById('status');
+const completed = document.getElementById('completed');
+const storageKey = 'openccjava-js-startup-diagnostics';
+let api;
+
+try {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+        const previous = document.getElementById('previous');
+        previous.textContent = `Before reload: ${saved}`;
+        previous.hidden = false;
+    }
+} catch {
+    // The live diagnostic also works with storage disabled.
+}
+
+function show(message) {
+    status.textContent = message;
+    try {
+        localStorage.setItem(storageKey, `${message}. ${completed.textContent}`);
+    } catch {
+        // Storage is optional.
+    }
+}
+
+const afterPaint = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+function phase(button, name, run, next) {
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        show(`${name}: running`);
+        await afterPaint();
+        const start = performance.now();
+        try {
+            await run();
+            completed.textContent = `Last completed phase: ${name}`;
+            show(`${name}: passed (${(performance.now() - start).toFixed(1)} ms)`);
+            if (next) next.disabled = false;
+        } catch (error) {
+            show(`${name}: failed (${error})`);
+        }
+    });
+}
+
+phase(importButton, 'Import', async () => {
+    api = await import('./js/openccjava.js');
+}, initializeButton);
+phase(initializeButton, 'Initialize', () => {
+    if (!api.initialize()) throw new Error(api.getLastError() || 'initialize() returned false');
+}, smokeButton);
+
+function check(condition, message) {
+    if (!condition) throw new Error(message);
+}
+
+function convert(input, config, punctuation = false) {
+    const result = api.convert(input, config, punctuation);
+    if (result === null) throw new Error(api.getLastError() || 'Conversion returned null');
+    return result;
+}
+
+phase(smokeButton, 'Smoke (42 checks)', async () => {
+    let step = 0;
+    async function run(name, test) {
+        step++;
+        show(`Smoke ${step}/42: running ${name}`);
+        await afterPaint();
+        try {
+            test();
+        } catch (error) {
+            throw new Error(`Step ${step}, ${name}: ${error}`);
+        }
+        show(`Smoke ${step}/42: passed ${name}`);
+    }
+
+    // Same cases as smoke.js, with a progress marker for each step.
+    const cases = [
+        ['汉字转换测试', 's2t', '漢字轉換測試'],
+        ['漢字轉換測試', 't2s', '汉字转换测试'],
+        ['头发发展', 's2t', '頭髮發展'],
+        ['頭髮發展', 't2s', '头发发展'],
+        ['“汉字”', 's2t', '「漢字」', true],
+        ['「漢字」', 't2s', '“汉字”', true],
+        ['软件鼠标', 's2twp', '軟體滑鼠'],
+        ['舊字體：廣國，讀賣。', 't2jp', '旧字体：広国，読売。'],
+        ['你好，小篆国际编码18', 's2seal', '你𿒛，𽌠𽴖𾇓𿭖𿛛碼18'],
+        ['你𿒛，𽌠𽴖𾇓𿭖𿛛碼18', 'seal2s', '你好，小篆国际编码18'],
+        ['汉字转换测试。'.repeat(1500), 's2t', '漢字轉換測試。'.repeat(1500)]
+    ];
+    for (const [input, config, expected, punctuation] of cases) {
+        const label = input.length > 40 ? 'long input' : input;
+        await run(`${config} conversion (${label})`, () =>
+            check(convert(input, config, punctuation) === expected, 'Unexpected conversion result'));
+    }
+    let configs;
+    await run('supported configurations', () => {
+        configs = Array.from(api.getSupportedConfigs());
+        check(configs.length === 24 && configs.every(config => api.isValidConfig(config)),
+            'Supported configuration enumeration failed');
+    });
+    for (const config of configs) {
+        await run(`configuration ${config}`, () => convert('汉字漢字🙂', config));
+    }
+    await run('compatibility normalization', () => check(
+        api.normalizeCompatExtended('聼竒金鼖🙂') === '聽奇金鼖🙂', 'Normalization failed'));
+    await run('DeTofu', () => check(api.detofu('骖𬴂🙂') === '骖騑🙂', 'DeTofu failed'));
+    for (const [input, expected] of [['汉字转换测试', 2], ['漢字轉換測試', 1], ['ABC🙂', 0]]) {
+        await run(`Chinese detection (${input})`, () =>
+            check(api.zhoCheck(input) === expected, 'Chinese detection failed'));
+    }
+    await run('invalid configuration error reporting', () => check(
+        api.convert('test', 'invalid', false) === null && api.getLastError(),
+        'Invalid configuration did not report an error'));
+});
+</script>
+</html>
