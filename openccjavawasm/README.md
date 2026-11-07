@@ -29,6 +29,16 @@ tries JavaScript and displays both the actual backend and the fallback reason.
 An explicit `?backend=js` loads only JavaScript; `?backend=wasm` permits the same
 clearly reported fallback. Unknown backend values report an error.
 
+### iPhone Safari development note
+
+Use the default Wasm GC backend on iPhone Safari. On the tested iPhone, the
+same TeaVM JavaScript build initialized over LAN HTTP on ports 8080 and 8443,
+but Safari reloaded the page during `initialize()` over LAN HTTPS and GitHub
+Pages. Module import, configuration enumeration, and embedded resource
+decoding passed over HTTPS. The last saved checkpoint varied between UTF-8
+buffering and construction of the `st_phrases` map. The cause of the HTTPS
+failure remains unresolved.
+
 ## Frontend
 
 `index.html` preserves the reference layout from
