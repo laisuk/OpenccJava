@@ -6,16 +6,25 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.6.0] - Unreleased
+## 1.6.0 - Unreleased
 
 ### Fixed
 
+- Hardened dependency-free JSON snapshot parsing to reject unescaped control characters, non-ASCII integer digits,
+  and integer overflow while preserving leading-zero compatibility and existing dictionary metadata semantics.
 - Fixed long-only dictionary starters being skipped during phrase conversion for keys of 64 or more UTF-16 units.
   Starter unions now derive per-starter maximum lengths at runtime, preserving exact short-length masks,
   dictionary precedence, and existing dictionary files/schema without imposing a 255-unit limit.
 
 ### Changed
 
+- Optimized `MiniDictJson` with a substring fast path for unescaped strings, lazy escape-decoding buffers,
+  direct integer accumulation, and a smaller initial stream buffer. Preserved UTF-16 code units, dictionary
+  insertion order, duplicate-key behavior, UTF-8 decoding, stream ownership, and Java 8 compatibility;
+  clarified parser Javadocs.
+- Measured median warm snapshot parsing at 18.600 to 10.506 ms for strings and 22.438 to 16.682 ms for streams
+  in local seven-fork JDK 21 benchmarks on the bundled 90,146-mapping snapshot. Allocated bytes per parse fell
+  from 41.76 to 18.69 MB and 52.56 to 30.52 MB, respectively; results vary by workload and JVM.
 - Replaced dictionary-loop iterators in the conversion hot path with indexed access, preserving dictionary order.
 - Added cached single-code-point lookup indexes to conversion partitions, avoiding temporary substrings for
   character fallback while preserving phrase priority, dictionary precedence, and supplementary/isolated-surrogate
@@ -26,6 +35,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added focused JSON parser regression tests for escapes, UTF-16 strings, integer boundaries, schema validation,
+  duplicate keys, serialization order, stream closing, and large snapshots, plus a dependency-free before/after
+  benchmark harness and verification report under `openccjava/bench`.
 - Added Small Seal Script configs `s2seal`, `t2seal`, `seal2s`, and `seal2t`, ported from stable OpenccNet 1.8.0,
   with direct `OpenCC.s2seal`, `t2seal`, `seal2s`, and `seal2t` APIs and directional punctuation support.
 - Added `SealCharacters`, `SealCharactersRev`, `SealVariants`, and `SealVariantsRev` slots throughout text/JSON
@@ -42,7 +54,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 --
 
-## [1.5.0] - 2026-09-30
+## 1.5.0 - 2026-09-30
 
 ### Fixed
 
@@ -92,7 +104,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.4.2] - 2026-08-11
+## 1.4.2 - 2026-08-11
 
 ### Added
 
@@ -128,7 +140,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.4.1] - 2026-07-21
+## 1.4.1 - 2026-07-21
 
 ### Added
 
@@ -164,7 +176,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.4.0] - 2029-06-19
+## 1.4.0 - 2029-06-19
 
 ### Added
 
@@ -259,7 +271,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.0] - 2026-05-24
+## 1.3.0 - 2026-05-24
 
 ### Added
 
@@ -303,7 +315,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.2.3] - 2026-05-11
+## 1.2.3 - 2026-05-11
 
 ### Changed
 
@@ -319,7 +331,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.2.2] - 2026-04-18
+## 1.2.2 - 2026-04-18
 
 ### Changed
 
@@ -337,7 +349,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.2.1] - 2026-04-03
+## 1.2.1 - 2026-04-03
 
 ### Changed
 
@@ -351,7 +363,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.2.0] - 2026-02-21
+## 1.2.0 - 2026-02-21
 
 ### Added
 
@@ -364,7 +376,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.1] - 2025-11-25
+## 1.1.1 - 2025-11-25
 
 ### Changed
 
@@ -375,7 +387,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.0] - 2025-10-10
+## 1.1.0 - 2025-10-10
 
 ### Added
 
@@ -429,26 +441,26 @@ int result = cc.zhoCheckInstance("汉字");
 
 ---
 
-## [1.0.3] - 2025-09-30
+## 1.0.3 - 2025-09-30
 
 ### Changed
 
 - Update dictionaries
 - DictionaryMaxlength: computes and stores `minLength`.
-- JSON writer now emits [map,max,min]
+- JSON writer now emits `[map,max,min]`
 - Performance: bitset `isDelimiter()`; faster `getSplitRanges()`.
 - No public API breaks.
 
 ### Announced
 
-- New JSON blocks: `st_punctuations`, `ts_punctuations` ([ {dict}, maxLength, minLength ]).
+- New JSON blocks: `st_punctuations`, `ts_punctuations` (`[ {dict}, maxLength, minLength ]`).
 - These are reserved for the next major and not used by runtime conversion yet.
 - `translatePunctuation()` is deprecated and will be removed in v1.1.0.
 - `zhoCheck()` will be changed from instance to static function in next major version (v1.1.0).
 
 ---
 
-## [1.0.2] - 2025-08-31
+## 1.0.2 - 2025-08-31
 
 ### Changed
 
@@ -460,7 +472,7 @@ int result = cc.zhoCheckInstance("汉字");
 
 ---
 
-## [1.0.1] - 2025-08-16
+## 1.0.1 - 2025-08-16
 
 ### Changed
 
@@ -474,7 +486,7 @@ int result = cc.zhoCheckInstance("汉字");
 
 ---
 
-## [1.0.0] - 2025-07-30
+## 1.0.0 - 2025-07-30
 
 ### Added
 
