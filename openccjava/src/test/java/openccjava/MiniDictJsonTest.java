@@ -1,9 +1,11 @@
 package openccjava;
 
 import org.junit.jupiter.api.Test;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class MiniDictJsonTest {
@@ -11,7 +13,8 @@ class MiniDictJsonTest {
         return MiniDictJson.parseToMap("{\"st_phrases\":[{" + map + "}," + metadata + "]}").get("st_phrases");
     }
 
-    @Test void stringsAndUtf16() {
+    @Test
+    void stringsAndUtf16() {
         String[] encoded = {"plain", "前缀\\\"尾", "前\\\\后", "a\\/b", "\\n\\t\\r\\b\\f",
                 "\\u6c49\\u5B57", "\\uD840\\uDC00", "𠀀汉字", "prefix\\n中\\t尾"};
         String[] decoded = {"plain", "前缀\"尾", "前\\后", "a/b", "\n\t\r\b\f", "汉字", "𠀀", "𠀀汉字", "prefix\n中\t尾"};
@@ -21,18 +24,20 @@ class MiniDictJsonTest {
         }
     }
 
-    @Test void rejectsMalformedStrings() {
+    @Test
+    void rejectsMalformedStrings() {
         for (String token : new String[]{"\"unterminated", "\"bad\\", "\"\\x\"", "\"\\u12\"", "\"\\uGGGG\""})
             assertThrows(IllegalArgumentException.class, () -> entry("\"k\":" + token, "1"));
         for (int c = 0; c < 32; c++) {
-            String value = "\"k\":\"prefix" + (char)c + "tail\"";
+            String value = "\"k\":\"prefix" + (char) c + "tail\"";
             assertThrows(IllegalArgumentException.class, () -> entry(value, "1"));
-            String escapedPrefix = "\"k\":\"\\n" + (char)c + "\"";
+            String escapedPrefix = "\"k\":\"\\n" + (char) c + "\"";
             assertThrows(IllegalArgumentException.class, () -> entry(escapedPrefix, "1"));
         }
     }
 
-    @Test void integersAndMetadata() {
+    @Test
+    void integersAndMetadata() {
         for (String n : new String[]{"0", "1", "00012", "2147483647", "0000000000000000000000000"})
             assertEquals(Integer.parseInt(n), entry("", n + ",0").maxLength);
         for (String n : new String[]{"2147483648", "99999999999999999999", "-1", "1.0", "١", "１２", "1١"})
@@ -44,7 +49,8 @@ class MiniDictJsonTest {
         assertThrows(IllegalArgumentException.class, () -> entry("", "1,2"));
     }
 
-    @Test void structureOrderAndDuplicates() {
+    @Test
+    void structureOrderAndDuplicates() {
         assertTrue(MiniDictJson.parseToMap(" {} \n").isEmpty());
         assertTrue(entry("", "0,0").dict.isEmpty());
         DictionaryMaxlength.DictEntry e = entry("\"z\":\"一\",\"a\":\"二\",\"z\":\"三\"", "1,1");
@@ -58,11 +64,15 @@ class MiniDictJsonTest {
             assertThrows(IllegalArgumentException.class, () -> MiniDictJson.parseToMap(json));
     }
 
-    @Test void streamClosesOnSuccessAndFailure() throws Exception {
+    @Test
+    void streamClosesOnSuccessAndFailure() throws Exception {
         for (String json : new String[]{"{}", "bad"}) {
             final boolean[] closed = {false};
             InputStream in = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)) {
-                @Override public void close() { closed[0] = true; }
+                @Override
+                public void close() {
+                    closed[0] = true;
+                }
             };
             if (json.equals("{}")) assertTrue(MiniDictJson.parseToMap(in).isEmpty());
             else assertThrows(IllegalArgumentException.class, () -> MiniDictJson.parseToMap(in));
@@ -70,7 +80,8 @@ class MiniDictJsonTest {
         }
     }
 
-    @Test void preservesUnsortedSerializationOrder() throws Exception {
+    @Test
+    void preservesUnsortedSerializationOrder() throws Exception {
         DictionaryMaxlength d = DictionaryMaxlength.fromJsonStringNoDeps(
                 "{\"st_phrases\":[{\"z\":\"one\",\"a\":\"two\",\"z\":\"three\"},1,1]}");
         String json = d.serializeToJsonString(false, false);
@@ -78,17 +89,26 @@ class MiniDictJsonTest {
         assertEquals("three", d.st_phrases.dict.get("z"));
     }
 
-    @Test void streamClosesOnReadFailure() {
+    @Test
+    void streamClosesOnReadFailure() {
         final boolean[] closed = {false};
         InputStream in = new InputStream() {
-            @Override public int read() throws IOException { throw new IOException("read failed"); }
-            @Override public void close() { closed[0] = true; }
+            @Override
+            public int read() throws IOException {
+                throw new IOException("read failed");
+            }
+
+            @Override
+            public void close() {
+                closed[0] = true;
+            }
         };
         assertThrows(IOException.class, () -> MiniDictJson.parseToMap(in));
         assertTrue(closed[0]);
     }
 
-    @Test void largeSnapshot() {
+    @Test
+    void largeSnapshot() {
         StringBuilder map = new StringBuilder();
         for (int n = 0; n < 30000; n++) {
             if (n != 0) map.append(',');
