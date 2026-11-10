@@ -37,6 +37,10 @@ tasks.withType<JavaCompile>().configureEach {
 // Application entrypoint (used by `run`, Jar manifest, etc.)
 application {
     mainClass.set("openccjavacli.Main")
+    applicationDefaultJvmArgs = listOf(
+        "-Dfile.encoding=UTF-8",
+        "-Dsun.jnu.encoding=UTF-8", // Java 8: Unicode CLI arguments / file paths
+    )
 }
 
 // Helper: turn "1.8"/"8"/"17" into major bytecode (52/61/etc.)
