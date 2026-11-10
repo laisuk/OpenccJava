@@ -103,13 +103,58 @@ try {
         if (await evaluate("document.documentElement.dataset.ready === 'true'")) break;
         await delay(100);
     }
+    // Real rendering and pointer/keyboard input, separate from DOM handler tests.
+    const requireValue = async (expression, message) => {
+        if (!await evaluate(expression)) throw new Error(message + ': ' + await evaluate("JSON.stringify({active:document.activeElement?.outerHTML, value:document.querySelector('.dictionary-card textarea')?.value})"));
+    };
+    const chooseTheme = async value => {
+        await evaluate(`(() => {const el=document.getElementById('themePreference'); el.value=${JSON.stringify(value)}; el.dispatchEvent(new Event('change'));})()`);
+    };
+    await chooseTheme('system');
+    for (const value of ['dark', 'light']) {
+        await send('Emulation.setEmulatedMedia', {features:[{name:'prefers-color-scheme',value}]});
+        await delay(100);
+        await requireValue(`document.documentElement.dataset.theme === '${value}'`, 'System theme did not follow browser preference');
+    }
+    await chooseTheme('dark');
+    await send('Page.reload');
+    for (let i=0;i<300;i++) {
+        if (await evaluate("document.documentElement.dataset.ready === 'true'")) break;
+        await delay(100);
+    }
+    await requireValue("document.documentElement.dataset.theme === 'dark' && document.getElementById('themePreference').value === 'dark'", 'Manual theme did not persist');
+    await evaluate("document.getElementById('addDictionaryBtn').click()");
+    const prepareTab = async () => {
+        await evaluate(`(() => {const t=document.querySelector('.dictionary-card textarea'); t.value='abcd'; t.focus(); t.setSelectionRange(1,3); document.querySelector('.dictionary-insert-tab').scrollIntoView({block:'center'});})()`);
+        return JSON.parse(await evaluate(`JSON.stringify((() => {const r=document.querySelector('.dictionary-insert-tab').getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2};})())`));
+    };
+    let point = await prepareTab();
+    await send('Input.dispatchMouseEvent', {type:'mousePressed',...point,button:'left',clickCount:1});
+    await send('Input.dispatchMouseEvent', {type:'mouseReleased',...point,button:'left',clickCount:1});
+    await requireValue("document.querySelector('.dictionary-card textarea').value === 'a\\td'", 'Mouse TAB insertion failed');
+    // A focused button must also activate with keyboard Enter.
+    await prepareTab();
+    await evaluate("document.querySelector('.dictionary-insert-tab').focus()");
+    await send('Input.dispatchKeyEvent', {type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+    await send('Input.dispatchKeyEvent', {type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+    await requireValue("document.querySelector('.dictionary-card textarea').value === 'a\\td'", 'Keyboard TAB insertion failed');
     await send('Emulation.setDeviceMetricsOverride', {width: 1280, height: 1000, deviceScaleFactor: 1, mobile: false});
+    await evaluate('window.scrollTo(0,0)');
     await delay(200);
     await writeFile(path.join(output, 'desktop.png'), Buffer.from((await send('Page.captureScreenshot')).data, 'base64'));
     await send('Emulation.setDeviceMetricsOverride', {width: 390, height: 844, deviceScaleFactor: 1, mobile: true});
+    await send('Emulation.setTouchEmulationEnabled', {enabled:true});
+    point = await prepareTab();
+    await send('Input.dispatchTouchEvent', {type:'touchStart',touchPoints:[point]});
+    await send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
+    await delay(100);
+    await requireValue("document.querySelector('.dictionary-card textarea').value === 'a\\td'", 'Emulated touch TAB insertion failed');
+    await requireValue('document.documentElement.scrollWidth <= innerWidth', 'Mobile layout overflows horizontally');
+    await chooseTheme('light');
+    await evaluate('window.scrollTo(0,0)');
     await delay(200);
     await writeFile(path.join(output, 'mobile.png'), Buffer.from((await send('Page.captureScreenshot')).data, 'base64'));
-    console.log('Desktop and mobile screenshots saved.');
+    console.log('System theme, persisted override, mouse/keyboard/emulated-touch TAB insertion and mobile width checks passed. Desktop dark and mobile light screenshots saved.');
     }
 } finally {
     socket?.close();

@@ -24,7 +24,7 @@ export function createAdapter(loaders = {}) {
         try {
             if (!api) throw new Error('Engine is not initialized');
             const result = api[method](...args);
-            if (result === null || (method === 'zhoCheck' && result === -1)) {
+            if ((['applyCustomDictionaries', 'resetDictionaries'].includes(method) && result === false) || result === null || (method === 'zhoCheck' && result === -1)) {
                 throw new Error(api.getLastError() || `${method} failed`);
             }
             return result;
@@ -72,6 +72,14 @@ export function createAdapter(loaders = {}) {
             const output = call('convertOfficeBytes', signed, format, config, punctuation, keepFont);
             return new Uint8Array(output.buffer, output.byteOffset, output.byteLength).slice();
         },
+        getSupportedDictionarySlots: () => Array.from(call('getSupportedDictionarySlots')),
+        getDictionaryStatus: () => call('getDictionaryStatus'),
+        applyCustomDictionaries(specs, config) {
+            return call('applyCustomDictionaries', specs.map(s => s.slot), specs.map(s => s.mode),
+                specs.map(s => s.text), config);
+        },
+        resetDictionaries: config => call('resetDictionaries', config),
+        getVersion: () => call('getVersion'),
         getSupportedConfigs: () => Array.from(call('getSupportedConfigs')),
         isValidConfig: config => call('isValidConfig', config),
         normalizeCompatExtended: text => call('normalizeCompatExtended', text),

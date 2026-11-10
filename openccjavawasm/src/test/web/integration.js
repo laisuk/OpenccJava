@@ -1,3 +1,4 @@
+import {validateModernUI} from "./modern-ui.js";
 import adapter, {createAdapter} from './openccJavaAdapter.js';
 import {editorLeft, editorRight, setInputEditorText, getEditorText, setEditorText,
     repairGbMojibake, convertOfficeFile} from './app.js';
@@ -13,6 +14,13 @@ function assert(condition, message) {
 const tick = () => new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 100)));
 try {
     assert(document.documentElement.dataset.ready === 'true', 'UI initialized');
+    const initialStatus = el('out').textContent;
+    const versionResponse = await fetch('./core-version.txt');
+    assert(versionResponse.ok, 'Gradle version expectation available');
+    const coreVersion = await versionResponse.text();
+    assert(adapter.getVersion() === coreVersion, 'Backend version matches Core Gradle version');
+    assert(initialStatus === `OpenccJava v${coreVersion} loaded. (${adapter.getSupportedConfigs().length} configs available)`,
+        'Initialization displays actual Core version and configuration count');
     assert(document.querySelectorAll('.cm-editor').length === 2, 'Two CodeMirror editors');
     assert(document.querySelectorAll('.cm-lineNumbers').length === 2, 'Line numbers');
     assert(el('config').options.length === 24, '24 dropdown configurations');
@@ -118,6 +126,8 @@ try {
     assert(jsOnly.getBackend() === 'js' && !jsOnly.getBackendNotice(), 'Explicit JS loads only JS');
     try { adapter.convert('test', 'invalid'); throw new Error('Accepted invalid config'); }
     catch (error) { assert(adapter.getLastError().includes('Unsupported configuration'), 'Java boundary error'); }
+    await validateModernUI(adapter, assert, tick, convertOfficeFile,
+        {editorLeft, editorRight, setInputEditorText, getEditorText});
     document.documentElement.dataset.integration = 'passed';
     el('out').textContent = `${adapter.getBackend()}: ${checks} integration checks passed`;
 } catch (error) {

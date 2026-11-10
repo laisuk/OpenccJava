@@ -2,8 +2,9 @@
 
 This module compiles the existing Java engine through a project dependency. It
 reuses the local Opencc-Fmmseg demo's HTML/CSS and browser-side utilities with
-the Java engine in place of Rust. It does not publish a library. Core and CLI sources,
-dictionaries, Java 8 compatibility, and release workflows are unchanged.
+the Java engine in place of Rust. It does not publish a library. CLI sources,
+dictionaries, Java 8 compatibility, and release workflows are unchanged. The
+modern frontend section documents two focused Core changes for custom dictionaries.
 
 ## Requirements and build
 
@@ -167,8 +168,8 @@ the XML-wide conversion can change non-ASCII `href` paths while ZIP entry names
 stay unchanged. This module rejects EPUBs with non-ASCII internal entry names
 before conversion instead of offering a broken download. ASCII-path EPUBs with
 Chinese content are supported. Removing that restriction requires a separately
-reviewed core strategy for preserving package references. Core sources remain
-unchanged. Numeric XML character references are another inherited limitation:
+reviewed core strategy for preserving package references. OfficeHelper remains
+unchanged by the frontend migration. Numeric XML character references are another inherited limitation:
 the helper converts literal text rather than decoding entity-encoded Chinese
 before conversion. Fixtures use equivalent literal UTF-8 XML for meaningful
 conversion checks. As with the JVM helper, this is not a complete XML-aware
@@ -232,9 +233,143 @@ Older browsers with only basic WebAssembly support cannot run this target.
 No shared memory or cross-origin isolation headers are required by this module.
 
 This is a synchronous, in-memory text and document experiment. PDF conversion,
-custom dictionaries, JavaFX, browser workers, and deployment are out of scope.
+JavaFX, browser workers, and deployment are out of scope.
 
-## Validation results
+## Modern frontend and custom dictionaries (November 11, 2026)
+
+The frontend now follows the local Opencc-Fmmseg design: responsive panels,
+CSS-variable CodeMirror styling, character counters, and explicit System / Light /
+Dark theme selection. Theme overrides persist in localStorage when available;
+System follows live `prefers-color-scheme` changes. Editors are never recreated
+for a theme change, preserving selection, history, and line numbers.
+
+Drop Zone auto-detection is enabled by default **only for TXT/MD**. It uses the
+existing CJK detector and strict `TextDecoder` decoding. Unknown detection and
+invalid byte sequences report an error and produce no download. Disable the
+checkbox to use the selected text encoding. Detection is heuristic and cannot
+guarantee the intended encoding for ambiguous valid byte sequences. Empty files
+are valid. Open File → Editor retains its previous detection/re-decoding behavior;
+Office/EPUB bytes never pass through a text decoder.
+
+Custom dictionary cards are drafts. Slots come from `DictSlot` through the
+bridge, and duplicate slots are rejected. Entry validation requires real TABs,
+rejects malformed/empty entries with card and line context, skips blank lines,
+BOM and full-line `#` / `//` comments, and uses the first target token. Duplicate
+source keys use Core's last-value-wins map semantics; the active pill counts
+unique mappings. The Core parser supplies in-memory pairs; parsing, dictionary patching, and
+conversion remain entirely in Core through `CustomDictSpec.fromPairs` and
+`new OpenCC(config, specs)`.
+
+Every card owns its textarea selection and Insert Tab button. Native
+`setRangeText` replaces the selected range and moves the caret after the TAB.
+Pointer down preserves selection; keyboard activation uses the textarea's last
+native selection. Tab inserts a TAB; Escape then Tab permits keyboard exit.
+No document-level cursor listeners are installed.
+
+### Lifecycle and boundary APIs
+
+`ConversionBridge` adds these exports, mirrored by `openccJavaAdapter.js`:
+
+- `getSupportedDictionarySlots(): String[]`
+- `getDictionaryStatus(): String`
+- `applyCustomDictionaries(String[] slots, String[] modes, String[] texts,
+  String config): boolean`
+- `resetDictionaries(String config): boolean`
+
+The adapter's Apply API accepts `[{slot, mode, text}]` and sends parallel string
+arrays. Core's new `DictionaryMaxlength.parseDictionaryPairs(String)` reuses the
+existing dictionary scanner in strict mode, returning an unmodifiable map with
+last-value-wins semantics. Existing file-loading APIs retain their lenient warning
+behavior. The strict parser reports physical line numbers; the bridge adds the
+card number. No dictionary-text parsing is duplicated in JavaScript or the bridge. False bridge results become
+JavaScript errors through the existing error channel. Core owns the only
+patching pipeline; no temporary files, runtime reload, or serialized dictionary
+snapshots are involved.
+
+Apply parses and validates the entire request, prepares a new converter **from the original
+shared base**, then swaps the bridge's single active engine and status only after
+construction succeeds. Failure leaves both references unchanged. Reset constructs
+a converter using the original shared base and retains the draft cards. The
+selected configuration is passed to the replacement; punctuation and Keep Font
+remain per-conversion settings. Text and `OfficeHelper.convert` both consume this
+same active engine. UI busy guards prevent Apply/Reset and document conversions
+from interleaving during asynchronous file reads/render yields. Obsolete engines
+are not retained by the frontend; Core's existing cache registry uses weak keys
+and values.
+
+A narrow Core correction in `DictRefs` is necessary for short override slots:
+a dictionary containing only two-BMP-character phrases previously entered the
+single-code-point partition and silently missed its phrases. Partitioning now
+distinguishes those phrases from a supplementary character's surrogate pair.
+No existing Core API behavior or dictionary resources changed apart from this
+short-phrase correction; the strict in-memory parser is an additive Core API. JVM tests cover both cases, and
+the fallback-index test now verifies its single-code-point invariant directly.
+
+Statistics retain configuration, punctuation, code point counts, elapsed time,
+and output language; they also report active backend and dictionary. Throughput
+is marked unavailable below 1,000 input characters or 1 ms of measured conversion
+time to avoid extrapolating tiny samples.
+
+### Migration verification
+
+Baseline: Gradle tests and both TeaVM builds passed, followed by the existing
+browser suite (72 frontend checks per backend). Phase 1 also passed that suite
+before dictionary integration. The final expanded suite covers append/override,
+multiple slots, duplicate slots, strict validation, failed-Apply rollback,
+repeated Apply, base restoration, draft/configuration preservation, TAB ranges,
+dynamic cards, all seven document formats with active custom entries, and Drop
+Zone automatic/manual decoding. The runner additionally checks live OS-theme
+emulation, persisted overrides, real mouse and keyboard input, emulated touch,
+and desktop/narrow mobile rendering. Browser evidence is under
+`build/browser-validation`; use the commands in the validation section below.
+
+Final commands and results (November 11):
+
+```powershell
+.\gradlew.bat test :openccjavawasm:browserIntegration --console=plain
+python -m http.server 8081 --bind 127.0.0.1 --directory openccjavawasm/build/generated/teavm
+# In another terminal:
+node openccjavawasm/src/test/run-browser.mjs "C:/Program Files/Google/Chrome/Application/chrome.exe" http://127.0.0.1:8081/
+python openccjavawasm/src/test/validate-office-packages.py
+```
+
+- Gradle: successful; Core 192 tests (1 skipped), CLI 11 tests, zero failures or
+  errors; both TeaVM targets compiled successfully.
+- Chrome: 138 frontend integration checks per backend; 63 Office checks and 29
+  reference packages per backend; 16 entity/font packages per backend; real ZIP
+  round trip, 11 golden conversions, all 24 configs, and forced Wasm fallback pass.
+- Native browser mouse/keyboard input, Chrome touch emulation, live System theme,
+  persisted manual theme, and mobile horizontal-width checks pass. Desktop dark (1280 px) and mobile light (390 px)
+  screenshots were visually inspected.
+- Independent Python readers, ZIP/CRC/XML/preserved-entry comparisons, JVM
+  equivalence, entity preservation, EPUB packaging, and actual saved downloads
+  pass on both backends.
+
+Dictionary preparation and conversion are synchronous TeaVM operations on the
+main thread. Busy state is painted before preparation, but large dictionaries
+can temporarily pause the interface. No untested worker model was introduced.
+CodeMirror still requires the existing CDN dependencies. Actual iPhone Safari,
+its HTTPS JavaScript-backend initialization behavior, and other browser engines
+have not been tested here; backend loading/preference/fallback code is unchanged.
+Chrome device emulation is not a physical mobile-browser test.
+
+Changed/added files for this migration:
+
+- `src/main/web/index.html`, `app.js`, `openccJavaAdapter.js`
+- `src/main/web/theme.js`, `dictionaries.js` (new)
+- `src/main/java/openccjavawasm/ConversionBridge.java`
+- `src/test/web/integration.js`, `modern-ui.js` (new)
+- `src/test/run-browser.mjs`
+- `../openccjava/src/main/java/openccjava/DictRefs.java`, `DictionaryMaxlength.java`
+- `../openccjava/src/test/java/openccjava/DictionaryLibTest.java`
+- `../openccjava/src/test/java/openccjava/SingleCodePointIndexTest.java`
+- this README
+
+The reference repositories were read only. Generated distributions were rebuilt
+through Gradle, never edited directly. No commits, pushes, publication, or
+deployment were performed.
+
+## Earlier validation results (November 1)
 
 Verified November 1, 2026, using Oracle JDK 21.0.12.1, Gradle 8.11.1,
 TeaVM 0.16.0, and headless Chrome 156.0.8078.76 on Windows:

@@ -23,8 +23,8 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
       conversions.
     - **Fully parallelized dictionary initialization**, ensuring instant startup after first load.
 
-  > Result: performance **on par with native OpenCC implementations (C++/Rust)**, verified with multi-million-character
-  benchmarks.
+  > Result: performance **on par with native OpenCC implementations (C++/Rust)**,
+  > verified with multi-million-character benchmarks.
 
 - ✅ **Accurate with non-BMP CJK** – correctly handles astral Chinese characters (CJK Ext. B–G, U+20000+), using
   surrogate-safe scanning and max-match across code points.
@@ -54,17 +54,30 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
 
 Try **OpenccJava** directly in your browser—no installation required!
 
-The online demo uses the Java conversion engine compiled with **TeaVM**, supporting both **WebAssembly GC** and
-**JavaScript** backends.
+Powered by the Java conversion engine compiled with **TeaVM**, the demo supports both **WebAssembly GC** and
+**JavaScript** backends. All text and document conversions run locally in your browser.
 
-- 🚀 **[Launch Online Demo](https://laisuk.github.io/OpenccJava/)** — Convert Simplified and Traditional Chinese text
-  directly in your browser.
-- ⚡ **[WebAssembly GC Backend](https://laisuk.github.io/OpenccJava/?backend=wasm)** — High-performance browser-based
-  conversion.
-- 🌐 **[JavaScript Backend](https://laisuk.github.io/OpenccJava/?backend=js)** — Alternative browser runtime.
-- 📄 **Document Conversion** — Convert Office documents and EPUB files, with optional font preservation.
+- 🚀 **[Launch Online Demo](https://laisuk.github.io/OpenccJava/)** — Convert Simplified and Traditional Chinese,
+  regional variants, Japanese Shinjitai, and more.
+- ⚡ **[WebAssembly GC Backend](https://laisuk.github.io/OpenccJava/?backend=wasm)** — Preferred browser runtime for
+  Chinese text conversion.
+- 🌐 **[JavaScript Backend](https://laisuk.github.io/OpenccJava/?backend=js)** — Alternative runtime for supported
+  browsers.
+- 📚 **Custom Dictionaries** — Add, append, or override dictionary entries with multiple configurable slots, without
+  modifying the built-in dictionaries.
+- 📄 **Office & EPUB Conversion** — Convert DOCX, XLSX, PPTX, ODT, ODS, ODP, and EPUB files, with optional font
+  preservation.
+- 🔤 **Text Encoding Detection** — Automatically detect common Chinese and Japanese text encodings when converting TXT/MD
+  files through the Drop Zone.
+- 🛠️ **Unicode Utilities** — Unicode compatibility normalization, DeTofu character recovery, and GB mojibake repair.
+- 🎨 **Modern Responsive Interface** — Light, Dark, and System themes, dual text editors, character counts, and
+  conversion statistics.
 
-The demo runs entirely in your browser, without requiring a server-side conversion service.
+**Privacy-friendly:** Text, documents, and custom dictionary entries are processed locally in your browser. No
+server-side conversion service is required.
+
+> **Note:** WebAssembly GC is the recommended backend, particularly for iPhone Safari. The JavaScript backend has a
+> known initialization issue on iPhone Safari over HTTPS.
 
 ---
 
@@ -1670,7 +1683,7 @@ Generate base dictionary for OpenccJava
 
 > 💡 Tip for Windows users:  
 > If you have enabled “ **Beta: Use Unicode UTF-8 for worldwide language support** ” in _Control Panel → Region →
-Administrative → Language for non-Unicode programs → Change system locale_,
+> Administrative → Language for non-Unicode programs → Change system locale_,
 > your console already uses UTF-8 — no need to specify `--con-enc UTF-8`.
 > You can safely display emoji, Chinese, and other Unicode characters without needing to run `chcp 65001` or modify code
 > pages manually.

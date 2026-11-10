@@ -1,3 +1,4 @@
+import {createDictionaryUI} from "./dictionaries.js";
 import ccAdapter from "./openccJavaAdapter.js";
 import {EditorState} from "https://esm.sh/@codemirror/state";
 import {EditorView, keymap, lineNumbers} from "https://esm.sh/@codemirror/view";
@@ -57,6 +58,7 @@ let cc = null;
 let officeDownloadUrl = null;
 let officeDownloadName = "";
 let officeBusy = false;
+let dictionaryUI = null;
 let outputDownloadUrl = null;
 
 let openedTextFileName = "";
@@ -97,6 +99,7 @@ try {
     await ccAdapter.initialize();
 
     cc = ccAdapter;
+    dictionaryUI = createDictionaryUI(cc, configInput, message => { out.textContent = message; }, () => officeBusy);
 
     const configs = cc.getSupportedConfigs();
 
@@ -124,7 +127,7 @@ try {
     document.getElementById("deTofuBtn").disabled = false;
     document.getElementById("backendStatus").textContent =
         `Backend: ${cc.getBackend() === 'wasm' ? 'WebAssembly GC' : 'JavaScript'}. ${cc.getBackendNotice()}`;
-    out.textContent = `OpenccJava loaded. (${configs.length} configs available)`;
+    out.textContent = `OpenccJava v${cc.getVersion()} loaded. (${configs.length} configs available)`;
     document.documentElement.dataset.ready = 'true';
 } catch (err) {
     out.textContent = `Failed to load OpenccJava: ${err}`;
@@ -359,7 +362,7 @@ function clearOfficeResult() {
 }
 
 async function convertOfficeFile(file) {
-    if (officeBusy) return;
+    if (officeBusy || dictionaryUI?.isBusy()) return;
     if (!cc) {
         out.textContent = "Engine is not loaded yet.";
         return;
@@ -377,7 +380,7 @@ async function convertOfficeFile(file) {
     const config = configInput.value;
     const punctuation = document.getElementById('punctuation').checked;
     const keepFont = document.getElementById('keepFont').checked;
-    const controls = [configInput, officeFile, officeDownloadBtn, document.getElementById('punctuation'),
+    const controls = [...document.querySelectorAll('#dictionaryPanel button, #dictionaryPanel select, #dictionaryPanel textarea'), configInput, officeFile, officeDownloadBtn, document.getElementById('punctuation'),
         document.getElementById('keepFont'), document.getElementById('btn')];
     const previousDisabled = controls.map(control => control.disabled);
     officeBusy = true;
@@ -399,7 +402,13 @@ async function convertOfficeFile(file) {
 
         let outputBytes;
         if (format === 'txt' || format === 'md') {
-            const text = decodeTextBytes(inputBytes, textEncoding.value);
+            let encoding = textEncoding.value;
+            if (document.getElementById('autoDetectEncoding').checked && inputBytes.length) {
+                const detected = detectCjkEncoding(inputBytes);
+                if (!detected.detected) throw new Error('Could not detect text encoding. Select an encoding and disable auto-detection.');
+                encoding = detected.encoding;
+            }
+            const text = new TextDecoder(encoding, {fatal: true}).decode(inputBytes);
             const converted = cc.convert(text, config, punctuation);
             outputBytes = new TextEncoder().encode(converted);
         } else {
@@ -422,6 +431,8 @@ async function convertOfficeFile(file) {
         out.textContent =
             `Document conversion completed.\n` +
             `Config: ${config}\n` +
+            `Backend: ${cc.getBackend() === "wasm" ? "WebAssembly GC" : "JavaScript"}\n` +
+            `Dictionary: ${cc.getDictionaryStatus()}\n` +
             `Punctuation: ${punctuation ? "enabled" : "disabled"}\n` +
             `Keep font: ${keepFont ? "enabled" : "disabled"}\n` +
             `Input: ${file.name}\n` +
@@ -648,11 +659,13 @@ document.getElementById("btn").onclick = () => {
 
     out.textContent =
         `Config: ${configInput.value}\n` +
+        `Backend: ${cc.getBackend() === "wasm" ? "WebAssembly GC" : "JavaScript"}\n` +
+        `Dictionary: ${cc.getDictionaryStatus()}\n` +
         `Punctuation: ${punctuation ? "enabled" : "disabled"}\n` +
         `Characters processed: ${inputCharCount.toLocaleString()}\n` +
         `Output characters: ${outputCharCount.toLocaleString()}\n` +
         `Conversion time: ${conversionMs.toFixed(2)} ms\n` +
-        `Throughput: ${(charsPerSecond / 1_000_000).toFixed(2)}M chars/sec\n` +
+        `Throughput: ${inputCharCount >= 1000 && conversionMs >= 1 ? (charsPerSecond / 1_000_000).toFixed(2) + "M chars/sec" : "n/a (short sample)"}\n` +
         `Output language detected: ${language}`;
 
     // Let the browser paint the status first, then update CodeMirror.

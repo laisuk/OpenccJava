@@ -1,6 +1,11 @@
 package openccjavawasm;
 
 import openccjava.OpenCC;
+import openccjava.CustomDictSpec;
+import openccjava.CustomDictMode;
+import openccjava.DictSlot;
+import openccjava.DictionaryMaxlength;
+import java.util.*;
 import openccjava.OpenccConfig;
 import openccjava.DeTofu;
 import openccjava.OfficeHelper;
@@ -17,8 +22,12 @@ import java.util.Locale;
 public final class ConversionBridge {
     private static OpenCC engine;
     private static String lastError = "";
+    private static String dictionaryStatus = "Default";
 
     private ConversionBridge() { }
+
+    @JSExport
+    public static String getVersion() { return BuildInfo.VERSION; }
 
     @JSExport
     public static boolean initialize() {
@@ -32,6 +41,67 @@ public final class ConversionBridge {
             lastError = error.toString();
             return false;
         }
+    }
+
+    @JSExport
+    public static String[] getSupportedDictionarySlots() {
+        return DictSlot.supportedCanonicalNames().toArray(new String[0]);
+    }
+
+    @JSExport
+    public static String getDictionaryStatus() { return dictionaryStatus; }
+
+    /** Only portable strings cross the boundary; Core parses and patches the dictionaries. */
+    @JSExport
+    public static boolean applyCustomDictionaries(String[] slots, String[] modes, String[] texts, String config) {
+        lastError = "";
+        try {
+            if (!initialize()) return false;
+            OpenccConfig parsed = OpenccConfig.tryParse(config);
+            if (parsed == null) throw new IllegalArgumentException("Unsupported configuration: " + config);
+            if (slots == null || modes == null || texts == null || slots.length == 0
+                    || slots.length != modes.length || slots.length != texts.length)
+                throw new IllegalArgumentException("Invalid dictionary arrays");
+            List<CustomDictSpec> specs = new ArrayList<>();
+            Set<DictSlot> seen = new HashSet<>();
+            int entries = 0;
+            for (int i = 0; i < slots.length; i++) {
+                try {
+                    DictSlot slot = DictSlot.parse(slots[i]);
+                    if (!seen.add(slot)) throw new IllegalArgumentException("duplicate slot: " + slots[i]);
+                    CustomDictMode mode;
+                    if ("append".equals(modes[i])) mode = CustomDictMode.Append;
+                    else if ("override".equals(modes[i])) mode = CustomDictMode.Override;
+                    else throw new IllegalArgumentException("Invalid dictionary mode");
+                    Map<String, String> pairs = DictionaryMaxlength.parseDictionaryPairs(texts[i]);
+                    if (pairs.isEmpty()) throw new IllegalArgumentException("no usable entries");
+                    entries += pairs.size();
+                    specs.add(CustomDictSpec.fromPairs(slot, pairs, mode));
+                } catch (RuntimeException error) {
+                    throw new IllegalArgumentException("Card " + (i + 1) + ": " + error.getMessage(), error);
+                }
+            }
+            // This constructor always copies the original shared base, never the active snapshot.
+            OpenCC replacement = new OpenCC(parsed, specs);
+            String status = "Custom (" + slots.length + (slots.length == 1 ? " slot - " : " slots - ")
+                    + entries + (entries == 1 ? " entry)" : " entries)");
+            engine = replacement;
+            dictionaryStatus = status;
+            return true;
+        } catch (Throwable error) { lastError = error.toString(); return false; }
+    }
+
+    @JSExport
+    public static boolean resetDictionaries(String config) {
+        lastError = "";
+        try {
+            OpenccConfig parsed = OpenccConfig.tryParse(config);
+            if (parsed == null) throw new IllegalArgumentException("Unsupported configuration: " + config);
+            OpenCC replacement = new OpenCC(parsed);
+            engine = replacement;
+            dictionaryStatus = "Default";
+            return true;
+        } catch (Throwable error) { lastError = error.toString(); return false; }
     }
 
     @JSExport
