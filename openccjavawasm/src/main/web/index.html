@@ -546,21 +546,6 @@
         </div>
     </div>
 
-    <section class="panel" id="dictionaryPanel" aria-labelledby="dictionaryHeading">
-        <div class="dictionary-heading"><h3 id="dictionaryHeading" class="section-heading">Custom Dictionaries</h3><span
-                id="dictionaryStatus" class="dictionary-status" role="status" aria-live="polite">Default</span></div>
-        <p id="dictionaryHelp" class="dictionary-help">Enter source and target separated by a real TAB. Only the first
-            target token is used. Blank lines and full-line # or // comments are ignored. Tab inserts a TAB; Escape then
-            Tab leaves the field.</p>
-        <div id="dictionaryCards"></div>
-        <div class="dictionary-actions">
-            <button id="addDictionaryBtn" disabled>Add New Custom Dictionary</button>
-            <button id="applyDictionariesBtn" class="primary" disabled>Apply Dictionaries</button>
-            <button id="resetDictionariesBtn" disabled>Reset to Default</button>
-        </div>
-        <p class="dictionary-help">Edits are drafts until applied. Reset restores the original base dictionary and
-            retains your draft cards. Slots affect only configurations that use them.</p>
-    </section>
     <section class="panel">
         <div class="row controls">
             <label>
@@ -611,6 +596,21 @@
             <button id="officeDownloadBtn" type="button">Download converted file</button>
         </div>
 
+    </section>
+    <section class="panel" id="dictionaryPanel" aria-labelledby="dictionaryHeading">
+        <div class="dictionary-heading"><h3 id="dictionaryHeading" class="section-heading">Custom Dictionaries</h3><span
+                id="dictionaryStatus" class="dictionary-status" role="status" aria-live="polite">Default</span></div>
+        <p id="dictionaryHelp" class="dictionary-help">Enter source and target separated by a real TAB. Only the first
+            target token is used. Blank lines and full-line # or // comments are ignored. Tab inserts a TAB; Escape then
+            Tab leaves the field.</p>
+        <div id="dictionaryCards"></div>
+        <div class="dictionary-actions">
+            <button id="addDictionaryBtn" disabled>Add New Custom Dictionary</button>
+            <button id="applyDictionariesBtn" class="primary" disabled>Apply Dictionaries</button>
+            <button id="resetDictionariesBtn" disabled>Reset to Default</button>
+        </div>
+        <p class="dictionary-help">Edits are drafts until applied. Reset restores the original base dictionary and
+            retains your draft cards. Slots affect only configurations that use them.</p>
     </section>
     <section class="panel"><h3 class="section-heading">Conversion statistics &amp; status</h3>
         <p id="backendStatus" role="status">Selecting backend…</p>
