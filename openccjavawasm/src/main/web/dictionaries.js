@@ -17,7 +17,7 @@ export function createDictionaryUI(cc, configInput, report, isOfficeBusy) {
                 <strong>Dictionary ${id}</strong>
                 <label for="dictionarySlot${id}">Slot <select id="dictionarySlot${id}" class="dictionary-slot"></select></label>
                 <label for="dictionaryMode${id}">Mode <select id="dictionaryMode${id}" class="dictionary-mode"><option value="append">append</option><option value="override">override</option></select></label>
-                <button type="button" aria-label="Remove dictionary ${id}">Remove</button>
+                <button type="button" class="dictionary-remove" aria-label="Remove dictionary ${id}">Remove</button>
             </div>
             <div class="dictionary-entries-heading">
                 <label for="dictionaryPairs${id}">Entries</label>
