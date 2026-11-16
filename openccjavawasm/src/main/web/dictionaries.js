@@ -17,11 +17,11 @@ export function createDictionaryUI(cc, configInput, report, isOfficeBusy) {
                 <strong>Dictionary ${id}</strong>
                 <label for="dictionarySlot${id}">Slot <select id="dictionarySlot${id}" class="dictionary-slot"></select></label>
                 <label for="dictionaryMode${id}">Mode <select id="dictionaryMode${id}" class="dictionary-mode"><option value="append">append</option><option value="override">override</option></select></label>
-                <button type="button" class="dictionary-remove" aria-label="Remove dictionary ${id}">Remove</button>
+                <button type="button" class="dictionary-remove" aria-label="Remove dictionary ${id}">&cross; Remove</button>
             </div>
             <div class="dictionary-entries-heading">
                 <label for="dictionaryPairs${id}">Entries</label>
-                <button type="button" class="dictionary-insert-tab">Insert Tab at cursor</button>
+                <button type="button" class="dictionary-insert-tab">&RightArrowBar; Insert Tab at cursor</button>
             </div>
             <textarea id="dictionaryPairs${id}" aria-describedby="dictionaryHelp" spellcheck="false" placeholder="source&#9;target"></textarea>`;
         card.dataset.dictionaryId = String(id);
