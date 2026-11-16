@@ -99,14 +99,16 @@ try {
     await ccAdapter.initialize();
 
     cc = ccAdapter;
-    dictionaryUI = createDictionaryUI(cc, configInput, message => { out.textContent = message; }, () => officeBusy);
+    dictionaryUI = createDictionaryUI(cc, configInput, message => {
+        out.textContent = message;
+    }, () => officeBusy);
 
     const configs = cc.getSupportedConfigs();
 
     for (const config of configs) {
         const option = document.createElement("option");
-        option.value = config;
-        option.textContent = config;
+        option.value = config.toString();
+        option.textContent = config.toString();
 
         if (config === "s2t") {
             option.selected = true;
@@ -302,16 +304,26 @@ function getOfficeFormat(fileName) {
     return dot >= 0 ? fileName.slice(dot + 1).toLowerCase() : "";
 }
 
-function convertedFileName(fileName) {
+function convertedFileName(fileName, config) {
     const dot = fileName.lastIndexOf(".");
+    const stem = dot > 0 ? fileName.slice(0, dot) : fileName;
+    const extension = dot > 0 ? fileName.slice(dot) : "";
 
-    if (dot <= 0) {
-        return `${fileName}_converted`;
+    // Convert only the stem using the active backend and applied dictionaries.
+    // Do not apply punctuation conversion to filenames.
+    const convertedStem = document.getElementById("convertFilename").checked
+        ? cc.convert(stem, config, false)
+        : stem;
+
+    if (!convertedStem ||
+        /[<>:"/\\|?*\x00-\x1f]/u.test(convertedStem) ||
+        /[. ]$/u.test(convertedStem) ||
+        /^(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\..*)?$/iu.test(convertedStem)) {
+        throw new Error("Converted filename is invalid for Windows.");
     }
 
-    return `${fileName.slice(0, dot)}_converted${fileName.slice(dot)}`;
+    return `${convertedStem}_converted${extension}`;
 }
-
 
 function clearOutputDownload() {
     if (outputDownloadUrl) {
@@ -381,10 +393,12 @@ async function convertOfficeFile(file) {
     const punctuation = document.getElementById('punctuation').checked;
     const keepFont = document.getElementById('keepFont').checked;
     const controls = [...document.querySelectorAll('#dictionaryPanel button, #dictionaryPanel select, #dictionaryPanel textarea'), configInput, officeFile, officeDownloadBtn, document.getElementById('punctuation'),
-        document.getElementById('keepFont'), document.getElementById('btn')];
+        document.getElementById('keepFont'), document.getElementById('convertFilename'), document.getElementById('btn')];
     const previousDisabled = controls.map(control => control.disabled);
     officeBusy = true;
-    controls.forEach(control => { control.disabled = true; });
+    controls.forEach(control => {
+        control.disabled = true;
+    });
     officeDrop.classList.add('disabled');
     officeDrop.setAttribute('aria-disabled', 'true');
     officeDrop.setAttribute('aria-busy', 'true');
@@ -420,8 +434,10 @@ async function convertOfficeFile(file) {
             type: documentMimeTypes[format]
         });
 
+        // Validate before creating the download URL so invalid names leave no result.
+        const outputName = convertedFileName(file.name, config);
         officeDownloadUrl = URL.createObjectURL(blob);
-        officeDownloadName = convertedFileName(file.name);
+        officeDownloadName = outputName;
         officeDownloadBtn.dataset.url = officeDownloadUrl;
         officeDownloadBtn.dataset.filename = officeDownloadName;
 
@@ -445,7 +461,9 @@ async function convertOfficeFile(file) {
     } finally {
         officeFile.value = "";
         officeBusy = false;
-        controls.forEach((control, index) => { control.disabled = previousDisabled[index]; });
+        controls.forEach((control, index) => {
+            control.disabled = previousDisabled[index];
+        });
         officeDrop.classList.remove('disabled');
         officeDrop.setAttribute('aria-disabled', 'false');
         officeDrop.setAttribute('aria-busy', 'false');
@@ -680,9 +698,14 @@ function updateCounts() {
     document.getElementById('inputCount').textContent = Array.from(getEditorText(editorLeft)).length.toLocaleString();
     document.getElementById('outputCount').textContent = Array.from(getEditorText(editorRight)).length.toLocaleString();
 }
+
 updateCounts();
 // Export UI operations for the local browser integration harness.
 export {editorLeft, editorRight, setInputEditorText, getEditorText, setEditorText, repairGbMojibake, convertOfficeFile};
 // Engine errors, including Java auxiliary-operation failures, remain visible.
-window.addEventListener('error', event => { out.textContent = `Error: ${event.error || event.message}`; });
-window.addEventListener('unhandledrejection', event => { out.textContent = `Error: ${event.reason}`; });
+window.addEventListener('error', event => {
+    out.textContent = `Error: ${event.error || event.message}`;
+});
+window.addEventListener('unhandledrejection', event => {
+    out.textContent = `Error: ${event.reason}`;
+});

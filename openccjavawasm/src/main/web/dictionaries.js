@@ -76,7 +76,7 @@ export function createDictionaryUI(cc, configInput, report, isOfficeBusy) {
             if (mode !== "append" && mode !== "override") throw new Error(`${prefix}: invalid mode: ${mode}`);
             if (seen.has(slot)) throw new Error(`${prefix}: duplicate slot ${slot}. Use one card per slot.`);
             seen.add(slot);
-            // Core owns OpenCC entry parsing, including strict line validation.
+            // Core owns `OpenCC` entry parsing, including strict line validation.
             specs.push({slot, mode, text: card.querySelector('textarea').value});
         }
         if (!specs.length) throw new Error("Add a dictionary before applying, or use Reset to Default.");
