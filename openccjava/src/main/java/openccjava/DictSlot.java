@@ -8,7 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Identifies one OpenCC dictionary slot that can be patched by a
+ * Identifies one `OpenCC` dictionary slot that can be patched by a
  * {@link CustomDictSpec}.
  *
  * <p>This enum is the single source of truth for active custom-dictionary
@@ -17,7 +17,7 @@ import java.util.Map;
  * accepts only canonical active-slot names; numeric strings, aliases, unknown
  * names, and retired slots are rejected.</p>
  *
- * <p>Each active value corresponds to one built-in OpenCC dictionary text file
+ * <p>Each active value corresponds to one built-in `OpenCC` dictionary text file
  * and one serialized {@link DictionaryMaxlength} field. Deprecated constants
  * remain present so legacy source continues to compile, but they are not active
  * and cannot be parsed or used by custom-dictionary operations.</p>
@@ -161,16 +161,32 @@ public enum DictSlot {
     @Deprecated
     JPVariantsRev("JPVariantsRev", false),
 
-    /** Small Seal Script to regular-script transcriptions ({@code SealCharacters.txt}). */
+    /**
+     * Small Seal Script to regular-script transcriptions ({@code SealCharacters.txt}).
+     *
+     * @since 1.6.0
+     */
     SealCharacters("SealCharacters", true),
 
-    /** Regular-script transcriptions to Small Seal Script ({@code SealCharactersRev.txt}). */
+    /**
+     * Regular-script transcriptions to Small Seal Script ({@code SealCharactersRev.txt}).
+     *
+     * @since 1.6.0
+     */
     SealCharactersRev("SealCharactersRev", true),
 
-    /** Modern characters to Seal regular-script variants ({@code SealVariants.txt}). */
+    /**
+     * Modern characters to Seal regular-script variants ({@code SealVariants.txt}).
+     *
+     * @since 1.6.0
+     */
     SealVariants("SealVariants", true),
 
-    /** Seal regular-script variants to modern characters ({@code SealVariantsRev.txt}). */
+    /**
+     * Seal regular-script variants to modern characters ({@code SealVariantsRev.txt}).
+     *
+     * @since 1.6.0
+     */
     SealVariantsRev("SealVariantsRev", true);
 
     private final String canonicalName;

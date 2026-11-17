@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * Supported conversion configurations.
  *
- * <p>Each constant corresponds to an OpenCC conversion mode,
+ * <p>Each constant corresponds to an `OpenCC` conversion mode,
  * covering Simplified ↔ Traditional Chinese and region-specific variants
  * (Taiwan, Hong Kong, Japan), plus Small Seal Script. The {@code p} suffix indicates that additional
  * region-specific phrase mappings are applied for Taiwan or Hong Kong;
@@ -114,26 +114,42 @@ public enum OpenccConfig {
      */
     JP2T,
 
-    /** Simplified Chinese to Small Seal Script. */
+    /**
+     * Simplified Chinese to Small Seal Script.
+     *
+     * @since 1.6.0
+     */
     S2SEAL,
 
-    /** Traditional Chinese to Small Seal Script. */
+    /**
+     * Traditional Chinese to Small Seal Script.
+     *
+     * @since 1.6.0
+     */
     T2SEAL,
 
-    /** Small Seal Script to Simplified Chinese. */
+    /**
+     * Small Seal Script to Simplified Chinese.
+     *
+     * @since 1.6.0
+     */
     SEAL2S,
 
-    /** Small Seal Script to Traditional Chinese. */
+    /**
+     * Small Seal Script to Traditional Chinese.
+     *
+     * @since 1.6.0
+     */
     SEAL2T;
 
     /**
-     * Returns the default OpenCC configuration.
+     * Returns the default `OpenCC` configuration.
      *
      * <p>This method defines the single authoritative default configuration
      * used by the Java binding whenever no configuration is explicitly provided
      * or when an invalid configuration is encountered during tolerant parsing.</p>
      *
-     * @return the default OpenCC configuration ({@link #S2T})
+     * @return the default `OpenCC` configuration ({@link #S2T})
      */
     public static OpenccConfig defaultConfig() {
         return S2T;
@@ -143,7 +159,7 @@ public enum OpenccConfig {
      * Returns the canonical lowercase name of this configuration.
      *
      * <p>The canonical name is the standard, lowercase identifier used by
-     * OpenCC for configuration keys (for example {@code "s2t"},
+     * `OpenCC` for configuration keys (for example {@code "s2t"},
      * {@code "s2twp"}, {@code "tw2sp"}).</p>
      *
      * @return the canonical lowercase configuration name
@@ -156,7 +172,7 @@ public enum OpenccConfig {
      * Lookup table for fast, case-insensitive configuration parsing.
      *
      * <p>This map serves as the internal canonical index from string representations
-     * of OpenCC configuration names to their corresponding {@link OpenccConfig}
+     * of `OpenCC` configuration names to their corresponding {@link OpenccConfig}
      * enum constants.</p>
      */
     private static final Map<String, OpenccConfig> LOOKUP = buildLookup();
@@ -209,7 +225,7 @@ public enum OpenccConfig {
     }
 
     /**
-     * Immutable list of all supported canonical OpenCC configuration names.
+     * Immutable list of all supported canonical `OpenCC` configuration names.
      */
     private static final List<String> SUPPORTED_CANONICAL_NAMES =
             Collections.unmodifiableList(buildSupportedCanonicalNames());
@@ -224,7 +240,7 @@ public enum OpenccConfig {
     }
 
     /**
-     * Returns an immutable list of all supported canonical OpenCC configuration names.
+     * Returns an immutable list of all supported canonical `OpenCC` configuration names.
      *
      * @return an unmodifiable list of supported canonical configuration names
      */
@@ -233,7 +249,7 @@ public enum OpenccConfig {
     }
 
     /**
-     * Checks whether a configuration string is a valid OpenCC conversion configuration.
+     * Checks whether a configuration string is a valid `OpenCC` conversion configuration.
      *
      * <p>The check is case-insensitive and accepts both canonical names
      * (for example {@code "s2t"}, {@code "t2twp"}) and enum-style names

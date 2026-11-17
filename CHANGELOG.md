@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## 1.6.0 - Unreleased
+## 1.6.0 - 2026-11-17
 
 ### Fixed
 
@@ -18,6 +18,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Refined public API documentation for v1.6.0: versioned Seal APIs and slots, documented Seal conversion
+  contracts and legacy dictionary behavior, corrected custom-dictionary ownership guidance, and updated
+  dependency examples and Java 8 application entry points.
 - Optimized `MiniDictJson` with a substring fast path for unescaped strings, lazy escape-decoding buffers,
   direct integer accumulation, and a smaller initial stream buffer. Preserved UTF-16 code units, dictionary
   insertion order, duplicate-key behavior, UTF-8 decoding, stream ownership, and Java 8 compatibility;
@@ -90,16 +93,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   Pass `false` to preserve the previous behavior, or `true` to enable punctuation conversion. Recompile direct-API
   callers against 1.5.0. The `convert(...)` signatures and default behavior are unchanged; dispatch now forwards the
   punctuation flag uniformly to all directional methods.
-- Refactored `OfficeHelper` so package handling is independent of OpenCC conversion policy.
+- Refactored `OfficeHelper` so package handling is independent of `OpenCC` conversion policy.
 - Shared CLI text-pipeline construction through `CliUtils` so `convert` and `office` use the same transformation order
-  and option semantics: compatibility normalization → OpenCC conversion/punctuation → optional DeTofu.
+  and option semantics: compatibility normalization → `OpenCC` conversion/punctuation → optional DeTofu.
 - **Breaking change (compatibility normalization):** internalized the previously public `CompatIdeographs` class
   and removed its public nested map/customization API. Use `OpenCC.normalizeCompat(...)` for built-in normalization;
   there is no direct replacement for custom compatibility maps. See `MIGRATION.md`.
 - Optimized `OfficeHelper` in-memory document conversion to process ZIP-based Office/EPUB packages directly in memory
   while streaming unchanged entries.
 - Improved custom dictionary file parsing and validation.
-- Updated OpenCC dictionary data and regenerated bundled `dictionary_maxlength.json`.
+- Updated `OpenCC` dictionary data and regenerated bundled `dictionary_maxlength.json`.
 - Refreshed native-image metadata generation workflows/configuration.
 
 ---
@@ -146,7 +149,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - Added CJK Compatibility Ideograph normalization support.
     - New `CompatIdeographs.normalize(...)` utility API.
-    - New `OpenCC.normalizeCompat(...)` convenience API for normalizing compatibility ideographs before OpenCC
+    - New `OpenCC.normalizeCompat(...)` convenience API for normalizing compatibility ideographs before `OpenCC`
       conversion.
     - New built-in mapping data embedded in `dicts/CJK_Compatibility_Ideographs.txt`.
     - Compatibility ideograph normalization is an optional pre-processing pass; DeTofu remains the optional
@@ -182,7 +185,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - Added optional DeTofu display-compatibility fallback support for rare non-BMP CJK extension characters.
 - Added built-in DeTofu fallback mappings embedded in `dicts/TSCharactersTofu.txt`.
-- Added `DeTofu` utility API for applying display-compatible fallback substitutions after OpenCC conversion.
+- Added `DeTofu` utility API for applying display-compatible fallback substitutions after `OpenCC` conversion.
 - Added `DeTofu.Level` extension threshold levels:
 
     - `ExtB`
@@ -199,7 +202,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Added DeTofu regression tests covering:
 
     - Built-in fallback mappings.
-    - OpenCC conversion + DeTofu integration.
+    - `OpenCC` conversion + DeTofu integration.
     - Custom fallback file overrides.
     - Preservation of unmapped extension characters.
 - Added direct Hong Kong phrase-level conversion configs and APIs:
@@ -229,7 +232,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   dictionary patching for `tw_variants_phrases` and `hk_variants_phrases`.
 - Updated `DictionaryMaxlength` text loading and JSON hydration so missing `HKPhrases.txt`, `HKPhrasesRev.txt`, or older
   JSON snapshots without `hk_phrases` / `hk_phrases_rev` initialize those slots as empty dictionaries.
-- Refactored JP conversion to follow the upstream OpenCC Shinjitai dictionary layout from commit `93ee7f78`.
+- Refactored JP conversion to follow the upstream `OpenCC` Shinjitai dictionary layout from commit `93ee7f78`.
 - Updated `t2jp` to use required `JPShinjitaiCharactersRev.txt` data only.
 - Updated `jp2t` to use `JPShinjitaiPhrases.txt` before `JPShinjitaiCharacters.txt`.
 - Deprecated legacy custom dictionary slots `DictSlot.JPVariants` and `DictSlot.JPVariantsRev`; they remain as
@@ -249,7 +252,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### CLI
 
-- Added `--detofu <level>` option to `convert` for applying DeTofu display-compatible fallback mappings after OpenCC
+- Added `--detofu <level>` option to `convert` for applying DeTofu display-compatible fallback mappings after `OpenCC`
   conversion.
 - Added `--detofu-file <file>` option to `convert` for loading additional UTF-8 DeTofu fallback mappings. Custom
   mappings override built-in mappings.
@@ -285,7 +288,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     - `DictionaryMaxlength.withCustomDicts(...)`
     - `DictionaryMaxlength.withCustomDictFiles(...)`
 - Added `CustomDictSpec` for immutable custom dictionary patch specifications.
-- Added `CustomDictSpec.fromFile(...)` and `CustomDictSpec.fromFiles(...)` for UTF-8 OpenCC text dictionary loading.
+- Added `CustomDictSpec.fromFile(...)` and `CustomDictSpec.fromFiles(...)` for UTF-8 `OpenCC` text dictionary loading.
 - Added `CustomDictSpec.fromPairs(...)` for in-memory custom dictionary mappings.
 - Added `DictSlot` enum for type-safe dictionary slot selection.
 - Added `CustomDictMode` with:
@@ -436,7 +439,7 @@ int result = cc.zhoCheckInstance("汉字");
 
 ```
 
-> ⚠️ Note: The dictionary is now shared across all OpenCC instances.  
+> ⚠️ Note: The dictionary is now shared across all `OpenCC` instances.  
 > Any modification to the dictionary object will affect all instances in the JVM.
 
 ---
@@ -491,8 +494,8 @@ int result = cc.zhoCheckInstance("汉字");
 ### Added
 
 - 🎉 First official release of `OpenccJava` to [JitPack.io](https://jitpack.io/#laisuk/OpenccJava)
-- ✅ Core `openccjava` module: pure Java implementation of OpenCC-compatible converter
-- ✅ Support for OpenCC configuration strings (e.g., `"s2t"`, `"tw2sp"`)
+- ✅ Core `openccjava` module: pure Java implementation of `OpenCC-compatible converter`
+- ✅ Support for `OpenCC` configuration strings (e.g., `"s2t"`, `"tw2sp"`)
 - ✅ Dictionary loader from default or custom `dicts/` folder
 - ✅ Optional punctuation conversion (`convert(text, true)`)
 - ✅ CLI support via `openccjavacli` module (e.g., `OpenccJava.bat`)

@@ -1,6 +1,36 @@
 # Migration Guide
 
-This document helps users migrate between versions of **OpenCC Java**.
+This document helps users migrate between versions of **`OpenCC Java`**.
+
+---
+
+## From v1.5.0 → v1.6.0
+
+Existing public method signatures and Java 8 compatibility are unchanged.
+
+### Small Seal Script
+
+New configs `s2seal`, `t2seal`, `seal2s`, and `seal2t` are available through
+`OpenccConfig`, configured conversion, and direct methods accepting `(String, boolean)`.
+The boolean enables punctuation conversion independently of the selected config.
+Seal output requires a supporting font, and dictionary conversion need not round-trip
+to the original text.
+
+Use the bundled v1.6.0 dictionaries for Seal conversion. Older text folders and JSON
+snapshots remain loadable, but missing Seal slots are initialized as empty dictionaries;
+no Seal mappings are added automatically. A mixed conversion such as `s2seal` can
+still apply its Simplified-to-Traditional round when Seal slots are empty.
+
+The new custom-dictionary slots are `SealCharacters`, `SealCharactersRev`,
+`SealVariants`, and `SealVariantsRev`. Use canonical names instead of enum ordinals
+when storing slot or configuration identifiers.
+
+### Dictionary ownership
+
+Constructors accepting `List<CustomDictSpec>` copy and patch the shared default
+dictionary. `OpenCC.fromDicts(...)` and `DictionaryMaxlength.fromDicts(...)` load text
+dictionaries independently. Treat dictionaries as immutable after attaching them to
+converters or caches; create a customized copy and a new converter for changes.
 
 ---
 

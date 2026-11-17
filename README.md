@@ -1,3 +1,5 @@
+<!--suppress UnnecessaryModifier -->
+
 # OpenccJava
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.laisuk/openccjava.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.laisuk/openccjava)
@@ -6,7 +8,7 @@
 [![Latest Downloads](https://img.shields.io/github/downloads/laisuk/openccjava/latest/total.svg)](https://github.com/laisuk/openccjava/releases/latest)
 [![](https://jitpack.io/v/laisuk/OpenccJava.svg)](https://jitpack.io/#laisuk/OpenccJava)
 
-**Pure Java**, **self-contained** implementation of **OpenCC** for **Traditional ↔ Simplified Chinese**
+**Pure Java**, **self-contained** implementation of **`OpenCC`** for **Traditional ↔ Simplified Chinese**
 text conversion, with full **Office/EPUB** document support and a lightweight **CLI**.
 
 ## ✨ Features
@@ -23,21 +25,21 @@ text conversion, with full **Office/EPUB** document support and a lightweight **
       conversions.
     - **Fully parallelized dictionary initialization**, ensuring instant startup after first load.
 
-  > Result: performance **on par with native OpenCC implementations (C++/Rust)**,
+  > Result: performance **on par with native `OpenCC` implementations (C++/Rust)**,
   > verified with multi-million-character benchmarks.
 
 - ✅ **Accurate with non-BMP CJK** – correctly handles astral Chinese characters (CJK Ext. B–G, U+20000+), using
   surrogate-safe scanning and max-match across code points.
 - ✅ **Pure Java, no JNI** – easy to use on any JVM (JDK 1.8+), no native libraries required.
 - ✅ **Thread-safe convenience conversion** – use `OpenCC.convert(...)` for one-off conversions with shared, lazy-loaded
-  dictionaries that are loaded only once per JVM.
+  dictionaries that are loaded only once per defining class loader.
 - ✅ **Wide format support** – convert plain text and Office documents: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.epub`, etc.
 - ✅ **Optional font name preservation** – keep original fonts when processing Office documents.
 - ✅ **CLI tool included** (`OpenccJavaCli.bat`) – convert files or stdin with flexible encoding options.
 - ✅ **Cross-platform** – runs on Windows, Linux, and macOS without extra dependencies.
 - ✅ **Self-contained** – no third-party dependencies, just the JDK.
 - ✅ **Small Seal Script** – convert Simplified/Traditional Chinese with `s2seal`, `t2seal`, `seal2s`, and `seal2t`.
-- ✅ **Drop-in replacement for OpenCC configs** – supports the same dictionary structure and configs.
+- ✅ **Drop-in replacement for `OpenCC` configs** – supports the same dictionary structure and configs.
 
 ---
 
@@ -95,7 +97,7 @@ Reusable Java library for programmatic conversion.
 
 ```kotlin
 dependencies {
-    implementation("io.github.laisuk:openccjava:1.5.0")
+    implementation("io.github.laisuk:openccjava:1.6.0")
 }
 ```
 
@@ -103,7 +105,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'io.github.laisuk:openccjava:1.5.0'
+    implementation 'io.github.laisuk:openccjava:1.6.0'
 }
 ```
 
@@ -114,7 +116,7 @@ dependencies {
 <dependency>
     <groupId>io.github.laisuk</groupId>
     <artifactId>openccjava</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
 </dependency>
 ```
 
@@ -130,7 +132,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencies {
-    implementation 'com.github.laisuk:OpenccJava:v1.5.0' // replace with latest tag
+    implementation 'com.github.laisuk:OpenccJava:v1.6.0' // replace with latest tag
 }
 ```
 
@@ -148,7 +150,7 @@ dependencies {
 <dependency>
 <groupId>com.github.laisuk</groupId>
 <artifactId>OpenccJava</artifactId>
-<version>v1.5.0</version>
+<version>v1.6.0</version>
 </dependency>
 ```
 
@@ -198,6 +200,22 @@ your classpath.
 ## 📖 OpenccJava API Usage
 
 `OpenCC` provides conversion between Simplified and Traditional Chinese (and variants) using configurable dictionaries.
+Examples below use `openccjava.OpenCC` and `openccjava.OpenccConfig`; import these types as needed.
+
+Use one `OpenCC` instance per thread, or synchronize access to its mutable configuration and diagnostics.
+Static `OpenCC.convert(...)` calls create separate instances and share the default dictionary. Treat shared
+or attached dictionaries and cached conversion plans as immutable.
+
+`convert(null)` and `convert("")` return `"Input text is null or empty"` and record it in `getLastError()`.
+Successful conversions do not clear a previous diagnostic; call `clearLastError()` explicitly. Direct directional
+methods such as `s2t(text, false)` preserve null and empty input and select their own mode independently of
+`getConfig()`. Punctuation conversion is disabled by default; the `p` suffix in a config name selects regional
+phrase mappings, not punctuation conversion. Static convenience overloads do not accept a punctuation flag;
+use `converter.convert(text, true)` when needed.
+
+Configuration parsing ignores case and surrounding whitespace. Null, blank, or unknown configurations fall back
+to `s2t`; use `OpenccConfig.tryParse(value)` to validate first (it returns null for invalid input). Because the
+configuration overloads accept both `String` and `OpenccConfig`, an untyped null argument is ambiguous in Java.
 
 ### 🔧 Constructor Overloads
 
@@ -221,7 +239,7 @@ OpenCC legacyPathConverter = new OpenCC("s2t", java.nio.file.Paths.get("dicts"))
 import openccjava.OpenCC;
 
 public class Example {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC converter = new OpenCC("s2t");
         String result = converter.convert("汉字转换");
         System.err.println(result); // → 漢字轉換
@@ -251,8 +269,8 @@ String result = OpenCC.convert(
         "s2t");
 ```
 
-These methods use the shared lazy-loaded dictionary cache, so dictionaries are still loaded only once per JVM. For
-repeated conversions, custom dictionaries, or advanced usage, create and reuse an `OpenCC` instance as shown above.
+These methods share a lazy-loaded dictionary, loaded once per defining class loader. For repeated conversions,
+custom dictionaries, or advanced usage, create and reuse an `OpenCC` instance as shown above.
 
 ### ⚙️ Configuration & Error Handling
 
@@ -261,7 +279,7 @@ import openccjava.OpenCC;
 import openccjava.OpenccConfig;
 
 public class Example {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC();
 
         cc.setConfig("t2s");
@@ -283,7 +301,7 @@ public class Example {
 import openccjava.OpenCC;
 
 public class Example {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         int code = OpenCC.zhoCheck("漢字");  // 1 = Traditional, 2 = Simplified, 0 = Unknown/Mixed
 
         // Deprecated compatibility instance method still exists:
@@ -305,7 +323,7 @@ The single-argument `convert(text)` behavior is unchanged; existing callers need
 import openccjava.OpenCC;
 
 public class Example {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC();
         cc.s2t("汉字", false);       // 漢字 - Simplified → Traditional
         cc.t2s("漢字", false);       // 汉字 - Traditional → Simplified
@@ -330,10 +348,11 @@ and Hong Kong Traditional Chinese.
 
 ## Unicode compatibility normalization
 
-OpenCC Java provides optional Unicode compatibility pre-processing through the `OpenCC` API. These helpers normalize CJK
-compatibility and variant forms before OpenCC segmentation and dictionary conversion.
+`OpenCC` Java provides optional Unicode compatibility pre-processing through the `OpenCC` API. These helpers normalize
+CJK
+compatibility and variant forms before `OpenCC` segmentation and dictionary conversion.
 
-Normalization is separate from normal OpenCC dictionary conversion. It does not modify dictionary data, regional
+Normalization is separate from normal `OpenCC` dictionary conversion. It does not modify dictionary data, regional
 conversion rules, punctuation handling, script detection, or conversion configuration.
 
 Three normalization modes are available:
@@ -349,7 +368,7 @@ pre-processing option.
 For converted text, the recommended order is:
 
 1. Normalize the input with `normalizeCompat(...)`, `normalizeUnicodeCompat(...)`, or `normalizeCompatExtended(...)`.
-2. Run normal OpenCC conversion with `convert(...)`.
+2. Run normal `OpenCC` conversion with `convert(...)`.
 3. Optionally run DeTofu on the converted result for display fallback.
 
 ### Java API usage
@@ -360,7 +379,7 @@ Normalize CJK Compatibility Ideographs:
 import openccjava.OpenCC;
 
 public class CompatIdeographsExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC();
 
         System.out.println(
@@ -387,7 +406,7 @@ Normalize additional Unicode compatibility and allograph forms:
 import openccjava.OpenCC;
 
 public class UnicodeCompatExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC();
 
         String input = "聼聼竒羙䂖甁噐";
@@ -404,7 +423,7 @@ Apply extended compatibility normalization:
 import openccjava.OpenCC;
 
 public class CompatExtendedExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC();
 
         String input = "聼聼竒羙⽟䂖甁噐⾳";
@@ -429,7 +448,7 @@ import openccjava.OpenCC;
 import openccjava.OpenccConfig;
 
 public class CompatBeforeConvertExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC(OpenccConfig.T2S);
 
         String input = "天龍八部書裡的聼眾";
@@ -473,8 +492,8 @@ Unknown or unmapped characters are preserved unchanged.
 If input may contain CJK Compatibility Ideographs, normalize them before conversion. DeTofu remains the opposite side of
 the pipeline and runs after conversion.
 
-DeTofu is not part of OpenCC dictionary conversion logic. It does not affect phrase matching, regional variants,
-punctuation conversion, script detection, or dictionary data. Apply it after normal OpenCC conversion when display
+DeTofu is not part of `OpenCC` dictionary conversion logic. It does not affect phrase matching, regional variants,
+punctuation conversion, script detection, or dictionary data. Apply it after normal `OpenCC` conversion when display
 compatibility is more important than preserving every converted rare extension character.
 
 Built-in mappings are embedded under `dicts/CharactersTofu.txt`. Users do not need to manage this file for normal usage.
@@ -487,7 +506,7 @@ import openccjava.OpenccConfig;
 import openccjava.DeTofu;
 
 public class DeTofuApiExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC(OpenccConfig.T2S);
 
         String converted = cc.convert("儼驂騑於上路，訪風景於崇阿，𱁬");
@@ -505,7 +524,7 @@ You can also use the DeTofu utility directly:
 import openccjava.DeTofu;
 
 public class DeTofuDirectExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         String safe = DeTofu.convert("骖𬴂", DeTofu.Level.ExtB);
         System.err.println(safe);
         // 骖騑
@@ -537,7 +556,7 @@ import openccjava.OpenCC;
 import openccjava.DeTofu;
 
 public class DeTofuCustomFileExample {
-    static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         OpenCC cc = new OpenCC();
 
         String safe = cc.deTofuWithCustomFile(
@@ -585,7 +604,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DeTofuCustomPairsExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC();
 
         Map<String, String> pairs = new HashMap<>();
@@ -624,7 +643,8 @@ CLI aliases may use `all`, `ext-b`, `ext-c`, `ext-d`, `ext-e`, `ext-f`, `ext-g`,
 
 ### 📘 User Custom Dictionaries
 
-Custom dictionaries patch specific OpenCC dictionary slots. The base official dictionaries are loaded first, then custom
+Custom dictionaries patch specific `OpenCC` dictionary slots. The base official dictionaries are loaded first, then
+custom
 dictionary files and/or in-memory pairs are applied to the selected slots.
 
 `TWVariantsPhrases` and `HKVariantsPhrases` are forward regional variant phrase slots. They are applied before
@@ -632,15 +652,18 @@ dictionary files and/or in-memory pairs are applied to the selected slots.
 built-in `TWVariantsPhrases.txt` and `HKVariantsPhrases.txt` files are required official dictionaries; missing files are
 load errors, the same as other official dictionary files.
 
-Normal `OpenCC` usage still uses the lazy default `DictionaryHolder` singleton. Custom dictionary usage does not touch
-`DictionaryHolder`: file-level custom dictionaries build a caller-owned `DictionaryMaxlength`, and post-load
-customization returns a customized copy without mutating the original `DictionaryMaxlength`. After an `OpenCC` instance
+Normal `OpenCC` usage uses the lazy default `DictionaryHolder` singleton. Constructors accepting
+`List<CustomDictSpec>` copy that shared dictionary and patch the copy. To load text dictionaries independently of
+`DictionaryHolder`, use `DictionaryMaxlength.fromDicts(...)` or `OpenCC.fromDicts(...)`. Post-load
+customization with `withCustomDicts(...)` returns a copy without mutating the original dictionary. After an `OpenCC`
+instance
 is constructed, treat its attached dictionary as immutable because conversion-plan metadata may be cached from its
 contents. The `OpenCC` instance itself remains mutable through configuration and diagnostic-state APIs; do not modify
 that state concurrently with conversion or state access unless callers provide external synchronization.
 
-Only users who intentionally use both the default singleton path and custom dictionary paths may hold two dictionary
-copies in memory. This is intentional and avoids global mutable state.
+Custom-spec constructors retain the shared base dictionary as well as the customized copy. Independently loaded
+text dictionaries also occupy separate memory. Reuse a prepared dictionary when constructing multiple converters,
+and treat it as immutable.
 
 #### CustomDictMode
 
@@ -694,24 +717,25 @@ ordinals—are the stable external contract. `JPVariants` and `JPVariantsRev` re
 Java source compiles, but they are inactive and are rejected by parsing, typed spec factories, and dictionary
 application.
 
-The token format is intentionally unified across the C#, Java, Rust, and Python OpenCC ecosystem. This section documents
+The token format is intentionally unified across the C#, Java, Rust, and Python `OpenCC` ecosystem. This section
+documents
 the Java public parser and Java CLI delegation; it does not claim equivalent public APIs in another language where that
 language's own documentation does not expose them.
 
 #### Dictionary File Format
 
-Custom dictionary files use the same parser as OpenCC text dictionaries:
+Custom dictionary files use the same parser as `OpenCC` text dictionaries:
 
 - UTF-8 text
 - One entry per line
 - `source<TAB>target`
 - Blank/comment lines follow existing parser behavior
-- Only the first target token is used, matching OpenCC dictionary behavior
+- Only the first target token is used, matching `OpenCC` dictionary behavior
 
 #### File-Based vs In-Memory Custom Dictionaries
 
 - File-based custom dictionaries use `CustomDictSpec.fromFile(...)` or `CustomDictSpec.fromFiles(...)` and load UTF-8
-  OpenCC text dictionary files.
+  `OpenCC` text dictionary files.
 - In-memory custom dictionaries use `CustomDictSpec.fromPairs(...)` and apply a `Map<String, String>` directly, which is
   useful for runtime terms or application-provided user dictionaries.
 - When custom specs for the same slot include both file paths and pairs, apply file specs first and pair specs
@@ -729,7 +753,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RegionalVariantPhraseExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         Map<String, String> pairs = new HashMap<>();
         pairs.put("喫茶小舖", "喫茶小舖");
 
@@ -749,7 +773,7 @@ public class RegionalVariantPhraseExample {
 }
 ```
 
-#### File-Level Preload Customization
+#### Construction-Time Customization
 
 Use the `OpenCC` custom dictionary constructors when you want a concise construction-time override for one converter.
 These constructors copy the shared dictionary first, apply the specs to that copy, and leave the shared
@@ -762,7 +786,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 public class OpenCCCustomDictConstructorExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = new OpenCC(
                 OpenccConfig.S2T,
                 Collections.singletonList(
@@ -795,7 +819,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 public class CustomDictFileExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = OpenCC.fromDicts(
                 OpenccConfig.S2T,
                 Collections.singletonList(
@@ -822,7 +846,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CustomDictPairsAtLoadExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         Map<String, String> pairs = new LinkedHashMap<>();
         pairs.put("测试词", "專用詞");
         pairs.put("鼠标", "滑鼠");
@@ -854,7 +878,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class OpenCCFromPairsExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         Map<String, String> pairs = new LinkedHashMap<>();
         pairs.put("测试词", "專用詞");
         pairs.put("鼠标", "滑鼠");
@@ -890,7 +914,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PostLoadCustomPairsExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         Map<String, String> pairs = new LinkedHashMap<>();
         pairs.put("测试词", "專用詞");
         pairs.put("鼠标", "滑鼠");
@@ -924,7 +948,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 public class PostLoadCustomDictExample {
-    static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         DictionaryMaxlength dict = DictionaryMaxlength
                 .fromJsonFileNoDeps("dicts/dictionary_maxlength.json")
                 .withCustomDicts(
@@ -956,7 +980,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class MultipleCustomDictFilesExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC cc = OpenCC.fromDicts(
                 OpenccConfig.S2T,
                 Arrays.asList(
@@ -987,7 +1011,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CustomDictFilesAndPairsExample {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         Map<String, String> pairs = new LinkedHashMap<>();
         pairs.put("测试词", "專用詞");
         pairs.put("鼠标", "滑鼠");
@@ -1088,7 +1112,7 @@ compilable compatibility constants but cannot be parsed or used for new dictiona
 List<String> configs = OpenCC.getSupportedConfigs();
 ```
 
-The following configuration keys correspond to OpenCC conversion modes:
+The following configuration keys correspond to `OpenCC` conversion modes:
 
 | Config Key | Direction                                       | Description                                                                        |
 |------------|-------------------------------------------------|------------------------------------------------------------------------------------|
@@ -1117,7 +1141,7 @@ The following configuration keys correspond to OpenCC conversion modes:
 | **seal2s** | Small Seal Script → Simplified                  | Decodes Seal characters and variants, then converts to Simplified Chinese.         |
 | **seal2t** | Small Seal Script → Traditional                 | Decodes Seal characters and normalizes their regular-script variants.              |
 
-### Small Seal Script usage (1.6.0, unreleased)
+### Small Seal Script usage (1.6.0)
 
 ```java
 OpenCC cc = new OpenCC(OpenccConfig.S2SEAL);
@@ -1138,6 +1162,7 @@ String backToTraditional = cc.seal2t(seal, false);
 All four configs accept optional punctuation conversion. `s2seal`, `t2seal`, and `seal2t` use Traditional-style
 punctuation; `seal2s` uses Simplified-style punctuation. Characters without a dictionary mapping pass through.
 Displaying Seal characters requires a font covering the dictionary's supplementary Unicode characters.
+Dictionary mappings may be many-to-one, so converting to Seal and back need not reproduce the original text.
 
 ```bash
 OpenccJavaCli convert -c s2seal -i simplified.txt -o seal.txt
@@ -1162,7 +1187,7 @@ initialized as empty dictionaries; use the updated dictionaries for Seal convers
 import openccjava.OpenCC;
 
 public class Example {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         OpenCC.setVerboseLogging(true);
     }
 }
@@ -1183,7 +1208,7 @@ coupling them to `OfficeHelper`.
 `OfficeHelper` handles package mechanics only: ZIP/package reconstruction, DOCX/XLSX/PPTX/ODF/EPUB entry selection,
 XLSX inline-string handling, optional font protection (`keepFont`), and EPUB packaging rules.
 
-The intended pipeline is: **Normalize compatibility → OpenCC conversion / punctuation → DeTofu → write transformed
+The intended pipeline is: **Normalize compatibility → `OpenCC` conversion / punctuation → DeTofu → write transformed
 text back into the Office/EPUB package**. Normalization and DeTofu are optional caller-supplied steps.
 
 ```java
@@ -1204,7 +1229,7 @@ public class Example {
         TextConverter textConverter = text -> {
             String result = opencc.normalizeCompatExtended(text);
             result = opencc.convert(result, true);
-            result = opencc.deToFu(result, DeTofu.Level.ExtB);
+            result = opencc.deTofu(result, DeTofu.Level.ExtB);
             return result;
         };
 
@@ -1247,7 +1272,7 @@ public class ExampleBytes {
         // Load the document entirely into memory
         byte[] inputBytes = Files.readAllBytes(Paths.get("example_simplified.docx"));
 
-        // Create an OpenCC converter
+        // Create an `OpenCC` converter
         OpenCC converter = new OpenCC("s2t");   // Simplified → Traditional
         TextConverter textConverter = converter::convert;
 
@@ -1313,8 +1338,8 @@ OfficeHelper.convert(
   paths:
   `convert(byte[], String, OpenCC, boolean punctuation, boolean keepFont)` and
   `convert(File, File, String, OpenCC, boolean punctuation, boolean keepFont)`.
-  Internally, these adapt OpenCC conversion to the same `TextConverter`-based package-processing core. Use
-  `TextConverter` directly when composing compatibility normalization, OpenCC conversion, punctuation, DeTofu, or
+  Internally, these adapt `OpenCC` conversion to the same `TextConverter`-based package-processing core. Use
+  `TextConverter` directly when composing compatibility normalization, `OpenCC` conversion, punctuation, DeTofu, or
   other transformations.
 
 - You may still use `Result` (the abstract base class) as the return type in legacy code.  
@@ -1453,10 +1478,10 @@ bin/OpenccJavaCli.bat office -c t2s -i book.epub -o book_simplified.epub -n -p -
 
 Like `convert`, `office` uses the shared `CliUtils` text pipeline: `normalizeCompatExtended` when
 `-E` / `--norm-compat-extended` is present, otherwise `normalizeCompat` when `-n` / `--norm-compat` is present,
-then OpenCC conversion with optional `-p` punctuation, then optional `--detofu <level>`. The transformed text is
+then `OpenCC` conversion with optional `-p` punctuation, then optional `--detofu <level>`. The transformed text is
 written back into the package. If both normalization flags are supplied, `-E` takes precedence.
 `--detofu-file <file>` requires `--detofu` and overrides built-in fallback mappings; `-D` / `--custom-dict`
-continues to configure custom dictionaries for the OpenCC conversion step.
+continues to configure custom dictionaries for the `OpenCC` conversion step.
 
 ```
 bin/OpenccJavaCli office --help 
@@ -1511,7 +1536,7 @@ Convert Office documents using OpenccJava
 - `--keep-font` / `--no-keep-font`: Preserve original fonts (Office only).
 - `--in-enc` / `--out-enc`: Specify encoding (e.g. `GBK`, `BIG5`, `UTF-8`).
 - `--format`: Force document format (e.g., `docx`, `epub`).
-- `--list-configs`: Show supported OpenCC configs.
+- `--list-configs`: Show supported `OpenCC` configs.
 
 ---
 
@@ -1610,7 +1635,7 @@ import openccjava.DictionaryMaxlength;
 import java.nio.file.Paths;
 
 public class DictionaryJsonExample {
-    static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         DictionaryMaxlength dict = DictionaryMaxlength.fromDicts();
 
         // Pretty, sorted JSON file.
@@ -1814,4 +1839,4 @@ leverages the `OpenccJava` library to provide simplified and traditional Chinese
 - MIT License.
 - © Laisuk.
 - See [LICENSE](./LICENSE) for details.
-- See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for bundled OpenCC lexicons (Apache License 2.0).
+- See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for bundled `OpenCC` lexicons (Apache License 2.0).

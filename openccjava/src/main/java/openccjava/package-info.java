@@ -15,8 +15,17 @@
  *
  * <p>Configured conversion returns a diagnostic string for null or empty text;
  * it does not return null. Inspect {@link openccjava.OpenCC#getLastError()} for
- * instance diagnostics. Direct directional methods select their own conversion
- * mode independently of the instance configuration.</p>
+ * instance diagnostics; a successful conversion does not clear an earlier
+ * diagnostic. Direct directional methods preserve null and empty input and
+ * select their own conversion mode independently of the instance configuration.
+ * Punctuation conversion is disabled by default; a regional configuration's
+ * {@code p} suffix selects phrase mappings, not punctuation conversion.</p>
+ *
+ * <p>Small Seal Script conversion is available since 1.6.0 through
+ * {@link openccjava.OpenccConfig#S2SEAL}, {@link openccjava.OpenccConfig#T2SEAL},
+ * {@link openccjava.OpenccConfig#SEAL2S}, and {@link openccjava.OpenccConfig#SEAL2T}.
+ * Unmapped characters pass through. Mappings may be many-to-one, so round trips
+ * need not reproduce the original text. Display requires a supporting font.</p>
  *
  * <p>Use {@link openccjava.CustomDictSpec}, {@link openccjava.DictSlot}, and
  * {@link openccjava.CustomDictMode} to customize dictionaries. Constructors

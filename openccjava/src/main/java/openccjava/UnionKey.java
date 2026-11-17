@@ -85,20 +85,36 @@ public enum UnionKey {
 
     // ===== Traditional-Traditional-specific unions =====
     /**
-     *  Simplified-style punctuation → Traditional-style punctuation only,
+     * Simplified-style punctuation → Traditional-style punctuation only,
      * used as an optional punctuation round for direct Traditional-region conversions.
      */
     StPunctOnly,
 
-    /** Starter union for {@code seal_characters}. */
+    /**
+     * Starter union for {@code seal_characters}.
+     *
+     * @since 1.6.0
+     */
     SealCharactersOnly,
 
-    /** Starter union for {@code seal_characters_rev}. */
+    /**
+     * Starter union for {@code seal_characters_rev}.
+     *
+     * @since 1.6.0
+     */
     SealCharactersRevOnly,
 
-    /** Starter union for {@code seal_variants}. */
+    /**
+     * Starter union for {@code seal_variants}.
+     *
+     * @since 1.6.0
+     */
     SealVariantsOnly,
 
-    /** Starter union for {@code seal_variants_rev}. */
+    /**
+     * Starter union for {@code seal_variants_rev}.
+     *
+     * @since 1.6.0
+     */
     SealVariantsRevOnly
 }

@@ -28,6 +28,15 @@ import static openccjava.DictRefs.isDelimiter;
  * synchronization. For concurrent applications, prefer one configured instance
  * per thread and treat its dictionary as immutable after construction.</p>
  *
+ * <p>Configured {@link #convert(String)} calls return a diagnostic string for
+ * null or empty input. Direct directional methods preserve null and empty
+ * input and do not change the active configuration. Successful conversion
+ * does not clear an earlier diagnostic; use {@link #clearLastError()}.</p>
+ *
+ * <p>Punctuation conversion is opt-in through boolean parameters. The
+ * {@code p} suffix in regional configuration names selects phrase mappings,
+ * independently of punctuation conversion.</p>
+ *
  * <p>Conversion uses a thread-local {@link StringBuilder} to reduce temporary
  * allocations.</p>
  */
@@ -888,7 +897,7 @@ public class OpenCC {
      * <p>This is a convenience API for one-off conversions. Internally it
      * creates a temporary {@code OpenCC} instance backed by the shared
      * dictionary cache provided by {@link DictionaryHolder}. Dictionaries
-     * are still loaded only once per JVM.</p>
+     * are still loaded only once per defining class loader.</p>
      *
      * <p>For repeated conversions, custom dictionaries, or advanced usage,
      * consider creating and reusing an {@code OpenCC} instance directly.</p>
@@ -931,7 +940,7 @@ public class OpenCC {
      * <p>This is a convenience API for one-off conversions. Internally it
      * creates a temporary {@code OpenCC} instance backed by the shared
      * dictionary cache provided by {@link DictionaryHolder}. Dictionaries
-     * are still loaded only once per JVM.</p>
+     * are still loaded only once per defining class loader.</p>
      *
      * <p>The provided {@code config} string is parsed in a case-insensitive
      * manner using {@link OpenccConfig#tryParse(String)}. If the string does
@@ -1203,11 +1212,11 @@ public class OpenCC {
      *
      * <p>Execution mode:</p>
      * <ul>
-     *   <li><b>Parallel</b> - if the input text exceeds 100,000 characters or
-     *       there are more than 1,000 split segments, segments are processed
-     *       in parallel using {@link IntStream#parallel()}.</li>
-     *   <li><b>Sequential</b> - otherwise, segments are processed in order
-     *       in a single thread.</li>
+     *   <li>Independent segments may be processed in parallel using
+     *       {@link IntStream#parallel()}, depending on input size, segment count,
+     *       and available processors.</li>
+     *   <li>Results retain input order in both sequential and parallel execution.
+     *       Execution thresholds are implementation details.</li>
      * </ul>
      *
      * <p>If the text is {@code null} or empty, it is returned unchanged.</p>
@@ -1676,11 +1685,18 @@ public class OpenCC {
     }
 
     /**
-     * Converts simplified Chinese to Small Seal Script.
+     * Converts Simplified Chinese to Small Seal Script.
      *
-     * @param input       the text to convert
-     * @param punctuation whether to convert punctuation in the target direction
-     * @return the converted text
+     * <p>Applies Simplified-to-Traditional conversion, Seal variants, then Seal characters.
+     * Unmapped characters pass through.
+     * This method selects its own mode independently of {@link #getConfigId()}.
+     * Dictionary mappings may be many-to-one; round trips need not reproduce
+     * the original text. Rendering Seal characters requires a supporting font.</p>
+     *
+     * @param input       the text to convert; may be {@code null} or empty
+     * @param punctuation whether to apply Traditional-style punctuation conversion
+     * @return the converted text, or the original input if null or empty
+     * @since 1.6.0
      */
     public String s2seal(String input, boolean punctuation) {
         DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.S2SEAL, punctuation);
@@ -1688,11 +1704,17 @@ public class OpenCC {
     }
 
     /**
-     * Converts traditional Chinese to Small Seal Script.
+     * Converts Traditional Chinese to Small Seal Script.
      *
-     * @param input       the text to convert
-     * @param punctuation whether to convert punctuation in the target direction
-     * @return the converted text
+     * <p>Applies Seal variants, then Seal characters. Unmapped characters pass through.
+     * This method selects its own mode independently of {@link #getConfigId()}.
+     * Dictionary mappings may be many-to-one; round trips need not reproduce
+     * the original text. Rendering Seal characters requires a supporting font.</p>
+     *
+     * @param input       the text to convert; may be {@code null} or empty
+     * @param punctuation whether to apply Traditional-style punctuation conversion
+     * @return the converted text, or the original input if null or empty
+     * @since 1.6.0
      */
     public String t2seal(String input, boolean punctuation) {
         DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.T2SEAL, punctuation);
@@ -1700,11 +1722,18 @@ public class OpenCC {
     }
 
     /**
-     * Converts small Seal Script to Simplified Chinese.
+     * Converts Small Seal Script to Simplified Chinese.
      *
-     * @param input       the text to convert
-     * @param punctuation whether to convert punctuation in the target direction
-     * @return the converted text
+     * <p>Applies Seal character decoding, reverse Seal variants, then Traditional-to-Simplified
+     * conversion. Unmapped characters pass through.
+     * This method selects its own mode independently of {@link #getConfigId()}.
+     * Dictionary mappings may be many-to-one; round trips need not reproduce
+     * the original text. Rendering Seal characters requires a supporting font.</p>
+     *
+     * @param input       the text to convert; may be {@code null} or empty
+     * @param punctuation whether to apply Simplified-style punctuation conversion
+     * @return the converted text, or the original input if null or empty
+     * @since 1.6.0
      */
     public String seal2s(String input, boolean punctuation) {
         DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.SEAL2S, punctuation);
@@ -1712,11 +1741,18 @@ public class OpenCC {
     }
 
     /**
-     * Converts small Seal Script to Traditional Chinese.
+     * Converts Small Seal Script to Traditional Chinese.
      *
-     * @param input       the text to convert
-     * @param punctuation whether to convert punctuation in the target direction
-     * @return the converted text
+     * <p>Applies Seal character decoding, then reverse Seal variants. Unmapped characters pass
+     * through.
+     * This method selects its own mode independently of {@link #getConfigId()}.
+     * Dictionary mappings may be many-to-one; round trips need not reproduce
+     * the original text. Rendering Seal characters requires a supporting font.</p>
+     *
+     * @param input       the text to convert; may be {@code null} or empty
+     * @param punctuation whether to apply Traditional-style punctuation conversion
+     * @return the converted text, or the original input if null or empty
+     * @since 1.6.0
      */
     public String seal2t(String input, boolean punctuation) {
         DictRefs refs = getDictRefsUnionForConfigId(OpenccConfig.SEAL2T, punctuation);

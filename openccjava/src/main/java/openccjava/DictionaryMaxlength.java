@@ -193,18 +193,26 @@ public class DictionaryMaxlength {
 
     /**
      * Small Seal Script to regular-script transcriptions.
+     *
+     * @since 1.6.0
      */
     public DictEntry seal_characters;
     /**
      * Regular-script transcriptions to Small Seal Script.
+     *
+     * @since 1.6.0
      */
     public DictEntry seal_characters_rev;
     /**
      * Modern characters to Seal regular-script variants.
+     *
+     * @since 1.6.0
      */
     public DictEntry seal_variants;
     /**
      * Seal regular-script variants to modern characters.
+     *
+     * @since 1.6.0
      */
     public DictEntry seal_variants_rev;
 
