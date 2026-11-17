@@ -553,14 +553,6 @@
                 <input type="checkbox" id="punctuation">
                 Enable punctuation conversion
             </label>
-            <label>
-                <input type="checkbox" id="keepFont" checked>
-                Preserve document font declarations
-            </label>
-            <label title="Convert the downloaded filename using the selected OpenCC configuration. The file extension is preserved. Invalid Windows filenames are rejected.">
-                <input type="checkbox" id="convertFilename">
-                Convert filename
-            </label>
         </div>
 
         <div class="row">
@@ -582,8 +574,20 @@
             </select>
         </div>
 
-        <div class="row"><label><input type="checkbox" id="autoDetectEncoding" checked> Auto-detect text encoding (Drop
-            Zone TXT/MD)</label></div>
+        <div class="row">
+            <label>
+                <input type="checkbox" id="autoDetectEncoding" checked> Auto-detect text encoding (Drop
+                Zone TXT/MD)
+            </label>
+            <label>
+                <input type="checkbox" id="keepFont" checked>
+                Preserve document font declarations
+            </label>
+            <label title="Convert the downloaded filename using the selected OpenCC configuration. The file extension is preserved. Invalid Windows filenames are rejected.">
+                <input type="checkbox" id="convertFilename">
+                Convert filename
+            </label>
+        </div>
         <div id="officeDrop" class="office-drop disabled" role="button" tabindex="0" aria-disabled="true">
             <strong>Click to open or drop a document, EPUB or text file here</strong>
             <small>DOCX, XLSX, PPTX, ODT, ODS, ODP, EPUB, TXT, MD — converted locally; nothing is uploaded</small>
