@@ -176,7 +176,7 @@ If you don’t want to rely on `mavenCentral` or `JitPack`:
 include("openccjava")
 ```
 
-1. Add to your dependencies:
+3. Add to your dependencies:
 
 ```groovy
 implementation project(":openccjava")
@@ -349,8 +349,7 @@ and Hong Kong Traditional Chinese.
 ## Unicode compatibility normalization
 
 `OpenCC` Java provides optional Unicode compatibility pre-processing through the `OpenCC` API. These helpers normalize
-CJK
-compatibility and variant forms before `OpenCC` segmentation and dictionary conversion.
+CJK compatibility and variant forms before `OpenCC` segmentation and dictionary conversion.
 
 Normalization is separate from normal `OpenCC` dictionary conversion. It does not modify dictionary data, regional
 conversion rules, punctuation handling, script detection, or conversion configuration.
@@ -643,8 +642,7 @@ CLI aliases may use `all`, `ext-b`, `ext-c`, `ext-d`, `ext-e`, `ext-f`, `ext-g`,
 
 ### 📘 User Custom Dictionaries
 
-Custom dictionaries patch specific `OpenCC` dictionary slots. The base official dictionaries are loaded first, then
-custom
+Custom dictionaries patch specific `OpenCC` dictionary slots. The base official dictionaries are loaded first, then custom
 dictionary files and/or in-memory pairs are applied to the selected slots.
 
 `TWVariantsPhrases` and `HKVariantsPhrases` are forward regional variant phrase slots. They are applied before
@@ -655,8 +653,7 @@ load errors, the same as other official dictionary files.
 Normal `OpenCC` usage uses the lazy default `DictionaryHolder` singleton. Constructors accepting
 `List<CustomDictSpec>` copy that shared dictionary and patch the copy. To load text dictionaries independently of
 `DictionaryHolder`, use `DictionaryMaxlength.fromDicts(...)` or `OpenCC.fromDicts(...)`. Post-load
-customization with `withCustomDicts(...)` returns a copy without mutating the original dictionary. After an `OpenCC`
-instance
+customization with `withCustomDicts(...)` returns a copy without mutating the original dictionary. After an `OpenCC` instance
 is constructed, treat its attached dictionary as immutable because conversion-plan metadata may be cached from its
 contents. The `OpenCC` instance itself remains mutable through configuration and diagnostic-state APIs; do not modify
 that state concurrently with conversion or state access unless callers provide external synchronization.
@@ -717,8 +714,7 @@ ordinals—are the stable external contract. `JPVariants` and `JPVariantsRev` re
 Java source compiles, but they are inactive and are rejected by parsing, typed spec factories, and dictionary
 application.
 
-The token format is intentionally unified across the C#, Java, Rust, and Python `OpenCC` ecosystem. This section
-documents
+The token format is intentionally unified across the C#, Java, Rust, and Python `OpenCC` ecosystem. This section documents
 the Java public parser and Java CLI delegation; it does not claim equivalent public APIs in another language where that
 language's own documentation does not expose them.
 
@@ -1254,7 +1250,7 @@ public class Example {
 
 ### 🧩 Example – Pure In-Memory `.docx` Conversion (`byte[]` → `MemoryResult`)
 
-For a simple OpenCC-only transformation, an `OpenCC` instance can be adapted directly to `TextConverter` with a
+For a simple `OpenCC`-only transformation, an `OpenCC` instance can be adapted directly to `TextConverter` with a
 Java 8 method reference.
 
 ```java
@@ -1591,8 +1587,8 @@ OpenccJava
 
 #### PDF extraction engine
 
-`openccjavacli pdf` uses a **text-based PDF extraction engine** (PdfBox) and is intended for **digitally generated PDFs
-** (e-books, research papers, reports).
+`openccjavacli pdf` uses a **text-based PDF extraction engine** (PDFBox) and is intended for
+**digitally generated PDFs** (e-books, research papers, reports).
 
 - ✅ Works best with selectable text
 - ❌ Does **not** perform OCR on scanned/image-only PDFs
@@ -1827,8 +1823,8 @@ This project supports parallel processing for high-performance batch conversion.
 
 ## Projects That Use `openccjava`
 
-[OpenccJavaFX](https://github.com/laisuk/OpenccJavaFX) - A Chinese text conversion application built with JavaFX,
-leverages the `OpenccJava` library to provide simplified and traditional Chinese conversion.
+[OpenccJavaFX](https://github.com/laisuk/OpenccJavaFX) - A Chinese text conversion application built with JavaFX
+that uses the `OpenccJava` library to provide simplified and traditional Chinese conversion.
 
 ![OpenccJavaFX Screenshot](https://raw.githubusercontent.com/laisuk/OpenccJavaFX/master/assets/image01.png)
 

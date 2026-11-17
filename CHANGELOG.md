@@ -25,7 +25,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   direct integer accumulation, and a smaller initial stream buffer. Preserved UTF-16 code units, dictionary
   insertion order, duplicate-key behavior, UTF-8 decoding, stream ownership, and Java 8 compatibility;
   clarified parser Javadocs.
-- Measured median warm snapshot parsing at 18.600 to 10.506 ms for strings and 22.438 to 16.682 ms for streams
+- Reduced median warm snapshot parsing time from 18.600 to 10.506 ms for strings and from 22.438 to 16.682 ms for streams
   in local seven-fork JDK 21 benchmarks on the bundled 90,146-mapping snapshot. Allocated bytes per parse fell
   from 41.76 to 18.69 MB and 52.56 to 30.52 MB, respectively; results vary by workload and JVM.
 - Replaced dictionary-loop iterators in the conversion hot path with indexed access, preserving dictionary order.
@@ -46,7 +46,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Added `SealCharacters`, `SealCharactersRev`, `SealVariants`, and `SealVariantsRev` slots throughout text/JSON
   loading, serialization, dictionary cloning, custom append/override operations, and cached conversion plans/unions.
 - Regenerated all three built-in JSON dictionary copies with Seal data. Older folders and JSON snapshots remain
-  loadable with empty missing Seal slots.
+  loadable, with missing Seal slots initialized as empty dictionaries.
 - Added Seal config/slot support to CLI help/completion, conversion, and dictionary generation/downloads, plus
   regression tests covering stable-release outputs, round order, supplementary starters, cache isolation, JSON
   round trips, custom dictionaries, legacy artifacts, and CLI UTF-8 file conversion.
@@ -55,7 +55,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Added regression tests for indexed character lookup, including dictionary precedence, empty replacements,
   supplementary characters, isolated surrogates, and phrase-first matching.
 
---
+---
 
 ## 1.5.0 - 2026-09-30
 
@@ -114,7 +114,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Added the `:openccjavacli:generateNativeImageJson` Gradle task and a GitHub Actions workflow for generating GraalVM
   native-image reachability metadata; refreshed the checked-in Linux, macOS, and Windows metadata.
 - Added a GitHub Actions workflow that builds and tests the Java 8-compatible `openccjava` library on Ubuntu with
-  `JDK  21`.
+  `JDK 21`.
 
 ### Changed
 
@@ -179,7 +179,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## 1.4.0 - 2029-06-19
+## 1.4.0 - 2026-06-19
 
 ### Added
 
@@ -360,7 +360,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Optimized `UnionCache`.
 - Optimized core conversion.
 - Optimized OfficeHelper.
-- Corrected sample codes for `MemoryResult` in README.
+- Corrected sample code for `MemoryResult` in README.
 - Removed legacy deprecated `getDictRefs()`.
 - Optimized `openccjavacli` Reflow to handle unclosed dialog text.
 
@@ -370,7 +370,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Added support PDF file type as input in `openccjavacli` subcommand `pdf`
+- Added support for the PDF file type as input in `openccjavacli` subcommand `pdf`
 
 ### Changed
 
@@ -467,7 +467,7 @@ int result = cc.zhoCheckInstance("汉字");
 
 ### Changed
 
-- Refactored all codes to be **Java 8+** compatible
+- Refactored all code to be **Java 8+** compatible
 
 ### Fixed
 
