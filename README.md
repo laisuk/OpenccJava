@@ -1137,7 +1137,7 @@ The following configuration keys correspond to `OpenCC` conversion modes:
 | **seal2s** | Small Seal Script → Simplified                  | Decodes Seal characters and variants, then converts to Simplified Chinese.         |
 | **seal2t** | Small Seal Script → Traditional                 | Decodes Seal characters and normalizes their regular-script variants.              |
 
-### Small Seal Script usage (1.6.0)
+### Small Seal Script usage (since v1.6.0)
 
 ```java
 OpenCC cc = new OpenCC(OpenccConfig.S2SEAL);

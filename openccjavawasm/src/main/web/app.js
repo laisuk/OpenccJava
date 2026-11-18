@@ -127,9 +127,14 @@ try {
     officeDrop.setAttribute("aria-disabled", "false");
 
     document.getElementById("deTofuBtn").disabled = false;
+
+    const runtime = cc.getBackend() === "wasm"
+        ? "TeaVM WebAssembly GC"
+        : "TeaVM JavaScript";
     document.getElementById("backendStatus").textContent =
-        `Backend: ${cc.getBackend() === 'wasm' ? 'WebAssembly GC' : 'JavaScript'}. ${cc.getBackendNotice()}`;
-    out.textContent = `OpenccJava v${cc.getVersion()} loaded. (${configs.length} configs available)`;
+        `Java Runtime: ${runtime}. ${cc.getBackendNotice()}`;
+    out.textContent =
+        `OpenccJava v${cc.getVersion()} loaded. (${configs.length} configs available)`;
     document.documentElement.dataset.ready = 'true';
 } catch (err) {
     out.textContent = `Failed to load OpenccJava: ${err}`;

@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 REM Use the system Java installation, ignoring IntelliJ's JAVA_HOME.
 REM Replace this path with your actual JDK installation.
-set "JAVA_HOME=C:\Java\zulu21.54.109-ca-jdk21.0.13.0.3-win_x64"
+set "JAVA_HOME=C:\Java\zulu21.54.201-ca-jdk21.0.13.1-win_x64"
 
 REM Ensure the selected JDK takes priority over Java 8.
 set "PATH=%JAVA_HOME%\bin;%PATH%"
